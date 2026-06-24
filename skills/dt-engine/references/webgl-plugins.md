@@ -11,7 +11,7 @@ Do not import plugin implementation files. `meta.dispose()` removes installed pl
 
 ## Plugin index
 
-Each entry gives factory signature; required/default parameters; returned API; side effects/lifecycle; minimal use; common errors; Three.js mapping.
+Each entry gives factory signature; required/default parameters; returned API; side effects/lifecycle; minimal use; and common errors. Native implementation details are mentioned only when they affect initialization, ownership, or teardown choices.
 
 ### `renderPass`
 
@@ -21,7 +21,7 @@ Each entry gives factory signature; required/default parameters; returned API; s
 const pass = meta.plugin.get<{ renderPass: unknown }>("render-pass");
 ```
 
-Do not install a duplicate; duplicate keys return the existing instance. Three.js: `EffectComposer` `RenderPass`.
+Do not install a duplicate; duplicate keys return the existing instance. This pass is an `EffectComposer` render pass, so ordering with other composer passes matters.
 
 ### `light`
 
@@ -34,7 +34,7 @@ const lights = meta.plugin.use(webglPlugin.light([
 ]));
 ```
 
-`createWebglEngine` already installs equivalent default lights. Three.js: `Light` subclasses.
+`createWebglEngine` already installs equivalent default lights. Use this plugin to replace or control engine-owned lights instead of adding unmanaged lights casually.
 
 ### `orbitControl`
 
@@ -45,7 +45,7 @@ const orbit = meta.plugin.get<{ mode(type: "2d" | "3d"): void }>("orbit-control"
 orbit?.mode("2d");
 ```
 
-Three.js: `OrbitControls`. Do not create before `amount()` if relying on a usable canvas.
+Backed by `OrbitControls`; do not create before `amount()` if relying on a usable canvas.
 
 ### `fxaaPass`
 
@@ -55,7 +55,7 @@ Three.js: `OrbitControls`. Do not create before `amount()` if relying on a usabl
 meta.plugin.use(webglPlugin.fxaaPass());
 ```
 
-Three.js: `ShaderPass(FXAAShader)`.
+Backed by a shader pass; composer ordering matters.
 
 ### `skyBox`
 
@@ -65,7 +65,7 @@ Three.js: `ShaderPass(FXAAShader)`.
 const sky = meta.plugin.use(webglPlugin.skyBox({ path: "/sky/", type: ".jpg" }));
 ```
 
-Three.js: `CubeTextureLoader`/`Scene.background`. Ensure all six files exist.
+Ensure all six cube-face files exist. `clear()` does not explicitly dispose the loaded cube texture.
 
 ### `hoverColor`
 
@@ -76,7 +76,7 @@ const hover = meta.plugin.use(webglPlugin.hoverColor({ color: "#00ffff", opacity
 const removeGuard = hover.interceptor((event) => Boolean(event.params.component));
 ```
 
-Call `removeGuard()` when replacing the interceptor. Fast pointer movement/removal can miss blur according to project issue notes. Three.js: temporary material color overlay.
+Call `removeGuard()` when replacing the interceptor. Fast pointer movement/removal can miss blur according to project issue notes.
 
 ### `stats`
 
@@ -98,7 +98,7 @@ color.set(component, { color: "#ffcc00", opacity: 0.6 });
 color.clear(component);
 ```
 
-Unknown IDs are ignored. Cleanup restores tracked objects and disposes overlay materials. Three.js: material override/per-instance attributes.
+Unknown IDs are ignored. Cleanup restores tracked objects and disposes overlay materials.
 
 ### `poi`, `poi2d`, `poiv2`
 
@@ -117,7 +117,7 @@ label.applyToComponent(component);
 await poi.clear(component);
 ```
 
-Side effects: appends a full-container overlay renderer, registers resize/render/events, and may move supplied HTML elements into overlay DOM. `dispose()` clears POIs, removes overlay DOM/listeners, and restores HTML parents when supported. Large CSS images can blur in Chrome. Three.js: `CSS2DRenderer`/`CSS3DRenderer`.
+Side effects: appends a full-container CSS2D/CSS3D overlay renderer, registers resize/render/events, and may move supplied HTML elements into overlay DOM. `dispose()` clears POIs, removes overlay DOM/listeners, and restores HTML parents when supported. Large CSS images can blur in Chrome.
 
 ### `lod`
 
@@ -128,7 +128,7 @@ const lod = meta.plugin.use(webglPlugin.lod({ include: "AICamera", size: 12 }));
 lod.update();
 ```
 
-It changes model visibility and restores it on plugin destruction. Current screen-size calculation samples only two box corners, so treat as approximate. Three.js: bounding-box/distance LOD.
+It changes model visibility and restores it on plugin destruction. Current screen-size calculation samples only two box corners, so treat as approximate.
 
 ### `path`
 
@@ -142,7 +142,7 @@ const line = path.create([{x:0,y:0,z:0}, {x:5,y:0,z:5}], { color: "#00ffff" });
 path.remove(line);
 ```
 
-`show(points)` contains a source bug that sets visibility false for point-array lookup; use returned Mesh for reliable show. Clear on teardown. Three.js: Catmull-Rom curve, tube geometry, textured mesh.
+`show(points)` contains a source bug that sets visibility false for point-array lookup; use returned Mesh for reliable show. Clear generated route meshes on teardown.
 
 ### `boxSelection`
 
@@ -154,7 +154,7 @@ const off = select.addEventListener("end" as any, () => console.log(select.list)
 select.start();
 ```
 
-Call `end`/`dispose` and listener removers. Starting twice warns. Dense polygon input has documented performance/sliding issues. Three.js: screen ray picking plus polygon path.
+Call `end`/`dispose` and listener removers. Starting twice warns. Dense polygon input has documented performance/sliding issues.
 
 ### `picker`
 
@@ -165,7 +165,7 @@ const picker = meta.plugin.use(webglPlugin.picker({}));
 const hits = picker.fromBrowserEvent(event);
 ```
 
-Requires rendered components and correct canvas coordinates. Three.js: `Raycaster`.
+Requires rendered components and correct canvas coordinates. Uses ray picking under the wrapper.
 
 ### `tool`
 
@@ -183,7 +183,7 @@ const tool = meta.plugin.use(webglPlugin.tool());
 const screen = tool.threeCoordinateToScreenPoint(component.model.position);
 ```
 
-Coordinate conversion accepts only one or two calibration pairs and throws otherwise. Screen-to-world can return null. Three.js: projection, raycasting, geometric calculations.
+Coordinate conversion accepts only one or two calibration pairs and throws otherwise. Screen-to-world can return null.
 
 ### `space`
 
@@ -194,13 +194,13 @@ const space = meta.plugin.use(webglPlugin.space());
 await space.render(component, { replace: false });
 ```
 
-Missing target, URL, or replace-parent throws. Its generated declaration contains an invalid internal `dt-engine/src/...` type import and runtime calls the ignored second argument of `createComponent`; treat as fragile. Three.js: replacing/nesting scene subspaces.
+Missing target, URL, or replace-parent throws. Its generated declaration contains an invalid internal `dt-engine/src/...` type import and runtime calls the ignored second argument of `createComponent`; treat as fragile.
 
 ### `threeLoader3dtiles`
 
 `webglPlugin.threeLoader3dtiles({url})` is publicly exposed but current `setup`, render, and teardown implementation are commented out and return `void`.
 
-Do not claim that it loads tiles. Three.js concept: intended 3D Tiles runtime, currently nonfunctional.
+Do not claim that it loads tiles. It is intended for 3D Tiles runtime support but is currently nonfunctional.
 
 ### `envRoom`
 
@@ -210,13 +210,13 @@ Do not claim that it loads tiles. Three.js concept: intended 3D Tiles runtime, c
 meta.plugin.use(webglPlugin.envRoom({ sigma: 0, near: 0.1, far: 100 }));
 ```
 
-Three.js: PMREM environment lighting.
+Use this when PMREM environment lighting is desired; dispose/remove explicitly during feature teardown.
 
 ### `lightSky`
 
 `webglPlugin.lightSky(props?: unknown)` returns `void`. It adds a hemisphere light and generated physical sky mesh during setup, but exposes no control object and declares no destroyed cleanup.
 
-Use only when accepting engine-lifetime ownership; prefer `light` plus `skyBox/envRoom` when teardown control matters. Three.js: `Sky` and hemisphere light.
+Use only when accepting engine-lifetime ownership; prefer `light` plus `skyBox/envRoom` when teardown control matters.
 
 ## TacOS integrations: both variants are supported references
 

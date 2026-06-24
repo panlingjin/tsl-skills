@@ -17,7 +17,7 @@ Use the package as published. Treat root exports and their public types as autho
    - Unity/Cloud: [unity-cloud-api.md](references/unity-cloud-api.md)
    - NodeServer and Cesium status: [node-and-cesium.md](references/node-and-cesium.md)
    - Extensions, events, and animation: [extensions-and-animation.md](references/extensions-and-animation.md)
-   - Three.js mappings: [concepts.md](references/concepts.md)
+   - wrapper boundaries and native ownership: [concepts.md](references/concepts.md)
    - Supported patterns: [examples.md](references/examples.md)
    - Migration, conflicts, and traps: [migration-and-pitfalls.md](references/migration-and-pitfalls.md)
 3. Before writing code, verify every dt-engine symbol is exported from `@tslfe/dt-engine`. Do not use `@tslfe/dt-engine/src/*`, `dist/*`, `es/*`, `lib/*`, or undocumented subpaths.

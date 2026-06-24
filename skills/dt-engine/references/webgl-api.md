@@ -41,11 +41,11 @@ meta.amount(container);
 await meta.render("/models/site.glb", true);
 ```
 
-Common errors: forgetting to return config; missing DOM; invalid Draco path; calling before container exists. Native mapping: application bootstrap around `Scene`, `PerspectiveCamera`, renderer, loaders, composer.
+Common errors: forgetting to return config; missing DOM; invalid Draco path; calling before container exists.
 
 ## `WebglCreator`
 
-| API | Signature, defaults, return | Side effects / lifecycle | Common error / Three.js concept |
+| API | Signature, defaults, return | Side effects / lifecycle | Common error / lifecycle note |
 | --- | --- | --- | --- |
 | `amount` | `(el: string | HTMLElement) => void` | Appends internal div/canvas, observes resize, starts frame queue. Repeated calls only resize. | Missing selector throws `el 不存在`. Mount once after DOM exists. |
 | `render` | `(url: string, mapping = false) => Promise<Component<WebglModel>>` | Disposes previous scene; with mapping loads sibling `meta.json`; builds component tree; compiles shaders. Same URL returns current tree. | Source default is `false`, but generated business scene/floor/campus loading code should call `render(url, true)`. Omit/pass `false` only for standalone GLB without sibling mapping. Always await. |
@@ -61,31 +61,31 @@ Common errors: forgetting to return config; missing DOM; invalid Draco path; cal
 
 ## `Meta<T>`
 
-| API | Signature / default / return | Side effects and errors | Three.js concept |
+| API | Signature / default / return | Side effects and errors | Common error / lifecycle note |
 | --- | --- | --- | --- |
-| `search` | `(type: string, shallow = false) => Component[]` | Includes root if matching. `shallow=true` checks direct children only. | Semantic type query. |
-| `get` | `(id: string, shallow = false) => Component | undefined` | Matches `modelId`, business `id`, or comma-delimited ID subset. | `getObjectByName` plus business IDs. |
-| `filter` | `(predicate, shallow = false) => Component[]` | Includes root if predicate matches. | Scene traversal. |
-| `add` | `(child: Component) => Promise<void>` | Sets root if absent; otherwise adds below current root. | `Object3D.add`. |
-| `remove` | `(child: Component) => Promise<void>` | Detaches from parent without geometry/material disposal. | `removeFromParent`. |
-| `clear` | backend-specific `() => Promise<void>` | WebGL disposes current scene; Unity warns and does nothing. | Scene clearing. |
-| `dispose` | `() => Promise<void>` | Clears plugins first, then backend resources. | Full renderer/app teardown. |
-| `use` | `(extension: (meta) => any) => result` | Calls arbitrary extension; built-in plugin installation normally uses `plugin.use`. | Extension injection. |
-| `plugin.use` | `(creator) => plugin instance` | Same plugin key returns existing instance and warns. | Add-on manager. |
-| `plugin.get/has` | `(name) => instance/boolean` | Read only. Note `webglPlugin.os` key is `"os-animation"`. | Add-on registry. |
-| `plugin.remove` | `(nameOrCreator) => void` | Runs plugin `destroyed` cleanup. | Remove pass/control/helper. |
-| `plugin.clear` | `() => void` | Disposes all plugins; called by meta disposal. | Full add-on cleanup. |
+| `search` | `(type: string, shallow = false) => Component[]` | Includes root if matching. `shallow=true` checks direct children only. | Use for semantic type queries, not native scene names. |
+| `get` | `(id: string, shallow = false) => Component | undefined` | Matches `modelId`, business `id`, or comma-delimited ID subset. | Prefer over native object lookup for mapped business IDs. |
+| `filter` | `(predicate, shallow = false) => Component[]` | Includes root if predicate matches. | Predicate sees Components, not raw objects. |
+| `add` | `(child: Component) => Promise<void>` | Sets root if absent; otherwise adds below current root. | Keeps semantic tree in sync. |
+| `remove` | `(child: Component) => Promise<void>` | Detaches from parent without geometry/material disposal. | Use `dispose` when resources should be released. |
+| `clear` | backend-specific `() => Promise<void>` | WebGL disposes current scene; Unity warns and does nothing. | Backend behavior differs. |
+| `dispose` | `() => Promise<void>` | Clears plugins first, then backend resources. | Terminal app teardown. |
+| `use` | `(extension: (meta) => any) => result` | Calls arbitrary extension; built-in plugin installation normally uses `plugin.use`. | Prefer `plugin.use` for plugins. |
+| `plugin.use` | `(creator) => plugin instance` | Same plugin key returns existing instance and warns. | Duplicate plugin keys reuse the existing instance. |
+| `plugin.get/has` | `(name) => instance/boolean` | Read only. Note `webglPlugin.os` key is `"os-animation"`. | Use documented plugin keys. |
+| `plugin.remove` | `(nameOrCreator) => void` | Runs plugin `destroyed` cleanup. | Remove feature overlays/listeners before replacement. |
+| `plugin.clear` | `() => void` | Disposes all plugins; called by meta disposal. | Called automatically by `meta.dispose()`. |
 
 ## `Component` and `ComponentGroup`
 
 Properties: `id`, `modelId`, `type`, `ext`, `parent`, `children`, `model`, `isComponent`.
 
-| API | Signature / return | Lifecycle and errors | Three.js mapping |
+| API | Signature / return | Lifecycle and errors | Common error / lifecycle note |
 | --- | --- | --- | --- |
-| `search/get/filter` | Same traversal semantics as Meta; search/filter return `ComponentGroup` | Operates below this node. | Subtree traversal. |
-| `add` | `(child: Component | string | Partial<ComponentOptions>, attach = false) => Promise<Component>` | Existing component is attached; string/options path requires URL. Runtime returns the parent for an existing child, but a newly constructed child for options. | `add` or `attach`. |
-| `remove` | `(child) => Promise<void>` | Detaches child and updates semantic tree; does not dispose. | `Object3D.remove`. |
-| `removeFromParent` | `() => Promise<void>` | Detaches this component and semantic relation; preserves GPU resources. | `Object3D.removeFromParent`. |
+| `search/get/filter` | Same traversal semantics as Meta; search/filter return `ComponentGroup` | Operates below this node. | Use for mapped semantic subtrees. |
+| `add` | `(child: Component | string | Partial<ComponentOptions>, attach = false) => Promise<Component>` | Existing component is attached; string/options path requires URL. Runtime returns the parent for an existing child, but a newly constructed child for options. | `attach=true` preserves world transform. |
+| `remove` | `(child) => Promise<void>` | Detaches child and updates semantic tree; does not dispose. | Use `dispose` when resources should be released. |
+| `removeFromParent` | `() => Promise<void>` | Detaches this component and semantic relation; preserves GPU resources. | Detach only; no geometry/material cleanup. |
 | `replace` | `(target) => void` | Replaces sibling relation and model. Root replacement throws; use `meta.clear`. | Parent swap. |
 | `clear` | `() => Promise<void>` | Disposes children; implementation starts child promises without awaiting all of them. | Subtree cleanup. |
 | `dispose` | `() => Promise<void>` | Recursively disposes listeners, geometry, and materials. Some recursive calls are not awaited; avoid immediate reuse. | GPU resource disposal. |
@@ -96,15 +96,15 @@ Properties: `id`, `modelId`, `type`, `ext`, `parent`, `children`, `model`, `isCo
 
 Publicly extends `Object3D` and `DTModel`, and exposes `target`, `isInstancedMesh`, `instancedId`.
 
-| API | Type / default / return | Side effects / pitfalls | Three.js mapping |
+| API | Type / default / return | Side effects / pitfalls | Common error / lifecycle note |
 | --- | --- | --- | --- |
-| `position`, `scale`, `rotation` | `{x,y,z}`; rotation radians and optional Euler order | Setters propagate transform deltas to logical descendants; instanced models update matrices/bounds. | Object3D transforms. |
-| `visible` | boolean | Inherited Object3D visibility. | `Object3D.visible`. |
+| `position`, `scale`, `rotation` | `{x,y,z}`; rotation radians and optional Euler order | Setters propagate transform deltas to logical descendants; instanced models update matrices/bounds. | Prefer wrapper setters when semantic children must follow. |
+| `visible` | boolean | Inherited visibility. | Safe for wrapped model visibility. |
 | `color` | setter string; runtime accepts `"color opacity"` and empty string to restore | Clones/draws materials; for instancing sets per-instance color/opacity. | Material color overlay. |
 | `opacity` | setter number | Non-instanced materials are cloned once and made transparent; instanced geometry gets `instanceOpacity`. | Material opacity. |
 | `disabled`, `selected` | Declared, but WebGL source implementation is commented out | Do not rely on these for WebGL behavior; use plugins/events. | No stable native equivalent. |
-| `add/attach/remove/replace` | Model-level hierarchy methods | Do not update semantic Component tree when called directly. Prefer Component methods. | Object3D hierarchy. |
-| `removeFromParent` | `Promise<void>` | Detaches only. | Object3D detach. |
+| `add/attach/remove/replace` | Model-level hierarchy methods | Do not update semantic Component tree when called directly. Prefer Component methods. | Avoid for mapped hierarchy edits. |
+| `removeFromParent` | `Promise<void>` | Detaches only. | Does not dispose resources. |
 | `dispose` | `Promise<void>` | Recursively removes and disposes geometry/material. Shared resources may be invalidated if manually shared. | Explicit GPU cleanup. |
 
 ## `WebglScene`

@@ -1,4 +1,6 @@
-# Core Concepts and Three.js Mapping
+# Core Concepts and Wrapper Boundaries
+
+Three.js comparisons here are guardrails for choosing the dt-engine wrapper API and understanding ownership. They are not permission to bypass public dt-engine APIs or import package internals.
 
 ## Object map
 
@@ -54,7 +56,7 @@ dt-engine owns a module-level render queue. `amount()` starts it; plugins and an
 
 ## Native Three.js usage boundary
 
-Use dt-engine lifecycle and query APIs first. Native Three.js is appropriate when no wrapper constructor exists:
+Use dt-engine lifecycle and query APIs first. Native Three.js is appropriate only when no wrapper constructor exists, such as creating a custom primitive mesh:
 
 ```ts
 import { BoxGeometry, Mesh, MeshStandardMaterial } from "three";
