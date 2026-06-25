@@ -1,4 +1,0 @@
-interface:
-  display_name: "DT Engine"
-  short_description: "Build and debug dt-engine Three.js integrations"
-  default_prompt: "Use $dt-engine to implement a Three.js feature with the public @tslfe/dt-engine API."

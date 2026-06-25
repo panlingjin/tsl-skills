@@ -1,5 +1,5 @@
 ---
-name: tsl-big-screen
+name: tsl-big-screen-best-practices
 description: Build or maintain TSL-style Vue 3 big-screen projects from scratch using the Vue CLI-compatible stack. Use when Codex needs to scaffold, specify, review, or extend a digital-twin/data-visualization screen with Vue Router, Pinia, Axios, MockJS, ECharts, CountUp, Page Switch, @tslfe/dt-engine, and @tslfe/ai-sdk MCP/LLM control flows.
 ---
 

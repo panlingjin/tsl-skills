@@ -5,17 +5,13 @@ Replace placeholders with runtime configuration. Never commit live provider cred
 ## Conversation with cleanup
 
 ```ts
-import { createllm } from "@tslfe/ai-sdk";
+import { LLMEventType, SpeechType, createllm } from "@tslfe/ai-sdk";
 import type { LLMInstance } from "@tslfe/ai-sdk";
 
 let llm: LLMInstance | undefined;
-type LlmEventName = Parameters<LLMInstance["on"]>[0];
-
-const llmEvents = {
-  connected: "connected" as LlmEventName,
-  data: "data" as LlmEventName,
-  error: "error" as LlmEventName
-};
+let disposeConnected: (() => void) | undefined;
+let disposeData: (() => void) | undefined;
+let disposeError: (() => void) | undefined;
 
 const handleConnected = () => {
   console.info("TSL AI connection established");
@@ -40,23 +36,26 @@ export function startConversation(): LLMInstance {
     autoInitRecorder: true,
     tts: {
       enable: true,
-      type: "bytedance",
+      type: SpeechType.BYTEDANCE,
       volume: 1,
       params: getRuntimeTtsConfig()
     }
   });
 
-  llm.on(llmEvents.connected, handleConnected);
-  llm.on(llmEvents.data, handleData);
-  llm.on(llmEvents.error, handleError);
+  disposeConnected = llm.on(LLMEventType.connected, handleConnected);
+  disposeData = llm.on(LLMEventType.data, handleData);
+  disposeError = llm.on(LLMEventType.error, handleError);
 
   return llm;
 }
 
 export function stopConversation(): void {
-  llm?.off(llmEvents.connected, handleConnected);
-  llm?.off(llmEvents.data, handleData);
-  llm?.off(llmEvents.error, handleError);
+  disposeConnected?.();
+  disposeData?.();
+  disposeError?.();
+  disposeConnected = undefined;
+  disposeData = undefined;
+  disposeError = undefined;
   llm?.close();
   llm = undefined;
 }
@@ -67,7 +66,7 @@ Use application-specific implementations for `getRuntimeTtsConfig`, `renderSdkMe
 ## Recorder and wake word
 
 ```ts
-import { createAudioRecorder } from "@tslfe/ai-sdk";
+import { AudioEventType, createAudioRecorder } from "@tslfe/ai-sdk";
 
 const recorder = createAudioRecorder({
   mode: "wakeup",
@@ -75,32 +74,34 @@ const recorder = createAudioRecorder({
   waveView: { enable: false }
 });
 
-type RecorderEventName = Parameters<typeof recorder.on>[0];
-
-recorder.on("error" as RecorderEventName, (error) => {
+const disposeRecorderError = recorder.on(AudioEventType.error, (error) => {
   console.error("Recorder failed", error);
 });
 
-recorder.on("wakeup" as RecorderEventName, (detected) => {
+const disposeWakeup = recorder.on(AudioEventType.wakeup, (detected) => {
   if (detected) {
     console.info("Wake word detected");
   }
 });
 
-recorder.init(
-  async () => {
-    await recorder.initWakeUp({
-      modelPath: "/ai-sdk/models/model.onnx",
-      wasmPaths: "/ai-sdk/onnxruntime/web/",
-      onReady: () => recorder.listen()
-    });
-  },
-  (error: unknown) => {
-    console.error("Microphone initialization failed", error);
-  }
-);
+export function startWakeupFromUserGesture(): void {
+  recorder.init(
+    async () => {
+      await recorder.initWakeUp({
+        modelPath: "/ai-sdk/models/model.onnx",
+        wasmPaths: "/ai-sdk/onnxruntime/web/",
+        onReady: () => recorder.listen()
+      });
+    },
+    (error: string) => {
+      console.error("Microphone initialization failed", error);
+    }
+  );
+}
 
 export function disposeRecorder(): void {
+  disposeRecorderError();
+  disposeWakeup();
   recorder.close();
 }
 ```
@@ -110,21 +111,22 @@ Call initialization from a user gesture if browser permission or autoplay policy
 ## Standalone TTS
 
 ```ts
-import { Speech } from "@tslfe/ai-sdk";
+import { Speech, SpeechType } from "@tslfe/ai-sdk";
 
 const speech = new Speech({
-  type: "bytedance",
+  type: SpeechType.BYTEDANCE,
   volume: 0.8,
   params: getRuntimeTtsConfig()
 });
 
-speech.on("error", (error) => {
+const disposeSpeechError = speech.on("error", (error) => {
   console.error("TTS failed", error);
 });
 
 speech.tts("你好，我可以为你做什么？", crypto.randomUUID());
 
 export function disposeSpeech(): void {
+  disposeSpeechError();
   speech.close();
 }
 ```
@@ -132,55 +134,65 @@ export function disposeSpeech(): void {
 ## Browser-side MCP server
 
 ```ts
-import { getMcpInfo, mcpServer } from "@tslfe/ai-sdk";
+import { getMcpInfo, mcpEvent, mcpServer } from "@tslfe/ai-sdk";
+import type { Tool } from "@tslfe/ai-sdk";
 import { z } from "zod";
 
 const mcp = new mcpServer("frontend-tools");
 
-mcp.on("success", ({ mcpId }) => {
+const disposeMcpSuccess = mcp.on(mcpEvent.SUCCESS, ({ mcpId }) => {
   console.info("MCP connected", mcpId);
 });
 
-mcp.on("fail", ({ message }) => {
+const disposeMcpFail = mcp.on(mcpEvent.FAIL, ({ message }) => {
   console.error("MCP connection failed", message);
 });
 
-mcp.registerTools([
+const tools: Tool[] = [
   {
     name: "get_page_title",
     description: "Return the current browser page title",
     input: {
       prefix: z.string().optional().describe("Optional title prefix")
     },
-    handler: async ({ prefix }: { prefix?: string }) => ({
-      title: `${prefix ?? ""}${document.title}`
-    })
+    handler: async (args) => {
+      const prefix = typeof args?.prefix === "string" ? args.prefix : "";
+      return {
+        title: `${prefix}${document.title}`
+      };
+    }
   }
-]);
+];
+
+mcp.registerTools(tools);
 
 const localInfo = await getMcpInfo();
 console.info("Local MCP information", localInfo);
 await mcp.connect();
 
 export async function disposeMcp(): Promise<void> {
+  disposeMcpSuccess();
+  disposeMcpFail();
   await mcp.close();
 }
 ```
 
 ## Vue 3 composable
 
-Store the external SDK instance in `shallowRef` so Vue does not proxy it. Keep the component thin by putting connection and cleanup effects in a composable.
+Store the external SDK instance in `shallowRef` so Vue does not proxy it. Keep the component thin by putting connection and cleanup effects in a composable. This text-only example disables automatic recorder initialization so mounting it does not ask for microphone access.
 
 ```ts
 // composables/useTslConversation.ts
 import { onMounted, onUnmounted, readonly, shallowRef } from "vue";
-import { createllm } from "@tslfe/ai-sdk";
+import { LLMEventType, createllm } from "@tslfe/ai-sdk";
 import type { LLMInstance } from "@tslfe/ai-sdk";
 
 export function useTslConversation() {
   const client = shallowRef<LLMInstance>();
   const connected = shallowRef(false);
   const errorMessage = shallowRef("");
+  let disposeConnected: (() => void) | undefined;
+  let disposeError: (() => void) | undefined;
 
   function send(text: string): void {
     client.value?.inputMessage(text);
@@ -197,27 +209,26 @@ export function useTslConversation() {
         : "TSL AI connection failed";
   };
 
-  type LlmEventName = Parameters<LLMInstance["on"]>[0];
-  const connectedEvent = "connected" as LlmEventName;
-  const errorEvent = "error" as LlmEventName;
-
   onMounted(() => {
     const instance = createllm({
       application: "your-application",
       notify: 0,
       recordConfig: { waveView: { enable: false } },
+      autoInitRecorder: false,
       tts: { enable: false }
     });
 
-    instance.on(connectedEvent, handleConnected);
-    instance.on(errorEvent, handleError);
+    disposeConnected = instance.on(LLMEventType.connected, handleConnected);
+    disposeError = instance.on(LLMEventType.error, handleError);
 
     client.value = instance;
   });
 
   onUnmounted(() => {
-    client.value?.off(connectedEvent, handleConnected);
-    client.value?.off(errorEvent, handleError);
+    disposeConnected?.();
+    disposeError?.();
+    disposeConnected = undefined;
+    disposeError = undefined;
     client.value?.close();
     client.value = undefined;
   });

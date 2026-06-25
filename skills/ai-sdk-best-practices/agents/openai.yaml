@@ -1,0 +1,4 @@
+interface:
+  display_name: "TSL AI SDK Best Practices"
+  short_description: "Best practices for @tslfe/ai-sdk"
+  default_prompt: "Use $ai-sdk-best-practices to integrate @tslfe/ai-sdk into my TypeScript frontend."

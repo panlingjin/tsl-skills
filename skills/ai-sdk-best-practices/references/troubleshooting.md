@@ -6,7 +6,7 @@
 - Start initialization from a user action when browser permission UX requires it.
 - Inspect site permission state and OS-level microphone permission.
 - Verify no unsupported constraints were passed through `audioTrackSet`.
-- Attach the recorder `error` event and the `init` failure callback.
+- Attach the recorder `AudioEventType.error` event and the `init` failure callback.
 - Call `close()` before replacing an existing recorder.
 
 ## LLM WebSocket does not connect
@@ -15,7 +15,7 @@
 - Inspect the final `/v1/llm/ws/...` request in browser developer tools.
 - Because the SDK uses a relative URL, configure the frontend origin or dev-server proxy to reach the backend.
 - Check authentication query parameters, token expiry, proxy upgrade headers, and TLS.
-- Subscribe to both `connected` and `error`.
+- Subscribe to both `LLMEventType.connected` and `LLMEventType.error`.
 - Use `close()` for final teardown; `closeConnection()` closes only the socket.
 
 ## Wake-word model or WASM fails to load
@@ -33,7 +33,7 @@
 
 - Initialize in a browser and account for Web Audio autoplay restrictions.
 - Resume playback from a user gesture when required.
-- Verify provider type and `params` against the deployed TTS service.
+- Use exported `SpeechType` values and verify `params` against the deployed TTS service.
 - Check token exposure: do not commit long-lived provider credentials to frontend source.
 - Subscribe to the speech `error`, `process`, and `end` events.
 - Check volume and whether `setAutoPlay(false)` or `pauseAudio()` was called.
@@ -50,15 +50,16 @@
 
 - Give every tool a unique non-empty `name`, a `description`, and a `handler`.
 - Validate Zod input fields and handler argument assumptions.
+- Treat the handler argument as optional; guard before destructuring.
 - Register tools before calling `connect()`.
-- Subscribe to the `fail` event; a rejected reverse connection is reported there.
+- Subscribe to the `mcpEvent.FAIL` event; a rejected reverse connection is reported there.
 - Be aware that the current `connect()` catches some exceptions and only logs them instead of rethrowing or emitting `fail`. Use browser network/console diagnostics and an application-level connection timeout when reliable failure state is required.
 - Await `mcp.close()` during teardown.
 
-## TypeScript declarations disagree with examples
+## TypeScript examples fail to compile
 
 - Prefer the installed package's declaration files.
 - Confirm imports exist at the package root before generating code.
-- Do not import internal paths to bypass a missing root export.
-- If an internal event enum is referenced by a public method but is not root-exported, derive the parameter type with `Parameters<PublicType["on"]>[0]` and cast known runtime event names to that type.
-- When declarations and runtime source disagree, use a stable public alternative and report the version-specific discrepancy. For current source, use `speech.tts()` instead of relying on the mismatched `getTTS` parameter declaration.
+- Use exported root enums and types such as `LLMEventType`, `AudioEventType`, `SpeechType`, `MessageType`, `Tool`, and `Wakeup`.
+- Do not import internal paths to bypass type errors; if a symbol is missing in an installed older version, update the integration for that version or report the package drift.
+- For text-only LLM UI, explicitly set `autoInitRecorder: false` to avoid microphone permission prompts during component mount.

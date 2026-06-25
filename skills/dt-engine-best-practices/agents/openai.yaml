@@ -1,0 +1,4 @@
+interface:
+  display_name: "DT Engine Best Practices"
+  short_description: "Build and debug dt-engine integrations safely"
+  default_prompt: "Use $dt-engine-best-practices to implement a Three.js feature with the public @tslfe/dt-engine API."

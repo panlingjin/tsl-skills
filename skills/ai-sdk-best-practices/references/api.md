@@ -1,38 +1,66 @@
 # Public API Reference
 
-This reference follows the current root exports in `src/index.ts`. Re-check the installed declarations when integrating a different package version.
+This reference follows the current root exports in `src/index.ts`. Re-check the installed declarations when integrating a different package version. `@tslfe/ai-sdk` is the TSL browser SDK; it is not OpenAI's AI SDK.
 
-## Root exports
+## Current root exports
+
+Import runtime values and exported types from the package root only:
 
 ```ts
 import {
   version,
   createAudioRecorder,
+  AudioEventType,
+  AudioTimer,
+  RecoderStatus,
+  StopTrigger,
   createllm,
-  mcpServer,
+  createLLMDefaultConfig,
+  LLMEventType,
+  MessageType,
+  OUTPUTTYPE,
   Speech,
-  getMcpInfo,
+  SpeechType,
+  Wakeup,
   getMcpConfig,
+  getMcpInfo,
   getMcpToken,
   getMcpUserInfo,
-  OUTPUTTYPE
+  mcpEvent,
+  mcpServer
 } from "@tslfe/ai-sdk";
 
 import type {
+  AudioEventData,
+  AudioInstance,
   AudioRecordConfig,
+  RecordingStateManager,
+  StartOptions,
+  waveData,
   LLMConfig,
-  LLMInstance
+  LLMErrorData,
+  LLMEventData,
+  LLMInstance,
+  LLMRequestOptions,
+  LLMSendParams,
+  SpeechConfig,
+  SpeechEventMap,
+  SpeechInstance,
+  SpeechOptions,
+  wakeupConfig,
+  wakeupMode,
+  wakeupState,
+  McpEventData,
+  McpEventMap,
+  McpEventType,
+  McpFailData,
+  McpInfo,
+  McpSuccessData,
+  Tool
 } from "@tslfe/ai-sdk";
 ```
 
-Do not import internal `Wakeup`, `AudioEventType`, `MessageType`, `SpeechType`, or MCP implementation types from the package root; they are not currently root exports.
-
-Some current public interfaces refer to internal event enums that are not root exports. If TypeScript rejects a valid runtime event string, derive the event-name type from the public method instead of importing an internal path:
-
-```ts
-type LlmEventName = Parameters<LLMInstance["on"]>[0];
-const connectedEvent = "connected" as LlmEventName;
-```
+Do not import package internals such as `@tslfe/ai-sdk/src/...`, `@tslfe/ai-sdk/es/...`, or `@tslfe/ai-sdk/lib/...` in application code.
 
 ## `createllm(config)`
 
@@ -63,11 +91,8 @@ interface LLMConfig {
     heartbeatInterval?: number;
     maxReconnectAttempts?: number;
   };
-  tts?: {
+  tts?: SpeechOptions & {
     enable?: boolean;
-    type?: string;
-    volume?: number;
-    params?: object;
     stopSpeechOnNewOrAbort?: boolean;
   };
   wakeup?: {
@@ -77,21 +102,23 @@ interface LLMConfig {
 }
 ```
 
-`notify` is required by the current source type even though an older README example omits it.
+`notify` is required by the current source type even though older README examples may omit it.
 
 Useful `LLMInstance` members:
 
 - `inputMessage(text, options?)`: send a normal text request.
-- `send({ text, type?, options? })`: send with an optional message type; verify available type exports in the installed version.
-- `on(event, callback)` / `off(event, callback)`: subscribe to `connected`, `data`, `progress`, `close`, or `error`.
+- `send({ text, type?, options? })`: send with an optional `MessageType`.
+- `on(type, callback)`: subscribe to `LLMEventType.progress`, `close`, `data`, `connected`, or `error`; returns an unsubscribe function.
+- `off(type, callback)`: remove a handler when not using the returned unsubscribe.
 - `setRequestOption(option)`: merge context/features/request data into later sends.
 - `setAutoPlay(enabled)`: enable or stop automatic TTS.
-- `recorder`: the associated recorder instance.
-- `speech`: the associated speech instance.
+- `getTTS({ text, request_id? })`: request explicit TTS through the combined instance.
+- `recorder`: the associated `AudioInstance`.
+- `speech`: the associated `Speech` instance.
 - `closeConnection()`: close only the WebSocket.
 - `close()`: release recorder, WebSocket, and speech resources; prefer this for teardown.
 
-The current source implementation accepts `{ text, request_id }` in `getTTS`, while its public interface declaration only mentions `{ text }`. Prefer `instance.speech.tts(text, requestId)` or follow the installed declarations.
+`createLLMDefaultConfig()` returns defaults with `autoInitRecorder: true`, `notify: 0`, ByteDance TTS enabled, and wakeup disabled. Override `autoInitRecorder: false` for text-only UI that should not ask for microphone access on mount.
 
 ## `createAudioRecorder(config)`
 
@@ -114,13 +141,18 @@ Useful recorder methods:
 
 - `init(success?, fail?)`
 - `start({ mode?, autoStop? }?)`
-- `stop(callback?)`, `cancel()`, `close()`
-- `listen()`, `listenCancel()`
-- `initWakeUp(config)`
-- `changeMode(mode)`, `getCurrentBlob()`
-- `on(event, callback)`, `off`, `once`, `offAll`
+- `stop()`: returns `Promise<void> | undefined`
+- `cancel()`: returns `Promise<void>`
+- `listen()`
+- `listenCancel()`: returns `Promise<void>`
+- `close(isEmit?)`
+- `initWakeUp(config)`: capital `U`
+- `changeMode(mode)`
+- `getCurrentBlob()`
+- `on(event, callback)`: subscribe to `AudioEventType` values and return an unsubscribe function.
+- `off(event, callback)`, `once(event, callback)`, `offAll(event?)`
 
-Common event names are `start`, `stop`, `error`, `text`, `audio`, `close`, `process`, `cancel`, and `wakeup`.
+Recorder event names are exported as `AudioEventType.start`, `stop`, `error`, `text`, `audio`, `close`, `process`, `cancel`, and `wakeup`.
 
 Wakeup configuration passed to `initWakeUp` supports:
 
@@ -145,22 +177,28 @@ Construct standalone TTS in a browser:
 
 ```ts
 const speech = new Speech({
-  type: "bytedance",
+  type: SpeechType.BYTEDANCE,
   volume: 1,
-  params: {}
+  params: getRuntimeTtsConfig()
 });
 ```
+
+`SpeechOptions` accepts `type?: SpeechType`, `volume?: number`, and provider-specific `params`.
 
 Useful methods:
 
 - `tts(text, requestId?)`
 - `pauseAudio({ disableEvents? }?)`
 - `clearQueue(requestIds?)`
-- `setVolume(volume)`
+- `setVolume(volume)`: clamps to `0.0` through `1.0`
 - `close()`
 - `on("process" | "end" | "pause" | "error", callback)`
 
 The constructor creates a Web Audio context. Initialize from a browser lifecycle and expect autoplay policies to require user interaction.
+
+## Wakeup
+
+`Wakeup`, `wakeupConfig`, `wakeupMode`, and `wakeupState` are root exports. Most application code should use `recorder.initWakeUp(config)` so microphone frames are wired into wake-word processing. Construct `new Wakeup(config)` only for lower-level custom integrations.
 
 ## MCP helpers
 
@@ -168,7 +206,7 @@ The constructor creates a Web Audio context. Initialize from a browser lifecycle
 - `registerTools(tools)`
 - `connect()`
 - `close()`
-- `on("success" | "fail", callback)`
+- `on(mcpEvent.SUCCESS | mcpEvent.FAIL, callback)` or `on("success" | "fail", callback)`
 - `getMcpConfig(url?)`
 - `getMcpToken(url?)`
 - `getMcpUserInfo(url?)`
@@ -180,6 +218,6 @@ Default local endpoints:
 - `http://127.0.0.1:12080/token`
 - `http://127.0.0.1:12080/userInfo`
 
-`registerTools` requires each tool to have a unique `name`, a `description`, and a `handler`. The current demo supplies Zod fields as the input schema. If generated application code imports `zod` directly, declare it as an application dependency.
+`Tool<TArgs, TResult>` requires each tool to have a unique `name`, a `description`, and a `handler`. The handler receives an optional argument, so write handler code defensively. The current demo supplies Zod fields as the input schema. If generated application code imports `zod` directly, declare it as an application dependency.
 
 In the current implementation, the `fail` event reports reverse-transport rejection and close failures, but some exceptions thrown inside `connect()` are caught and only logged. Do not promise that every connection exception reaches application code without first checking the installed SDK version.

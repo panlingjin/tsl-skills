@@ -1,9 +1,9 @@
 ---
-name: dt-engine
+name: dt-engine-best-practices
 description: Use @tslfe/dt-engine to create or modify Three.js/WebGL, Unity Cloud, or Node-rendered digital-twin features; query the package API, parameters, defaults, and examples; diagnose dt-engine errors; migrate native Three.js code to the wrapper; or review initialization, asynchronous loading, render-loop ownership, lifecycle, and resource disposal.
 ---
 
-# DT Engine
+# DT Engine Best Practices
 
 Use the package as published. Treat root exports and their public types as authoritative; never invent APIs from native Three.js or copy internal `src/*` imports from this repository.
 
