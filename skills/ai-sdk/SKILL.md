@@ -1,5 +1,5 @@
 ---
-name: use-tsl-ai-sdk
+name: ai-sdk
 description: Integrate and troubleshoot the browser package @tslfe/ai-sdk in TypeScript frontend applications. Use when implementing TSL voice recording or recognition, LLM conversations, TTS playback, offline wake-word detection, or the SDK's browser-side MCP server; when adapting these features to Vue 3; or when diagnosing microphone, WebSocket, ONNX/WASM, speech, or local MCP service failures. Do not use for unrelated packages that are merely described as an AI SDK.
 ---
 
