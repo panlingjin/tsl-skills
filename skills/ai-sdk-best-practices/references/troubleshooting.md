@@ -1,5 +1,14 @@
 # Troubleshooting
 
+## Runtime config is missing or wrong
+
+- Confirm SDK setup code calls a project-level config boundary such as `getRuntimeTslAiSdkConfig()` instead of scattering env reads or placeholder strings across features.
+- Check that Vite browser-exposed variables use the required `VITE_` prefix.
+- Confirm required non-secret values such as `application` and `mcpId` are non-empty before creating SDK instances.
+- Keep long-lived provider credentials, API keys, and provider secrets out of committed frontend source. Use backend token exchange or approved runtime injection.
+- Inspect whether local development, staging, and production use different base paths for WebSocket proxying, wake-word assets, and MCP helper endpoints.
+- Fail fast with clear runtime errors when required config is absent; do not silently fall back to fake tokens or fake provider params.
+
 ## Microphone initialization fails
 
 - Require HTTPS or localhost; ordinary insecure origins cannot reliably use `getUserMedia`.

@@ -32,7 +32,7 @@ Treat version drift as a real possibility. Check the installed package version o
 - Use `Speech` for standalone TTS playback.
 - Use `mcpServer` plus `getMcpInfo` for browser-side MCP tool registration and reverse connection.
 
-Read [references/api.md](references/api.md) before generating code that uses the selected path. Read [references/examples.md](references/examples.md) for minimal TypeScript and Vue 3 patterns. Read [references/troubleshooting.md](references/troubleshooting.md) when the request involves setup, deployment, or failures.
+Read [references/api.md](references/api.md) before generating code that uses the selected path. Read [references/configuration.md](references/configuration.md) before writing initialization code that needs application names, tokens, provider params, WebSocket origins, wake-word assets, or MCP endpoints. Read [references/examples.md](references/examples.md) for minimal TypeScript and Vue 3 patterns. Read [references/troubleshooting.md](references/troubleshooting.md) when the request involves setup, deployment, or failures.
 
 ## Apply the integration workflow
 
@@ -43,11 +43,16 @@ Read [references/api.md](references/api.md) before generating code that uses the
    - ASR provider credentials when applicable
    - TTS provider credentials and voice parameters
    - MCP identifier and availability of the local companion service
-4. Request microphone access only from a user-driven flow where practical. Handle denial and insecure-context failures.
-5. Configure static wake-word assets when wakeup is enabled. Verify both the ONNX model URL and the ONNX Runtime WASM directory.
-6. Register event handlers before starting recording or connecting when events could fire immediately.
-7. Surface connection, recorder, speech, and MCP errors to the application instead of logging success only.
-8. Release every created resource:
+4. Resolve runtime configuration before generating SDK initialization code:
+   - Inspect the target project's existing config style, such as `import.meta.env`, `process.env`, runtime config files, backend token exchange, or deployment-injected values.
+   - Create one project-level config boundary such as `getRuntimeTslAiSdkConfig()` or reuse an existing config module.
+   - Keep SDK initialization code consuming the config object instead of scattering placeholder values across `createllm`, `createAudioRecorder`, `Speech`, wakeup, and MCP setup.
+   - Use TODO placeholders and runtime validation for missing ordinary values. Ask the user only for high-risk decisions such as exposing long-lived credentials to browser code.
+5. Request microphone access only from a user-driven flow where practical. Handle denial and insecure-context failures.
+6. Configure static wake-word assets when wakeup is enabled. Verify both the ONNX model URL and the ONNX Runtime WASM directory.
+7. Register event handlers before starting recording or connecting when events could fire immediately.
+8. Surface connection, recorder, speech, and MCP errors to the application instead of logging success only.
+9. Release every created resource:
    - Call `llm.close()` for the combined instance.
    - Call `recorder.close()` for a standalone recorder.
    - Call `speech.close()` for standalone TTS.
@@ -60,6 +65,7 @@ For Vue 3, keep SDK class instances in `shallowRef`, initialize browser-only ins
 
 - Import only from `@tslfe/ai-sdk`; never import paths under `@tslfe/ai-sdk/src`, `es`, `lib`, or repository `src/`.
 - Do not expose provider tokens in committed frontend source. Use the deployment's approved runtime configuration or token exchange.
+- Do not hard-code application names, provider params, token strings, wake-word asset paths, or MCP IDs inside examples or feature code when they are project configuration; route them through the runtime config boundary.
 - Do not claim wake-word support works until the model and WASM files are actually served with successful HTTP responses.
 - Do not treat `closeConnection()` as full cleanup; use `close()` unless only the WebSocket must be disconnected.
 - Do not treat the `agents/openai.yaml` metadata filename as SDK ownership or vendor identity; `@tslfe/ai-sdk` is a TSL package.

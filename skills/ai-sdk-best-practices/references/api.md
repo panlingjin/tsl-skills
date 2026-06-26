@@ -104,6 +104,8 @@ interface LLMConfig {
 
 `notify` is required by the current source type even though older README examples may omit it.
 
+Treat `application`, `notify`, `token`, WebSocket proxy/origin assumptions, `recordConfig`, TTS params, and wakeup settings as runtime configuration. Load [configuration.md](configuration.md) before generating LLM setup code, and route project-specific values through a config boundary instead of hard-coding them inside `createllm`.
+
 Useful `LLMInstance` members:
 
 - `inputMessage(text, options?)`: send a normal text request.
@@ -136,6 +138,8 @@ Useful `AudioRecordConfig` fields:
 - `audioTrackSet`: browser media-track constraints
 - `powerLevelLimit`, `remainTime`, `stopTime`, `maximumTime`, `cancelTime`
 - `waveView`: `{ enable, el, type, options }`
+
+Treat provider credentials and recognition params as runtime configuration. Do not place ASR provider secrets or long-lived tokens in browser source.
 
 Useful recorder methods:
 
@@ -170,6 +174,7 @@ Wakeup configuration passed to `initWakeUp` supports:
 Defaults are `/ai-sdk/onnxruntime/web/` for WASM files and `/ai-sdk/models/model.onnx` for the model.
 
 The current package publication whitelist contains `es`, `lib`, `dist`, and `typings`; it does not publish the repository's model or WASM assets. The consuming application must deliberately deploy compatible asset files.
+Read wakeup asset paths from runtime configuration when the consuming app's base path, CDN path, or deployment target controls where static assets are served.
 
 ## `Speech`
 
@@ -179,11 +184,12 @@ Construct standalone TTS in a browser:
 const speech = new Speech({
   type: SpeechType.BYTEDANCE,
   volume: 1,
-  params: getRuntimeTtsConfig()
+  params: config.tts.params
 });
 ```
 
 `SpeechOptions` accepts `type?: SpeechType`, `volume?: number`, and provider-specific `params`.
+Treat provider-specific `params` as application configuration. Do not invent fake provider params or commit live provider credentials in examples.
 
 Useful methods:
 
@@ -219,5 +225,7 @@ Default local endpoints:
 - `http://127.0.0.1:12080/userInfo`
 
 `Tool<TArgs, TResult>` requires each tool to have a unique `name`, a `description`, and a `handler`. The handler receives an optional argument, so write handler code defensively. The current demo supplies Zod fields as the input schema. If generated application code imports `zod` directly, declare it as an application dependency.
+
+Treat `mcpId` and helper endpoint URLs as runtime configuration when the application does not use the default local companion service.
 
 In the current implementation, the `fail` event reports reverse-transport rejection and close failures, but some exceptions thrown inside `connect()` are caught and only logged. Do not promise that every connection exception reaches application code without first checking the installed SDK version.

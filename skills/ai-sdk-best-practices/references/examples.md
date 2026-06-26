@@ -1,12 +1,84 @@
 # Integration Examples
 
-Replace placeholders with runtime configuration. Never commit live provider credentials.
+Use a runtime configuration boundary before creating SDK instances. Replace TODO values in the config boundary, not inside feature code. Never commit live provider credentials.
+
+## Runtime config boundary
+
+Adapt this pattern to the host project's existing config module and environment conventions:
+
+```ts
+// config/tsl-ai-sdk.ts
+import { SpeechType } from "@tslfe/ai-sdk";
+import type { AudioRecordConfig, SpeechOptions } from "@tslfe/ai-sdk";
+
+export interface TslAiSdkRuntimeConfig {
+  application: string;
+  notify: 0 | 1;
+  token?: string;
+  recordConfig: AudioRecordConfig;
+  tts: SpeechOptions & {
+    enable?: boolean;
+    stopSpeechOnNewOrAbort?: boolean;
+  };
+  wakeup: {
+    modelPath: string;
+    wasmPaths: string;
+    confidence_threshold?: number;
+    highScoreCount?: number;
+  };
+  mcp: {
+    mcpId: string;
+    configUrl?: string;
+    tokenUrl?: string;
+    userInfoUrl?: string;
+  };
+}
+
+function requirePublicEnv(name: string, value: string | undefined): string {
+  if (!value) {
+    throw new Error(`Missing ${name}; configure it in the app runtime environment.`);
+  }
+  return value;
+}
+
+export function getRuntimeTslAiSdkConfig(): TslAiSdkRuntimeConfig {
+  return {
+    application: requirePublicEnv(
+      "VITE_TSL_AI_APPLICATION",
+      import.meta.env.VITE_TSL_AI_APPLICATION
+    ),
+    notify: 0,
+    token: undefined, // TODO: fetch a short-lived token from the application backend if required.
+    recordConfig: {
+      type: "sentence",
+      waveView: { enable: false }
+    },
+    tts: {
+      enable: false,
+      type: SpeechType.BYTEDANCE,
+      volume: 1,
+      params: undefined // TODO: load provider params from the approved runtime source.
+    },
+    wakeup: {
+      modelPath: import.meta.env.VITE_TSL_AI_WAKEUP_MODEL_PATH || "/ai-sdk/models/model.onnx",
+      wasmPaths: import.meta.env.VITE_TSL_AI_WAKEUP_WASM_PATH || "/ai-sdk/onnxruntime/web/"
+    },
+    mcp: {
+      mcpId: import.meta.env.VITE_TSL_AI_MCP_ID || "frontend-tools",
+      configUrl: import.meta.env.VITE_TSL_AI_MCP_CONFIG_URL,
+      tokenUrl: import.meta.env.VITE_TSL_AI_MCP_TOKEN_URL,
+      userInfoUrl: import.meta.env.VITE_TSL_AI_MCP_USER_INFO_URL
+    }
+  };
+}
+```
 
 ## Conversation with cleanup
 
 ```ts
-import { LLMEventType, SpeechType, createllm } from "@tslfe/ai-sdk";
+import { LLMEventType, createllm } from "@tslfe/ai-sdk";
 import type { LLMInstance } from "@tslfe/ai-sdk";
+import { getRuntimeTslAiSdkConfig } from "./config/tsl-ai-sdk";
 
 let llm: LLMInstance | undefined;
 let disposeConnected: (() => void) | undefined;
@@ -26,19 +98,17 @@ const handleError = (error: unknown) => {
 };
 
 export function startConversation(): LLMInstance {
+  const config = getRuntimeTslAiSdkConfig();
+
   llm = createllm({
-    application: "your-application",
-    notify: 0,
-    recordConfig: {
-      type: "sentence",
-      waveView: { enable: false }
-    },
+    application: config.application,
+    notify: config.notify,
+    token: config.token,
+    recordConfig: config.recordConfig,
     autoInitRecorder: true,
     tts: {
-      enable: true,
-      type: SpeechType.BYTEDANCE,
-      volume: 1,
-      params: getRuntimeTtsConfig()
+      ...config.tts,
+      enable: true
     }
   });
 
@@ -61,17 +131,19 @@ export function stopConversation(): void {
 }
 ```
 
-Use application-specific implementations for `getRuntimeTtsConfig`, `renderSdkMessage`, and `showConnectionError`.
+Use application-specific implementations for `renderSdkMessage` and `showConnectionError`.
 
 ## Recorder and wake word
 
 ```ts
 import { AudioEventType, createAudioRecorder } from "@tslfe/ai-sdk";
+import { getRuntimeTslAiSdkConfig } from "./config/tsl-ai-sdk";
 
+const config = getRuntimeTslAiSdkConfig();
 const recorder = createAudioRecorder({
+  ...config.recordConfig,
   mode: "wakeup",
-  type: "live",
-  waveView: { enable: false }
+  type: "live"
 });
 
 const disposeRecorderError = recorder.on(AudioEventType.error, (error) => {
@@ -88,8 +160,7 @@ export function startWakeupFromUserGesture(): void {
   recorder.init(
     async () => {
       await recorder.initWakeUp({
-        modelPath: "/ai-sdk/models/model.onnx",
-        wasmPaths: "/ai-sdk/onnxruntime/web/",
+        ...config.wakeup,
         onReady: () => recorder.listen()
       });
     },
@@ -111,19 +182,17 @@ Call initialization from a user gesture if browser permission or autoplay policy
 ## Standalone TTS
 
 ```ts
-import { Speech, SpeechType } from "@tslfe/ai-sdk";
+import { Speech } from "@tslfe/ai-sdk";
+import { getRuntimeTslAiSdkConfig } from "./config/tsl-ai-sdk";
 
-const speech = new Speech({
-  type: SpeechType.BYTEDANCE,
-  volume: 0.8,
-  params: getRuntimeTtsConfig()
-});
+const config = getRuntimeTslAiSdkConfig();
+const speech = new Speech(config.tts);
 
 const disposeSpeechError = speech.on("error", (error) => {
   console.error("TTS failed", error);
 });
 
-speech.tts("你好，我可以为你做什么？", crypto.randomUUID());
+speech.tts("Hello, how can I help?", crypto.randomUUID());
 
 export function disposeSpeech(): void {
   disposeSpeechError();
@@ -136,9 +205,11 @@ export function disposeSpeech(): void {
 ```ts
 import { getMcpInfo, mcpEvent, mcpServer } from "@tslfe/ai-sdk";
 import type { Tool } from "@tslfe/ai-sdk";
+import { getRuntimeTslAiSdkConfig } from "./config/tsl-ai-sdk";
 import { z } from "zod";
 
-const mcp = new mcpServer("frontend-tools");
+const config = getRuntimeTslAiSdkConfig();
+const mcp = new mcpServer(config.mcp.mcpId);
 
 const disposeMcpSuccess = mcp.on(mcpEvent.SUCCESS, ({ mcpId }) => {
   console.info("MCP connected", mcpId);
@@ -186,6 +257,7 @@ Store the external SDK instance in `shallowRef` so Vue does not proxy it. Keep t
 import { onMounted, onUnmounted, readonly, shallowRef } from "vue";
 import { LLMEventType, createllm } from "@tslfe/ai-sdk";
 import type { LLMInstance } from "@tslfe/ai-sdk";
+import { getRuntimeTslAiSdkConfig } from "@/config/tsl-ai-sdk";
 
 export function useTslConversation() {
   const client = shallowRef<LLMInstance>();
@@ -210,12 +282,14 @@ export function useTslConversation() {
   };
 
   onMounted(() => {
+    const config = getRuntimeTslAiSdkConfig();
     const instance = createllm({
-      application: "your-application",
-      notify: 0,
-      recordConfig: { waveView: { enable: false } },
+      application: config.application,
+      notify: config.notify,
+      token: config.token,
+      recordConfig: config.recordConfig,
       autoInitRecorder: false,
-      tts: { enable: false }
+      tts: { ...config.tts, enable: false }
     });
 
     disposeConnected = instance.on(LLMEventType.connected, handleConnected);
