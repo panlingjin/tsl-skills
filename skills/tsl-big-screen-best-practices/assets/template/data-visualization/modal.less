@@ -1,0 +1,470 @@
+@import "./data-tokens.less";
+
+.modal-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: @modal-edge-gap;
+  color: @data-text-primary;
+  pointer-events: auto;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.modal-layer--main {
+  z-index: @layer-modal-main;
+}
+
+.modal-layer--confirm {
+  z-index: @layer-modal-confirm;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: @modal-backdrop;
+}
+
+.modal-shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  background:
+    linear-gradient(@modal-surface, @modal-surface) padding-box,
+    @modal-border-gradient border-box;
+  border: @modal-border-width solid transparent;
+  border-radius: @modal-radius;
+  box-shadow: @modal-shadow;
+  backdrop-filter: blur(@modal-backdrop-blur);
+  outline: none;
+}
+
+.modal-shell:focus-visible {
+  box-shadow: @modal-shadow, 0 0 0 2px rgba(101, 242, 252, 0.32);
+}
+
+.modal-shell--sm {
+  width: @modal-width-sm;
+}
+
+.modal-shell--md {
+  width: @modal-width-md;
+}
+
+.modal-shell--lg {
+  width: @modal-width-lg;
+}
+
+.modal-shell--xl {
+  width: @modal-width-xl;
+}
+
+.modal-shell--dialog {
+  min-width: 0;
+}
+
+.modal-shell--confirm {
+  min-height: 0;
+}
+
+.modal-shell--media .modal__body {
+  padding: 0;
+  background: #000;
+}
+
+.modal-layer--drawer {
+  align-items: stretch;
+  padding-block: 0;
+}
+
+.modal-layer--drawer.modal-layer--left {
+  justify-content: flex-start;
+}
+
+.modal-layer--drawer.modal-layer--right {
+  justify-content: flex-end;
+}
+
+.modal-shell--drawer {
+  max-height: 100%;
+  border-radius: 0;
+}
+
+.modal-shell--drawer-default {
+  width: @modal-drawer-width;
+}
+
+.modal-shell--drawer.modal-shell--left {
+  margin-left: -@modal-edge-gap;
+  border-left: 0;
+}
+
+.modal-shell--drawer.modal-shell--right {
+  margin-right: -@modal-edge-gap;
+  border-right: 0;
+}
+
+.modal__header {
+  display: flex;
+  flex: 0 0 @modal-header-height;
+  align-items: center;
+  min-width: 0;
+  padding: 0 @modal-padding-x;
+  background: @modal-surface-header;
+  border-bottom: 1px solid @modal-divider;
+  box-shadow: @modal-header-shadow;
+}
+
+.modal__title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: @data-text-primary;
+  font-size: @modal-title-size;
+  font-weight: 500;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal__extra {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-left: auto;
+  padding-left: @data-space-3;
+  color: @data-text-secondary;
+}
+
+.modal__close {
+  position: relative;
+  flex: 0 0 @modal-close-size;
+  width: @modal-close-size;
+  height: @modal-close-size;
+  margin-left: auto;
+  padding: 0;
+  color: @data-text-secondary;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: @data-radius;
+  cursor: pointer;
+  transition:
+    color @data-transition,
+    background-color @data-transition,
+    border-color @data-transition;
+}
+
+.modal__extra + .modal__close {
+  margin-left: @data-space-2;
+}
+
+.modal__close:hover:not(:disabled) {
+  color: @data-color-primary;
+  background: rgba(69, 216, 253, 0.1);
+  border-color: rgba(69, 216, 253, 0.24);
+}
+
+.modal__close:focus-visible {
+  outline: 2px solid @data-color-primary;
+  outline-offset: 2px;
+}
+
+.modal__close:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.modal__close-icon::before,
+.modal__close-icon::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 1px;
+  background: currentcolor;
+  content: "";
+}
+
+.modal__close-icon::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.modal__close-icon::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: @modal-padding-y @modal-padding-x;
+  overflow: auto;
+  overscroll-behavior: contain;
+  color: @data-text-secondary;
+  font-size: @data-font-body;
+  scrollbar-color: rgba(69, 216, 253, 0.42) transparent;
+  scrollbar-width: thin;
+}
+
+.modal__footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: @modal-footer-gap;
+  min-height: @modal-header-height;
+  padding: @data-space-2 @modal-padding-x;
+  border-top: 1px solid @modal-divider;
+}
+
+.modal-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: @modal-action-min-width;
+  height: @modal-action-height;
+  padding: 0 @data-space-4;
+  color: @data-text-primary;
+  font: inherit;
+  font-size: @data-font-body;
+  font-weight: 500;
+  line-height: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  transition:
+    color @data-transition,
+    background-color @data-transition,
+    border-color @data-transition,
+    box-shadow @data-transition,
+    opacity @data-transition;
+}
+
+.modal-action--secondary {
+  color: @data-text-secondary;
+  background: @modal-action-secondary-surface;
+  border: 1px solid rgba(101, 242, 252, 0.2);
+  box-shadow: inset 0 0 16px rgba(0, 233, 255, 0.24);
+}
+
+.modal-action--primary {
+  background: @modal-action-primary-surface;
+  border: 1px solid @modal-action-primary-border;
+  box-shadow:
+    0 3px 20px rgba(5, 255, 254, 0.36),
+    inset 0 0 16px rgba(0, 233, 255, 0.6);
+}
+
+.modal-action:hover:not(:disabled) {
+  color: #fff;
+  border-color: @modal-border-color;
+  box-shadow:
+    0 0 22px rgba(5, 255, 254, 0.42),
+    inset 0 0 16px rgba(0, 233, 255, 0.52);
+}
+
+.modal-action:focus-visible {
+  outline: 2px solid @modal-border-color;
+  outline-offset: 2px;
+}
+
+.modal-action:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.modal-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.scene-callout {
+  position: relative;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: @callout-min-width;
+  max-width: @callout-max-width;
+  padding: @data-space-2 @data-space-3 @data-space-3;
+  color: @data-text-primary;
+  text-align: left;
+  background: @callout-surface;
+  border: 1px solid @callout-border;
+  border-radius: @callout-radius;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(@callout-backdrop-blur);
+  pointer-events: auto;
+}
+
+.scene-callout__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 36px;
+  padding: 0 @data-space-2;
+}
+
+.scene-callout *,
+.scene-callout *::before,
+.scene-callout *::after {
+  box-sizing: border-box;
+}
+
+.scene-callout__header::before {
+  position: absolute;
+  inset: 2px 36px 2px 0;
+  background: @callout-accent-secondary;
+  clip-path: polygon(0 0, 92% 0, 100% 100%, 0 100%);
+  content: "";
+  opacity: 0.2;
+}
+
+.scene-callout__header::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, @callout-accent, rgba(70, 232, 255, 0));
+  content: "";
+}
+
+.scene-callout__title {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: @callout-title;
+  font-size: @modal-title-size;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 1px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scene-callout__close {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 @modal-close-size;
+  width: @modal-close-size;
+  height: @modal-close-size;
+  margin-left: auto;
+  padding: 0;
+  color: @data-text-secondary;
+  background: transparent;
+  border: 0;
+  border-radius: @data-radius;
+  cursor: pointer;
+}
+
+.scene-callout__close::before,
+.scene-callout__close::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 1px;
+  background: currentcolor;
+  content: "";
+}
+
+.scene-callout__close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.scene-callout__close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.scene-callout__close:hover {
+  color: @callout-accent;
+  background: rgba(70, 232, 255, 0.1);
+}
+
+.scene-callout__close:focus-visible {
+  outline: 2px solid @callout-accent;
+  outline-offset: 1px;
+}
+
+.scene-callout__body {
+  padding: @data-space-3 @data-space-2 0;
+  color: @data-text-secondary;
+  font-size: @data-font-body;
+  line-height: 1.5;
+}
+
+.modal-layer.is-busy .modal-backdrop {
+  cursor: wait;
+}
+
+.modal-fade-scale-enter-active,
+.modal-fade-scale-leave-active,
+.modal-slide-left-enter-active,
+.modal-slide-left-leave-active,
+.modal-slide-right-enter-active,
+.modal-slide-right-leave-active {
+  transition: opacity @modal-motion-duration @modal-motion-easing;
+}
+
+.modal-fade-scale-enter-active .modal-shell,
+.modal-fade-scale-leave-active .modal-shell,
+.modal-slide-left-enter-active .modal-shell,
+.modal-slide-left-leave-active .modal-shell,
+.modal-slide-right-enter-active .modal-shell,
+.modal-slide-right-leave-active .modal-shell {
+  transition: transform @modal-motion-duration @modal-motion-easing;
+}
+
+.modal-fade-scale-enter-from,
+.modal-fade-scale-leave-to,
+.modal-slide-left-enter-from,
+.modal-slide-left-leave-to,
+.modal-slide-right-enter-from,
+.modal-slide-right-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-scale-enter-from .modal-shell,
+.modal-fade-scale-leave-to .modal-shell {
+  transform: translateY(8px) scale(0.98);
+}
+
+.modal-slide-left-enter-from .modal-shell,
+.modal-slide-left-leave-to .modal-shell {
+  transform: translateX(-100%);
+}
+
+.modal-slide-right-enter-from .modal-shell,
+.modal-slide-right-leave-to .modal-shell {
+  transform: translateX(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-fade-scale-enter-active,
+  .modal-fade-scale-leave-active,
+  .modal-slide-left-enter-active,
+  .modal-slide-left-leave-active,
+  .modal-slide-right-enter-active,
+  .modal-slide-right-leave-active,
+  .modal-fade-scale-enter-active .modal-shell,
+  .modal-fade-scale-leave-active .modal-shell,
+  .modal-slide-left-enter-active .modal-shell,
+  .modal-slide-left-leave-active .modal-shell,
+  .modal-slide-right-enter-active .modal-shell,
+  .modal-slide-right-leave-active .modal-shell {
+    transition-duration: 1ms;
+  }
+}

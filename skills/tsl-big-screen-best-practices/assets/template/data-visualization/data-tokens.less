@@ -1,0 +1,134 @@
+// 1920 x 1080 data-display baseline. Scale the screen root, not individual tokens.
+@data-color-primary: #45d8fd;
+@data-color-secondary: #78d2d6;
+@data-color-tertiary: #6aa2d4;
+@data-color-success: #84cdb0;
+@data-color-warning: #d8b283;
+@data-color-danger: #e78181;
+@data-color-extra: #a38ece;
+@data-color-active: #e5c569;
+
+@data-text-primary: #f2f3f5;
+@data-text-secondary: #e5e6eb;
+@data-text-muted: #c9cdd4;
+
+@data-surface-panel: rgba(1, 8, 12, 0.82);
+@data-surface-card: rgba(13, 29, 48, 0.6);
+@data-surface-stripe: rgba(255, 255, 255, 0.04);
+@data-surface-hover: rgba(72, 232, 255, 0.24);
+@data-border: rgba(143, 181, 197, 0.3);
+@data-grid-line: rgba(143, 181, 197, 0.1);
+
+@data-panel-left-gradient: linear-gradient(
+  90deg,
+  @data-surface-panel 0%,
+  rgba(1, 8, 12, 0.5) 62%,
+  rgba(1, 8, 12, 0) 100%
+);
+@data-panel-right-gradient: linear-gradient(
+  270deg,
+  @data-surface-panel 0%,
+  rgba(1, 8, 12, 0.5) 62%,
+  rgba(1, 8, 12, 0) 100%
+);
+
+@data-font-axis: 12px;
+@data-font-unit: 14px;
+@data-font-body: 16px;
+@data-font-section-title: 18px;
+@data-font-panel-title: 24px;
+@data-font-kpi: 40px;
+
+@data-space-1: 8px;
+@data-space-2: 12px;
+@data-space-3: 16px;
+@data-space-4: 24px;
+@data-space-5: 32px;
+
+@data-radius: 4px;
+@data-row-height: 44px;
+@data-transition: 180ms ease;
+
+// Card surfaces and structure
+@card-surface-standard: @data-surface-card;
+@card-surface-panel: linear-gradient(
+  180deg,
+  rgba(1, 12, 16, 0.72) 0%,
+  rgba(6, 34, 45, 0.64) 100%
+);
+@card-surface-floating: rgba(1, 12, 16, 0.86);
+@card-border-default: @data-border;
+@card-border-strong: rgba(255, 255, 255, 0.2);
+@card-border-active: rgba(229, 197, 105, 0.84);
+@card-shadow-floating: 0 12px 36px rgba(0, 0, 0, 0.34);
+@card-shadow-active: 0 0 16px rgba(229, 197, 105, 0.2);
+@card-backdrop-blur: 32px;
+
+@card-radius-compact: 4px;
+@card-radius-standard: 8px;
+@card-padding-compact: @data-space-2;
+@card-padding-standard: @data-space-3;
+@card-padding-spacious: @data-space-4;
+@card-header-compact: 28px;
+@card-header-standard: 32px;
+@card-header-spacious: 40px;
+@card-grid-gap: @data-space-3;
+@card-grid-gap-compact: @data-space-2;
+@card-min-height-kpi: 76px;
+@card-min-height-content: 160px;
+@card-min-width-floating: 220px;
+
+// Modal surfaces, geometry and stack. Visual baseline normalized from AI Park.
+@modal-surface: rgba(0, 0, 0, 0.4);
+@modal-surface-header: rgba(16, 23, 22, 0.4);
+@modal-backdrop: rgba(0, 5, 10, 0.56);
+@modal-border-color: #65f2fc;
+@modal-border-width: 2px;
+@modal-border-gradient: linear-gradient(
+  134deg,
+  rgba(101, 242, 252, 0) 0%,
+  @modal-border-color 50%,
+  rgba(101, 242, 252, 0) 100%
+);
+@modal-divider: rgba(143, 181, 197, 0.18);
+@modal-header-shadow: inset 0 0 13px rgba(163, 229, 255, 0.6);
+@modal-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+@modal-backdrop-blur: 32px;
+
+@modal-radius: 8px;
+@modal-edge-gap: 32px;
+@modal-header-height: 48px;
+@modal-title-size: 20px;
+@modal-padding-x: 24px;
+@modal-padding-y: 24px;
+@modal-footer-gap: 12px;
+@modal-close-size: 32px;
+@modal-motion-duration: 220ms;
+@modal-motion-easing: cubic-bezier(0.22, 1, 0.36, 1);
+
+@modal-action-height: 48px;
+@modal-action-min-width: 120px;
+@modal-action-secondary-surface: rgba(11, 65, 95, 0.2);
+@modal-action-primary-surface: rgba(21, 225, 240, 0.22);
+@modal-action-primary-border: #05fffe;
+
+@callout-surface: rgba(15, 31, 47, 0.72);
+@callout-border: #6c8097;
+@callout-title: #dbf2ff;
+@callout-accent: #46e8ff;
+@callout-accent-secondary: #46aeff;
+@callout-backdrop-blur: 16px;
+@callout-radius: 8px;
+@callout-min-width: 220px;
+@callout-max-width: 420px;
+
+@modal-width-sm: 360px;
+@modal-width-md: 560px;
+@modal-width-lg: 800px;
+@modal-width-xl: 1200px;
+@modal-drawer-width: 480px;
+
+@layer-llm: 1999;
+@layer-modal-main: 2000;
+@layer-modal-confirm: 2100;
+@layer-toast: 2200;

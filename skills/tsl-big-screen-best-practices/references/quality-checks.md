@@ -88,6 +88,38 @@ Focus tests on:
 - Page Switch composable behavior
 - `frontControl` action dispatch
 - pure chart option builders
+- modal close-reason, stack, and lifecycle behavior
+
+For the bundled data-visualization builders, cover:
+
+- null or omitted input produces a valid empty option
+- numeric zero remains visible and is not replaced by `--`
+- negative comparison values remain numeric
+- long category labels can use horizontal comparison mode
+- arrays in `overrides` replace preset arrays while nested objects merge without mutating inputs
+- composition totals ignore invalid values and show `--` when no valid values exist
+- composition center text and donut use the same `center` in internal and external legend modes
+- composition geometry parameters remain authoritative when `overrides` attempts to set a different title or series center
+- external composition mode hides the ECharts legend and uses the documented chart/HTML-legend layout without overlap
+- raw composition counts never receive a `%` suffix unless they are converted to shares of the valid total
+- a chart container that starts at `0×0` does not call `echarts.init`; initialization occurs once after `ResizeObserver` reports positive dimensions
+- option changes received while the chart is hidden are rendered after it becomes measurable
+- replacing a conditional chart element rebinds observation and disposes the instance owned by the old element
+- gauge values clamp to the configured range and threshold ratios remain ordered
+
+For the bundled modal templates, cover:
+
+- Dialog, Confirm, Drawer, and Media defaults plus every documented size and Drawer direction
+- `v-model:open` and `close-button`, `backdrop`, `escape`, `replaced`, and `programmatic` reasons
+- busy state blocks Escape, backdrop, and close-button exits
+- the close button remains right-aligned with and without the optional `header-extra` slot
+- only the topmost modal handles Escape and Tab; one Confirm may cover one main modal
+- replacing a modal does not restore focus into the obscured page, while normal close restores its trigger
+- scroll locking remains active until the last modal closes and returns to its original value after unmount
+- `keepMounted` preserves DOM without leaving modal listeners or locks active while closed
+- AI Park visual tokens compile to the normalized black surface, 134-degree cyan gradient border, 48px header, 20px title, and 32px blur
+- primary and secondary modal actions retain visible hover, disabled, active, and keyboard-focus states
+- Scene Callout uses its 16px blur preset without entering the modal stack or rendering a backdrop
 
 Do not snapshot huge visual components unless the project already uses snapshot tests.
 
@@ -99,6 +131,39 @@ Before delivery:
 - Confirm the root screen mounts to `#infraApp`.
 - Confirm the screen is not blank.
 - Confirm resize scaling works.
+- Confirm each data panel answers one clear question and follows the selection matrix in `data-visualization.md`.
+- Confirm panel, content, and item cards follow the hierarchy and anatomy in `card-patterns.md`; modals remain separate.
+- Confirm Dialog, Confirm, Drawer, Media Viewer, and Scene Callout choices follow `modal-patterns.md` rather than using one generic overlay for every case.
+- Confirm modals Teleport to `#infraApp` by default and remain inside the 1080p scaled coordinate system.
+- Confirm only one main modal and one overlaid Confirm can be active; the layer values remain LLM `1999`, main `2000`, Confirm `2100`, and Toast reserve `2200`.
+- Confirm Dialog, Drawer, and Media allow backdrop close by default, while Confirm does not; busy blocks Escape, backdrop, and close-button exits.
+- Confirm opening moves focus inside, Tab/Shift+Tab loop in the topmost modal, Escape closes only the topmost allowed modal, and focus returns after closing.
+- Confirm a title provides `aria-labelledby`; a titleless modal provides `ariaLabel`; Confirm uses `alertdialog`, and close controls are real buttons.
+- Confirm the close button stays at the header's right edge when `header-extra` is absent, and keeps a 12px gap after it when present.
+- Confirm body overflow, long content, optional header/footer slots, Drawer placement, Media layout, and 32px canvas edges at all documented sizes.
+- Confirm Dialog, Confirm, Drawer, and Media share the normalized AI Park surface: translucent black, cyan gradient edge, 48px glowing header, and 32px blur.
+- Confirm modal primary/secondary actions use the shared classes and remain readable in default, hover, active, focus, and disabled states.
+- Confirm Scene Callout uses the lighter blue-gray surface, CSS title accent, 16px blur, no copied image asset, no backdrop, and no modal focus lock.
+- Confirm modal and drawer transitions respect reduced motion, and reference-counted scroll locking survives main-plus-Confirm stacking.
+- Confirm close, replacement, route leave, and unmount abort requests and clean timers, media, listeners, observers, charts, and dynamic containers.
+- Confirm `.card-grid` uses the documented `12/8/6/4` spans for single, main/secondary, double, and triple layouts, with DOM order matching visual order.
+- Confirm cards in one grid row align in height without absolute-positioning ordinary content.
+- Confirm compact, standard, and spacious cards use the shared padding/header tokens instead of feature-specific duplicates.
+- Confirm static cards have no hover affordance; interactive cards provide hover and visible keyboard focus, and active cards use the gold selection accent.
+- Confirm success, warning, and danger cards use a semantic edge plus text/icon meaning instead of saturated full-card fills.
+- Confirm that among card variants only panel and floating cards use backdrop blur, and visible card-surface nesting does not exceed two levels; modal and Scene Callout blur follow their separate overlay specification.
+- Confirm floating cards remain readable over the scene, keep reusable styles free of viewport coordinates, and use pointer events only when interactive.
+- Confirm empty or omitted footers render no divider, and loading/empty/error states preserve the card's context and minimum height.
+- Confirm KPI groups use Grid for equal-weight metrics and stay within the recommended two-to-six primary values.
+- Confirm trend, comparison, composition, progress, table, timeline, radar, and map forms match their data semantics rather than field names alone.
+- Confirm every donut keeps its center text concentric with the ring after resize; external legends occupy a separate `.composition-layout` column and hide the ECharts legend.
+- Confirm composition legend values either retain their real unit or show calculated shares whose total is approximately 100%; raw counts are never mislabeled as percentages.
+- Confirm charts, tables, KPI cards, statuses, and empty states use the bundled blue-cyan tokens unless a supplied design system explicitly overrides them.
+- Confirm gold is reserved for selected or deliberately highlighted states.
+- Confirm data displays preserve zero, use `--` only for missing/invalid values, and render explicit loading, empty, error, stale, or partial states as required.
+- Confirm chart components own initialization, updates, resize handling, and disposal; option builders remain pure.
+- Confirm responsive Grid/Flex charts use `use-echarts.js`, never initialize at `0×0`, and recover when loading, `v-if`, `v-show`, tabs, drawers, or panels make the container measurable.
+- Confirm tables use fixed headers in bounded regions, show four-to-eight columns on passive screens, truncate overflow with a tooltip, pair status color with text, and pause auto-scroll on hover/focus.
 - Confirm API calls go through `src/utils/axios.js`.
 - Confirm `.env` contains `VUE_APP_MOCK = true` and mock registration is controlled only by `process.env.VUE_APP_MOCK === "true"`.
 - Confirm mock data is reached through Axios and MockJS interception.
@@ -145,3 +210,6 @@ For projects generated from this skill:
 - LLM uses `@tslfe/ai-sdk` + MCP tools when requested.
 - MCP handlers delegate to `frontControl`.
 - Timers, event listeners, charts, WebSockets, dynamic modals, POI, and effects are cleaned up.
+- Data-display forms follow `data-visualization.md`, and copied visualization templates remain at their documented target paths.
+- Card hierarchy, layout spans, density, surfaces, interaction states, and nesting follow `card-patterns.md`.
+- Modal type, stack, focus, close, Teleport, sizing, layer, motion, and cleanup behavior follows `modal-patterns.md`; copied modal templates remain at their documented target paths.

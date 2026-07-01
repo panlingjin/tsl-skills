@@ -170,9 +170,11 @@ Panel details:
 - Use fixed design-width panels on fixed-canvas screens, then let root scaling adapt them.
 - Use left/right gradient shadows when the panel needs to blend into the 3D scene.
 - Keep the center area visually open for the model. Center overlays must be absolute and must not resize the 3D container.
-- Keep z-index order predictable: scene `0`, panels `10`, header `20`, Page Switch/modals/LLM `30+`.
+- Keep page composition layers predictable: scene `0`, panels `10`, header `20`, and Page Switch `30`. The application-level LLM/modal/Confirm/Toast stack uses `1999/2000/2100/2200`; do not invent feature-level values such as `9999`.
 
 ## Visual Components
+
+Read `references/data-visualization.md` before choosing a data-display form. Read `references/card-patterns.md` before defining card hierarchy, panel/content/item surfaces, card layouts, or floating cards. Read `references/modal-patterns.md` before implementing modal types, focus behavior, close rules, or application-level overlay layers. Keep this file focused on page composition and scene-overlay layout.
 
 Standard shared components:
 
@@ -187,9 +189,11 @@ Standard shared components:
 - `svg-icon`
 - `page-switch`
 
-Charts must own their ECharts instance and dispose it on unmount.
+Charts must own their ECharts instance and dispose it on unmount. Use the bundled `use-echarts.js` lifecycle template for responsive, conditional, tabbed, drawer, or asynchronously loaded chart containers so initialization waits for positive geometry.
 
 Counters should accept value, decimals, duration, prefix/suffix, and unit. Watch value changes and update the CountUp instance instead of remounting.
+
+Use the unified blue-cyan data theme by default. Reserve gold for selected or deliberately highlighted states instead of mixing it into the ordinary chart-series palette.
 
 ## Assets
 
@@ -201,6 +205,8 @@ Use:
 - `src/assets/img/switch` for Page Switch base and item backgrounds
 - `src/assets/font` for screen fonts
 - `src/assets/style/font.less`, `reset.less`, `var.less`, and optional `common.less`
+- `src/assets/style/data-tokens.less` and `data-display.less` when using the bundled data-visualization baseline
+- `src/assets/style/modal.less` when using the bundled modal baseline
 
 This skill bundles a common asset pack. Copy only the relevant files into the generated project:
 
@@ -213,7 +219,7 @@ Do not embed generated iconfont blobs in new projects unless a provided icon pac
 
 ## Interaction And Motion
 
-Use motion sparingly:
+Use motion sparingly. Modal timing, drawer direction, and reduced-motion behavior come from `modal.less` and `references/modal-patterns.md`:
 
 - fade for modals
 - slide-left/slide-right for panels

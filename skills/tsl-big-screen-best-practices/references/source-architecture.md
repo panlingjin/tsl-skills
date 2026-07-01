@@ -15,6 +15,7 @@ src/
       switch/
     style/
   components/
+    modal/
     svg-icon/
   constant/
   hooks/
@@ -65,6 +66,57 @@ Included common assets:
 - Weather: `qing.svg`, `duoyun.svg`, `yin.svg`, `yu.svg`, `xue.svg`, `feng.svg`, `wu.svg`, `mai.svg`, `shachenbao.svg`, `longjuanfeng.svg`
 
 Keep the existing project `svg-icon` registration mechanism. Do not add another icon system only to consume these assets.
+
+## Data Visualization Templates
+
+When the project needs standard card layouts, KPI, chart, table, progress, or empty-state styling, copy the bundled data-visualization templates:
+
+```text
+skill assets/template/data-visualization/data-tokens.less
+  -> project src/assets/style/data-tokens.less
+skill assets/template/data-visualization/data-display.less
+  -> project src/assets/style/data-display.less
+skill assets/template/data-visualization/chart-theme.js
+  -> project src/utils/chart-theme.js
+skill assets/template/data-visualization/chart-options.js
+  -> project src/utils/chart-options.js
+skill assets/template/data-visualization/use-echarts.js
+  -> project src/hooks/use-echarts.js
+```
+
+Import `data-display.less` once from the global style entry. Keep both Less files in the same directory because `data-display.less` imports `data-tokens.less`.
+
+Keep chart responsibilities separated:
+
+- `chart-theme.js` owns the stable palette and shared axis, grid, tooltip, and legend styling.
+- `chart-options.js` turns normalized feature data into ECharts options.
+- `use-echarts.js` waits for measurable geometry, then owns ECharts initialization, reactive updates, `ResizeObserver`, resize handling, and disposal.
+- chart components own the DOM ref, option source, loading/empty UI, and feature interaction wiring.
+- feature code owns business labels, units, threshold meaning, geographic data, and advanced map/radar/heatmap/bar-line options.
+
+Do not fetch APIs, start timers, or create ECharts instances inside an option builder.
+
+## Modal Templates
+
+When the project needs Dialog, Confirm, Drawer, or Media Viewer behavior, copy the shared modal templates:
+
+```text
+skill assets/template/modal/BaseModal.vue
+  -> project src/components/modal/BaseModal.vue
+skill assets/template/modal/use-modal-lifecycle.js
+  -> project src/hooks/use-modal-lifecycle.js
+skill assets/template/data-visualization/modal.less
+  -> project src/assets/style/modal.less
+```
+
+Keep `modal.less` beside `data-tokens.less`, which it imports. Import `modal.less` once from the global style entry. Feature Modal components may style their content, but must not duplicate the base backdrop, layer, focus, scroll-lock, or transition implementation.
+
+Responsibilities remain separate:
+
+- `BaseModal.vue` owns the reusable shell and public Vue/CSS contract.
+- `use-modal-lifecycle.js` owns the single-main-plus-Confirm registry, focus stack, keyboard behavior, and scroll-lock reference count.
+- Feature Modal components own APIs, validation, business actions, player/chart instances, and cleanup.
+- Dynamic callers own `createApp()` unmounting and removal of their temporary mount container.
 
 ## SVG Icon Component
 
