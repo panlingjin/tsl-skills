@@ -8,7 +8,7 @@ export default {
 import {
   computed,
   getCurrentInstance,
-  ref,
+  shallowRef,
   useAttrs,
   useSlots,
   watch,
@@ -56,9 +56,9 @@ const emit = defineEmits([
 
 const attrs = useAttrs();
 const slots = useSlots();
-const panelRef = ref(null);
-const pendingCloseReason = ref("");
-const lastCloseReason = ref("");
+const panelRef = shallowRef(null);
+const pendingCloseReason = shallowRef("");
+const lastCloseReason = shallowRef("");
 const instance = getCurrentInstance();
 const titleId = `modal-title-${instance?.uid ?? "base"}`;
 
@@ -114,7 +114,7 @@ function handleBackdrop() {
   if (actualCloseOnBackdrop.value) requestClose("backdrop");
 }
 
-const { focusInitialElement, restoreFocus } = useModalLifecycle({
+const { focusInitialElement, completeClose } = useModalLifecycle({
   open: computed(() => props.open),
   layer: actualLayer,
   busy: computed(() => props.busy),
@@ -136,13 +136,28 @@ watch(
   },
 );
 
+watch(
+  [() => props.open, hasTitle, () => props.ariaLabel],
+  ([isOpen, titleAvailable, label]) => {
+    if (
+      isOpen
+      && !titleAvailable
+      && !label
+      && process.env.NODE_ENV !== "production"
+    ) {
+      console.warn("[BaseModal] A titleless modal requires ariaLabel.");
+    }
+  },
+  { immediate: true },
+);
+
 function handleAfterEnter() {
   focusInitialElement();
   emit("after-enter");
 }
 
 function handleAfterLeave() {
-  if (lastCloseReason.value !== "replaced") restoreFocus();
+  completeClose();
   lastCloseReason.value = "";
   emit("after-leave");
 }

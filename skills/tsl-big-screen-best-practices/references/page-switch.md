@@ -1,5 +1,16 @@
 # Page Switch
 
+## Contents
+
+- [Purpose](#purpose)
+- [Files](#files)
+- [Engine Contract](#engine-contract)
+- [Composable](#composable)
+- [Auto Close Timer](#auto-close-timer)
+- [UI Behavior](#ui-behavior)
+- [Default Style](#default-style)
+- [Route Integration](#route-integration)
+
 ## Purpose
 
 Use Page Switch when a screen can switch between multiple engine projects or scenes exposed by dt-engine.
@@ -15,16 +26,11 @@ src/components/page-switch/
   index.vue
   usePageSwitch.js
   useTimer.js
+src/services/
+  page-switch.js
 ```
 
-Copy common assets from this skill before implementing the component:
-
-```text
-assets/icons/svg/swiper-item-icon.svg  -> src/assets/icons/svg/swiper-item-icon.svg
-assets/img/switch/switch-base.png      -> src/assets/img/switch/switch-base.png
-assets/img/switch/switch-icon.png      -> src/assets/img/switch/switch-icon.png
-assets/img/switch/switch-item-bg.png   -> src/assets/img/switch/switch-item-bg.png
-```
+Copy the Page Switch assets through the paths in `references/source-architecture.md`.
 
 ## Engine Contract
 
@@ -44,25 +50,44 @@ const currentProjectKey = ref(0);
 
 ## Composable
 
-Implement `usePageSwitch.js`:
+Keep engine commands in a lifecycle-free service so MCP and other non-component modules can reuse them safely:
 
 ```js
-import { ref, onMounted } from "vue";
+// src/services/page-switch.js
+export async function fetchProjectList(meta) {
+  if (!meta) throw new Error("fetchProjectList requires initialized meta");
+  return meta.unity.invoke("GetProjectConfigs");
+}
+
+export async function switchProject(meta, key) {
+  if (!meta) throw new Error("switchProject requires initialized meta");
+  await meta.unity.invoke("SwitchProject", { SceneIndex: key });
+  return key;
+}
+```
+
+Implement `usePageSwitch.js` only as the component lifecycle/state adapter:
+
+```js
+import { onMounted, shallowRef } from "vue";
 import { loadEngine } from "@/utils/dt-engine";
+import {
+  fetchProjectList,
+  switchProject as switchProjectService,
+} from "@/services/page-switch";
 
 export function usePageSwitch() {
-  const list = ref([]);
-  const currentProjectKey = ref(0);
+  const list = shallowRef([]);
+  const currentProjectKey = shallowRef(0);
 
   const switchProject = async (key) => {
     const { meta } = await loadEngine();
-    await meta.unity.invoke("SwitchProject", { SceneIndex: key });
-    currentProjectKey.value = key;
+    currentProjectKey.value = await switchProjectService(meta, key);
   };
 
   const getProjectList = async () => {
     const { meta } = await loadEngine();
-    const result = await meta.unity.invoke("GetProjectConfigs");
+    const result = await fetchProjectList(meta);
     list.value = result?.All || [];
     currentProjectKey.value = result?.Current?.SceneIndex || 0;
   };
@@ -78,20 +103,23 @@ export function usePageSwitch() {
 Implement `useTimer.js`:
 
 ```js
-import { ref, onUnmounted } from "vue";
+import { onUnmounted, shallowRef } from "vue";
 
 export function useTimer() {
-  const timer = ref(null);
+  const timer = shallowRef(null);
 
   const stop = () => {
     if (!timer.value) return;
-    clearInterval(timer.value);
+    clearTimeout(timer.value);
     timer.value = null;
   };
 
   const start = (callback, delay) => {
     stop();
-    timer.value = setInterval(callback, delay);
+    timer.value = setTimeout(() => {
+      timer.value = null;
+      callback();
+    }, delay);
   };
 
   onUnmounted(stop);
@@ -121,7 +149,7 @@ Render Page Switch inside the same scaled big-screen root as the rest of the UI.
 
 Use the `infra-shapan` bottom switch shape as the default style:
 
-- root fixed at the bottom center: `position: fixed; bottom: 0; left: 50%; transform: translateX(-50%)`
+- root absolute at the bottom center of the scaled canvas: `position: absolute; bottom: 0; left: 50%; transform: translateX(-50%)`
 - collapsed handle is a centered `120px x 8px` rounded line, `bottom: 10px`, color `#c9cdd4`
 - expanded base is `1920px x 99px`; use `src/assets/img/switch/switch-base.png` when a matching asset is available
 - collapsed/expanded switch visuals may use `src/assets/img/switch/switch-icon.png` when the design calls for a decorative handle/icon
@@ -137,7 +165,7 @@ Default Less:
 
 ```less
 .page-switch {
-  position: fixed;
+  position: absolute;
   bottom: 0;
   left: 50%;
   z-index: 30;

@@ -130,6 +130,8 @@ Generic Line:
 - Title: `16px / 24px`, weight `500`, no extra letter spacing
 - Use only when a quieter internal divider is required
 
+Wrap the visible text in `.section-title__text` (or use a direct heading element). It keeps the title single-line and truncates before the line decoration or action area can overlap it.
+
 ## Icons And Bilingual Meta
 
 Keep icons subordinate to the title text:
@@ -186,7 +188,7 @@ Open Rail Panel and subsection:
   </header>
   <div class="data-card__body">
     <div class="section-title section-title--marker">
-      <span>Fault Distribution</span>
+      <span class="section-title__text">Fault Distribution</span>
     </div>
   </div>
 </section>

@@ -5,9 +5,7 @@ description: Build or maintain TSL-style Vue 3 big-screen projects from scratch 
 
 # TSL Big Screen Project
 
-Use this skill to create a usable TSL big-screen project from zero, or to align an existing project with the same conventions.
-
-The default target is a Vue CLI-compatible Vue 3 project. Prefer this stack unless the user explicitly asks for a different build system.
+Create, maintain, or review TSL big-screen projects. The compatibility baseline is Vue 3 with Vue CLI 5 unless the user explicitly chooses another build system.
 
 ## Workflow
 
@@ -28,34 +26,14 @@ The default target is a Vue CLI-compatible Vue 3 project. Prefer this stack unle
 
 ## Build Defaults
 
-- Use Vue 3, Vue CLI 5, Vue Router 4, Pinia, Less, style-resources-loader, ECharts, CountUp, Origami Vue, TSL CLI/plugin conventions, and JavaScript with optional gradual TypeScript.
+- Use Vue 3, Composition API, Vue CLI 5, Vue Router 4, Pinia, Less, ECharts, and the existing TSL package conventions.
 - Pin only compatibility-sensitive dependencies: `zod@3.23.8` and `@tslfe/dt-engine@4.3.1-1`.
 - Use native `axios` through `src/utils/axios.js` for all HTTP calls.
-- Use MockJS by intercepting real Axios requests. Do not import mock data directly into components.
-- Use `#infraApp` as the default mount element.
-- Reuse bundled common assets from this skill for Page Switch, LLM quick questions, weather icons, and common screen controls.
-- Reuse the bundled data-visualization Less and option-builder templates when the project needs a standard TSL data-display baseline.
-- Reuse the bundled Ya'an China-map assets and `china-map.js` only for a static national map surface. Do not add business data, interaction, animation, or extra geographic layers to that template.
-- Copy the bundled decoration assets with the data-display Less when decorated Panel, content-card, section, or floating-card titles are required. The Ya'an Rail and AI Park Section Marker use their fixed-color source PNGs; Cap, Bracket, and orbit ornaments remain recolorable SVG masks.
-- Pair the Ya'an Rail only with the open `.data-card--rail-panel` surface. Use Cap, Marker, or plain text for closed rounded cards instead of creating a bordered frame around the Rail.
-- Reuse the bundled `use-echarts.js` lifecycle template for responsive or asynchronously mounted charts; never initialize ECharts while its container has zero width or height.
-- Reuse the bundled BaseModal, modal lifecycle, and Less templates instead of rebuilding focus, scroll-lock, and layer behavior per feature.
+- Use `#infraApp` as the `1920 × 1080` scaled root and keep all overlays in its coordinate system.
+- Reuse bundled templates and assets through the copy contracts in `source-architecture.md`; do not hand-rebuild their lifecycle behavior.
 - Use the browser/page default font unless the user, supplied design, or maintained project explicitly requires a brand font. Do not copy third-party source-project fonts by default.
 - Keep left and right dashboard columns inside the scaled 1080p canvas. Passive side panels must pass the documented height budget and must not create page-level or whole-panel vertical scrolling.
-- Keep root and route components thin. Put feature UI in child components and feature behavior in composables/stores.
+- Keep root and route components thin. Put feature UI in child components and feature behavior in composables, services, or stores.
 - Do not copy project-specific secrets, private URLs, model ids, tokens, JWTs, app secrets, or hard-coded customer data from existing projects.
 
-## Delivery Checklist
-
-- The project can start, render the root screen, and mount to `#infraApp`.
-- API modules call the shared Axios instance.
-- MockJS data is reachable only through normal Axios calls.
-- Page Switch, MCP, LLM, and dt-engine code are included only when required by the requested project.
-- Timers, listeners, dynamic modals, engine effects, and WebSocket handlers have cleanup paths.
-- Left and right dashboard columns fit between their top and bottom safe areas without page or whole-panel scrollbars; only explicitly bounded table/list bodies may scroll.
-- Card titles follow the Panel/content/section/item hierarchy, use at most one primary title treatment per card, and retain their decoration assets at the documented path.
-- Rail titles use the open Panel preset, align to the documented `14px` inset, and never render an empty title-icon placeholder.
-- AI Park Marker titles use the original half-frame PNG at `24px`, `22px` inherited-font text in `#C9CDD4`, and no generated underline, dot, or token recoloring.
-- Decorated title typography follows the documented size, weight, line-height, spacing, and Meta rules without introducing a third-party font family.
-- A static Ya'an-style China map copies only the two documented source assets, registers them once, and renders one geo plus two map layers on a single Canvas.
-- `npm run lint`, `npm run test:unit`, or the closest available checks are documented or run.
+Finish with the automated and manual acceptance entry in `references/quality-checks.md`.

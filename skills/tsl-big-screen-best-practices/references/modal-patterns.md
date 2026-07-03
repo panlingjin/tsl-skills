@@ -112,7 +112,7 @@ When a modal opens:
 3. Keep Tab and Shift+Tab inside the topmost modal.
 4. Restore focus to the connected trigger after the leave transition finishes.
 
-When a Confirm covers a main modal, focus moves to the Confirm. Closing it restores focus inside the main modal. Use a reference-counted scroll lock so closing the Confirm does not unlock a page still covered by the main modal.
+When a Confirm covers a main modal, focus moves to the Confirm. Closing it restores focus inside the main modal. A modal closed with `replaced` must suppress restoration through transition completion and component unmount; storing the reason only inside `BaseModal` is insufficient because the lifecycle composable also owns unmount cleanup. Use a reference-counted scroll lock so closing the Confirm does not unlock a page still covered by the main modal.
 
 Use `aria-labelledby` when a visible title exists. A titleless modal must provide `ariaLabel`. Use `role="alertdialog"` for Confirm and `role="dialog"` for other modal variants, with `aria-modal="true"`.
 
@@ -160,18 +160,7 @@ The `.scene-callout` preset creates its angled title accent with CSS and does no
 
 ## Template Usage
 
-Copy these templates into the project:
-
-```text
-assets/template/modal/BaseModal.vue
-  -> src/components/modal/BaseModal.vue
-
-assets/template/modal/use-modal-lifecycle.js
-  -> src/hooks/use-modal-lifecycle.js
-
-assets/template/data-visualization/modal.less
-  -> src/assets/style/modal.less
-```
+Use the exact Modal copy paths in `references/source-architecture.md`.
 
 `modal.less` imports `data-tokens.less`, so keep them in the same target directory. Import `modal.less` once from the global style entry. Feature Modal components may style their content but must not redefine base layers and dimensions.
 

@@ -43,6 +43,7 @@ function removeFromStack(id) {
 }
 
 function closeAndRemove(entry) {
+  entry.markReplaced();
   removeFromStack(entry.id);
   entry.requestClose("replaced");
 }
@@ -58,7 +59,10 @@ function registerModal(entry) {
   const currentLayerEntry = [...modalStack]
     .reverse()
     .find((item) => item.layer === entry.layer);
-  if (currentLayerEntry) closeAndRemove(currentLayerEntry);
+  if (currentLayerEntry) {
+    entry.setRestoreTarget(currentLayerEntry.getRestoreTarget());
+    closeAndRemove(currentLayerEntry);
+  }
 
   modalStack.push(entry);
 }
@@ -85,6 +89,8 @@ export function useModalLifecycle({
   const id = ++modalId;
   const previousFocus = shallowRef(null);
   let active = false;
+  let restoreAllowed = true;
+  let closeCompleted = false;
 
   const focusInitialElement = async () => {
     await nextTick();
@@ -143,24 +149,35 @@ export function useModalLifecycle({
   const activate = () => {
     if (active || typeof document === "undefined") return;
     active = true;
+    restoreAllowed = true;
+    closeCompleted = false;
     previousFocus.value = document.activeElement;
-    registerModal({ id, layer: unref(layer), requestClose });
+    registerModal({
+      id,
+      layer: unref(layer),
+      requestClose,
+      markReplaced: () => { restoreAllowed = false; },
+      getRestoreTarget: () => previousFocus.value,
+      setRestoreTarget: (target) => { previousFocus.value = target; },
+    });
     lockScroll();
     document.addEventListener("keydown", handleKeydown);
-    focusInitialElement();
   };
 
-  const deactivate = ({ restore = false } = {}) => {
-    if (!active) {
-      if (restore) restoreFocus();
-      return;
-    }
+  const deactivate = () => {
+    if (!active) return;
 
     active = false;
     removeFromStack(id);
     unlockScroll();
     document.removeEventListener("keydown", handleKeydown);
-    if (restore) restoreFocus();
+  };
+
+  const completeClose = () => {
+    if (closeCompleted) return;
+    closeCompleted = true;
+    if (restoreAllowed) restoreFocus();
+    else previousFocus.value = null;
   };
 
   watch(
@@ -172,10 +189,13 @@ export function useModalLifecycle({
     { immediate: true, flush: "post" },
   );
 
-  onBeforeUnmount(() => deactivate({ restore: true }));
+  onBeforeUnmount(() => {
+    deactivate();
+    completeClose();
+  });
 
   return {
     focusInitialElement,
-    restoreFocus,
+    completeClose,
   };
 }

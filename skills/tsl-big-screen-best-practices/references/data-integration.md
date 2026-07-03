@@ -1,5 +1,12 @@
 # Data Integration
 
+## Contents
+
+- [Axios](#axios)
+- [MockJS](#mockjs)
+- [Timed Refresh](#timed-refresh)
+- [WebSocket](#websocket)
+
 ## Axios
 
 Use native `axios` for new projects. Create a single shared instance in `src/utils/axios.js`.
@@ -21,15 +28,23 @@ request.interceptors.request.use((config) => {
 request.interceptors.response.use(
   (response) => {
     const { data } = response;
-    if (data?.code === 200 || Number(data?.code) === 0) {
-      return data.data ?? data;
+    const code = data?.code;
+    if ([200, "200", 0, "0"].includes(code)) {
+      return Object.prototype.hasOwnProperty.call(data, "data") ? data.data : data;
     }
 
-    if (data?.msg) Toast.error(data.msg);
-    if (data?.message) Toast.error(data.message);
-    return Promise.reject(data);
+    const message = data?.message || data?.msg || "请求失败";
+    Toast.error(message);
+    return Promise.reject(new Error(message));
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    const message = error?.response?.data?.message
+      || error?.response?.data?.msg
+      || error?.message
+      || "网络连接失败";
+    Toast.error(message);
+    return Promise.reject(error instanceof Error ? error : new Error(message));
+  }
 );
 
 export default request;
@@ -95,8 +110,9 @@ Rules:
 - Return the same envelope as the real service: `{ code, message, data }`.
 - Include error examples through the same envelope, not by throwing from components.
 - Keep mock records generic. Do not copy customer data, private IDs, URLs, or tokens.
-- Set `VUE_APP_MOCK = true` in `.env` so MockJS is enabled by default in every mode.
-- Import `src/mock` only when `VUE_APP_MOCK === "true"`. A mode-specific environment file may explicitly set it to `false` to use real services.
+- Set `VUE_APP_MOCK = true` only in `.env.development`.
+- Set `VUE_APP_MOCK = false` in `.env.test` and `.env.master` unless a dedicated isolated build explicitly requires mocks.
+- Import `src/mock` only when `VUE_APP_MOCK === "true"`.
 
 ## Timed Refresh
 

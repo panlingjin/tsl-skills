@@ -456,6 +456,18 @@
   height: @card-title-icon-section-size;
 }
 
+.section-title__text,
+.section-title > h2,
+.section-title > h3,
+.section-title > h4 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+}
+
 .section-title--marker {
   height: @section-title-marker-height;
   padding: 0;
@@ -915,6 +927,14 @@
   overflow: hidden;
   color: @data-text-primary;
   background: transparent;
+}
+
+.data-table__scroll {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .data-table table {

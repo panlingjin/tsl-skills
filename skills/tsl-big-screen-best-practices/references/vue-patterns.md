@@ -1,5 +1,17 @@
 # Vue Patterns
 
+## Contents
+
+- [SFC Defaults](#sfc-defaults)
+- [Component Boundaries](#component-boundaries)
+- [Props And Emits](#props-and-emits)
+- [Composables](#composables)
+- [Modal Ownership](#modal-ownership)
+- [Chart Ownership](#chart-ownership)
+- [Pinia](#pinia)
+- [Router](#router)
+- [Lifecycle Safety](#lifecycle-safety)
+
 ## SFC Defaults
 
 Use Vue 3 Composition API with `<script setup>`.
@@ -83,6 +95,8 @@ Use the bundled `use-echarts.js` composable for charts inside responsive Grid/Fl
 - Observe the chart element with `ResizeObserver`. A zero-size callback is a waiting state, not an initialization signal or an error.
 - Use a `flush: "post"` watcher for option changes so DOM updates finish before render scheduling.
 - Let a changed template ref rebind the observer and dispose the instance owned by the replaced element.
+- Treat `theme` and `initOptions` as initialization-only. Dispose and recreate the instance when either must change; do not expect a reactive theme mutation to recolor an existing ECharts instance.
+- Read `setOptionOptions` at each option application so an owning component can choose update semantics without rebuilding the chart.
 - Dispose the chart, observer, animation frame, and window fallback listener on unmount.
 - Do not repair lifecycle races with fixed chart widths, arbitrary `setTimeout`, or repeated unconditional `echarts.init()` calls.
 
@@ -113,16 +127,28 @@ const routes = [
     component: () => import("@/views/home")
   },
   {
-    path: "/:catchAll(.*)",
+    path: "/:pathMatch(.*)*",
     redirect: "/"
   }
 ];
 
 export default createRouter({
-  history: createWebHistory("/"),
+  history: createWebHistory(process.env.BASE_URL),
   routes
 });
 ```
+
+Use HTML5 history mode (`createWebHistory(process.env.BASE_URL)`) by default for routing. Ensure that `publicPath` in `vue.config.js` is configured with an absolute path (typically `"/"`) to prevent nested routing asset loading errors. Production deployments must configure SPA route fallback (e.g., Nginx `try_files`) so reloads on nested routes do not return 404.
+
+For an Nginx root deployment, the minimum fallback is:
+
+```nginx
+location / {
+  try_files $uri $uri/ /index.html;
+}
+```
+
+When deploying below a subpath, set `publicPath` to that absolute subpath and keep `createWebHistory(process.env.BASE_URL)` unchanged so the router and compiled asset base stay aligned.
 
 Use route `meta` for scene keys or app codes only when navigation behavior needs them.
 

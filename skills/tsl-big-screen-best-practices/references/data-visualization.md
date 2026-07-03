@@ -128,6 +128,8 @@ Keep each card responsible for one question. Use normal Grid/Flex flow inside it
 - Keep legends close to the chart and in the same order as the series. Do not rely on color alone; always include a text label.
 - Keep donut geometry under one source of truth: pass `center` and `radius` to `createCompositionOption`; never move `title.left` or `series[0].center` independently through `overrides`.
 - Keep donut center typography subordinate to the ring: the default value is `22px / 28px / 600`, the unit is `12px / 28px`, and the label is `12px / 18px / 400`. Pass an unadorned number or value through `centerValue` and pass `类`, `%`, `台`, or another suffix through `unit`; never concatenate the unit into `centerValue`.
+- The center value scales down to `20px` and then `18px` for longer content instead of expanding into the ring. If a value still does not fit, abbreviate it in business code and expose the full value outside the ring.
+- Composition builders discard `null`, non-numeric, and negative values before both rendering and total calculation. Zero remains valid. Do not use a donut when negative values carry meaning.
 - Center text is display-only. The builder forces `title.triggerEvent: false` after merging `overrides`. If feature code uses ECharts `graphic`, set every center-text element to `silent: true`; if it uses an absolutely positioned HTML center layer, set that layer to `pointer-events: none`. A center overlay must never create a rectangular dead zone over the donut ring.
 - Use `legendMode: "echarts"` only when ECharts owns the full chart-and-legend canvas. Use `legendMode: "external"` with `.composition-layout` when the legend needs a separate value or percentage column; never render both legends.
 - In external-legend mode, split `.composition-layout` into equal `1fr / 1fr` columns. Give the left chart its own `.composition-layout__chart` canvas and keep its donut at the builder default `50%/50%`. Do not render a full-width ECharts canvas underneath a separate HTML legend.
@@ -143,6 +145,7 @@ Use the same visual contract with native tables or a selected component library:
 
 - show `4–8` columns on a passive big screen
 - keep the header fixed inside a bounded table region
+- wrap the table in `.data-table__scroll` with an explicit card-body height; sticky headers are bounded to this local scroller
 - use `40–44px` row height on the 1080p canvas
 - use `--` for missing values; preserve numeric zero
 - right-align numeric columns and keep units in the header or a dedicated column
@@ -166,24 +169,7 @@ Treat loading, empty, error, stale, and partial data as first-class states.
 
 ## Reusable Templates
 
-Copy only the files required by the project:
-
-```text
-skill assets/template/data-visualization/data-tokens.less
-  -> project src/assets/style/data-tokens.less
-skill assets/template/data-visualization/data-display.less
-  -> project src/assets/style/data-display.less
-skill assets/template/data-visualization/chart-theme.js
-  -> project src/utils/chart-theme.js
-skill assets/template/data-visualization/chart-options.js
-  -> project src/utils/chart-options.js
-skill assets/template/data-visualization/use-echarts.js
-  -> project src/hooks/use-echarts.js
-skill assets/template/data-visualization/china-map.js
-  -> project src/utils/china-map.js
-skill assets/map/china/*
-  -> project src/assets/map/china/
-```
+Use the exact data-visualization copy paths in `references/source-architecture.md`. Copy only the files required by the project.
 
 Keep `data-tokens.less` and `data-display.less` beside each other because the display stylesheet imports the token file. Import `data-display.less` once from the global style entry.
 
@@ -226,7 +212,7 @@ useECharts(container, option, {
 // -> { chart, ready, render, resize, dispose }
 ```
 
-`container` and `option` accept a plain value, ref, computed ref, or getter. Config values may also be plain or reactive. Keep callable ECharts callbacks inside the option object; only the top-level `option` argument treats a function as a getter. The template targets Vue 3.2, so it uses a local `unref`-based resolver rather than Vue 3.3-only `toValue`.
+`container` and `option` accept a plain value, ref, computed ref, or getter. `theme` and `initOptions` are read only when an instance is created; changing them requires `dispose()` followed by `render()`. `setOptionOptions` is read whenever a dirty option is applied. Do not describe the whole config object as hot-reactive. Keep callable ECharts callbacks inside the option object; only the top-level `option` argument treats a function as a getter. The template targets Vue 3.2, so it uses a local `unref`-based resolver rather than Vue 3.3-only `toValue`.
 
 The lifecycle helper marks options dirty only when their source changes. ResizeObserver and window resize events resize the existing instance without calling `setOption` again; calling the returned `render()` explicitly forces one option application.
 

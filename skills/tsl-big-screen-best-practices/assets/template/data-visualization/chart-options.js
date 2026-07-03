@@ -64,6 +64,18 @@ function normalizePair(value, fallback) {
     : cloneValue(fallback);
 }
 
+function formatTooltipValue(value, unit) {
+  const numeric = toFiniteNumber(value);
+  return numeric === null ? "--" : `${numeric}${unit}`;
+}
+
+function resolveCenterValueFontSize(value) {
+  const length = String(value ?? "").length;
+  if (length <= 4) return 22;
+  if (length <= 7) return 20;
+  return 18;
+}
+
 export function createTrendOption({
   categories = [],
   series = [],
@@ -75,7 +87,9 @@ export function createTrendOption({
   const normalized = normalizeSeries(series);
   const option = {
     color: normalized.map(resolveColor),
-    tooltip: createChartTooltip("axis"),
+    tooltip: createChartTooltip("axis", {
+      valueFormatter: (value) => formatTooltipValue(value, unit),
+    }),
     legend: createChartLegend(normalized.length > 1),
     grid: createChartGrid(),
     xAxis: createCategoryAxis(categories, { boundaryGap: false }),
@@ -124,7 +138,10 @@ export function createComparisonOption({
   const valueAxis = createValueAxis(unit);
   const option = {
     color: normalized.map(resolveColor),
-    tooltip: createChartTooltip("axis", { axisPointer: { type: "shadow" } }),
+    tooltip: createChartTooltip("axis", {
+      axisPointer: { type: "shadow" },
+      valueFormatter: (value) => formatTooltipValue(value, unit),
+    }),
     legend: createChartLegend(normalized.length > 1),
     grid: createChartGrid(horizontal ? { right: showValue ? 48 : 16 } : {}),
     xAxis: horizontal ? valueAxis : categoryAxis,
@@ -174,21 +191,20 @@ export function createCompositionOption({
   const normalized = Array.isArray(data)
     ? data.map((item, index) => {
         const entry = isPlainObject(item) ? item : {};
+        const numericValue = toFiniteNumber(entry.value);
         return {
           name: entry.name || "",
-          value: entry.value,
+          value: numericValue,
           itemStyle: { color: entry.color || DATA_PALETTE[index % DATA_PALETTE.length] },
         };
-      })
+      }).filter((item) => item.value !== null && item.value >= 0)
     : [];
-  const validValues = normalized
-    .map((item) => toFiniteNumber(item.value))
-    .filter((item) => item !== null);
-  const computedTotal = validValues.length
-    ? validValues.reduce((sum, value) => sum + value, 0)
+  const computedTotal = normalized.length
+    ? normalized.reduce((sum, item) => sum + item.value, 0)
     : "--";
   const displayValue = centerValue ?? computedTotal;
   const displayUnit = displayValue === "--" ? "" : unit;
+  const centerValueFontSize = resolveCenterValueFontSize(displayValue);
   const option = {
     tooltip: createChartTooltip("item", { valueFormatter: (value) => `${value}${unit}` }),
     legend: createChartLegend(actualLegendMode === "echarts" && normalized.length > 0, {
@@ -210,7 +226,7 @@ export function createCompositionOption({
         rich: {
           value: {
             color: CHART_TOKENS.textPrimary,
-            fontSize: 22,
+            fontSize: centerValueFontSize,
             fontWeight: 600,
             lineHeight: 28,
           },
@@ -304,8 +320,8 @@ export function createGaugeOption({
     ? parsedMax
     : numericMin + 100;
   const numericValue = parsedValue ?? numericMin;
-  const displayValue = parsedValue ?? "--";
   const safeValue = Math.min(numericMax, Math.max(numericMin, numericValue));
+  const displayValue = parsedValue === null ? "--" : safeValue;
   const axisColors = (Array.isArray(thresholds) ? thresholds : [])
     .map((item) => {
       const entry = isPlainObject(item) ? item : {};

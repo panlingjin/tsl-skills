@@ -1,8 +1,20 @@
 # Project Setup
 
+## Contents
+
+- [Baseline](#baseline)
+- [Package Scripts](#package-scripts)
+- [Required Project Config](#required-project-config)
+- [Vue CLI Config](#vue-cli-config)
+- [Environment Files](#environment-files)
+- [HTML Shell](#html-shell)
+- [TSL Config](#tsl-config)
+
 ## Baseline
 
 Create a Vue CLI-compatible Vue 3 big-screen app.
+
+Vue CLI 5 is retained as an explicit TSL compatibility baseline for existing tooling. Do not migrate a generated or maintained project to Vite as an incidental cleanup; use another build system only when the user or target repository requires it.
 
 Default stack:
 
@@ -15,6 +27,7 @@ Default stack:
 - `less` and `less-loader`
 - `svg-sprite-loader`
 - `style-resources-loader` and `vue-cli-plugin-style-resources-loader`
+- `babel-plugin-import`
 - `echarts`
 - `countup`
 - `origami-vue`
@@ -87,7 +100,10 @@ Add the matching dev dependencies:
   "@babel/core": "^7.12.16",
   "@babel/plugin-proposal-private-methods": "^7.18.6",
   "@vue/cli-plugin-babel": "~5.0.0",
+  "@vue/cli-plugin-eslint": "~5.0.0",
+  "@vue/cli-plugin-unit-jest": "~5.0.0",
   "@vue/cli-service": "^5.0.8",
+  "babel-plugin-import": "^1.13.8",
   "babel-jest": "^27.0.6",
   "svg-sprite-loader": "^6.0.11",
   "tsl-cli-helper": "^2.1.13"
@@ -181,7 +197,7 @@ function resolve(dir) {
 }
 
 module.exports = {
-  publicPath: "./",
+  publicPath: "/",
   productionSourceMap: false,
   devServer: {
     host: "0.0.0.0",
@@ -245,17 +261,22 @@ Allowed variable categories:
 - `VUE_APP_TACOS_LOAD_MODE`
 - service base URLs represented as placeholders
 
-Every generated project must define the MockJS switch in `.env`:
+Use mode-specific MockJS defaults:
 
 ```env
+# .env.development
 VUE_APP_MOCK = true
+
+# .env.test and .env.master
+VUE_APP_MOCK = false
 ```
 
-Treat `true` as the default for every mode. Mode-specific environment files inherit this value unless they explicitly set `VUE_APP_MOCK = false`. Do not make MockJS activation depend implicitly on `NODE_ENV`.
+Do not put `VUE_APP_MOCK = true` in the shared `.env`; otherwise test and production-like builds silently inherit mock interception. Import mocks only when the explicit mode value equals `"true"`. Do not make activation depend implicitly on `NODE_ENV`.
 
-When the project uses `@tslfe/dt-engine` in local Unity EXE mode, `.env` must include these fixed values:
+When the project uses `@tslfe/dt-engine` in local Unity EXE mode, `.env.development` must include these local defaults:
 
 ```env
+# .env.development
 VUE_APP_TACOS_LOAD_MODE = unity-exe
 VUE_APP_DTENGINE_WS = ws://127.0.0.1:8181
 ```
@@ -266,7 +287,7 @@ When the project uses LLM/MCP, `.env` must include this fixed value:
 VUE_APP_MCP_SERVER_NAME = bigscreen
 ```
 
-Treat the dt-engine values as required local development defaults. Treat `VUE_APP_MCP_SERVER_NAME = bigscreen` as the required MCP server default for big-screen projects. Put these values in `.env` so every mode can read the default runtime connection/server name unless a mode-specific env file intentionally overrides it. Do not replace them with placeholders unless the user explicitly chooses another runtime mode.
+Treat the dt-engine values as local development defaults; test/master must provide their deployment-specific runtime values instead of inheriting localhost. Treat `VUE_APP_MCP_SERVER_NAME = bigscreen` as the shared MCP server default unless a mode intentionally overrides it.
 
 Never commit real tokens, app secrets, JWTs, private hostnames, or customer-specific identifiers. Use placeholder values and document where deployment supplies real values.
 

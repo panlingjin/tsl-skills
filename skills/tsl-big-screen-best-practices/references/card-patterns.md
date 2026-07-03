@@ -214,6 +214,7 @@ Section titles and restrained decoration:
 
 ```text
 .section-title
+.section-title__text
 .section-title--marker | --line
 .decor-divider | .decor-divider--capped
 .decor-corner | .decor-corner--right

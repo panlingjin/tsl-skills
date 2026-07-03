@@ -1,4 +1,4 @@
 interface:
   display_name: "TSL Big Screen Project"
-  short_description: "Build Vue CLI TSL big-screen projects"
-  default_prompt: "Use $tsl-big-screen-best-practices to scaffold a Vue CLI TSL big-screen project."
+  short_description: "Build, maintain, and review TSL big screens"
+  default_prompt: "Use $tsl-big-screen-best-practices to build, maintain, or review a Vue 3 TSL big-screen project."

@@ -1,5 +1,14 @@
 # DT Engine
 
+## Contents
+
+- [Dependency](#dependency)
+- [Constants](#constants)
+- [Engine Initialization](#engine-initialization)
+- [Scene Hook](#scene-hook)
+- [View Integration](#view-integration)
+- [Cleanup](#cleanup)
+
 ## Dependency
 
 When the project uses digital-twin scenes, install exactly:
@@ -26,57 +35,22 @@ export const THREE_SELECTOR = "three-container";
 
 ## Engine Initialization
 
-Create `src/utils/dt-engine.js`:
+Copy the verified `4.3.1-1` integration template:
 
-```js
-import Engine, { unityPlugin, webglPlugin } from "@tslfe/dt-engine";
-import { TACOS_LOAD_MODE, THREE_SELECTOR } from "@/constant";
-
-let cachedMeta = null;
-let pending = null;
-
-function usePlugin(meta) {
-  const mode = process.env.VUE_APP_TACOS_LOAD_MODE;
-  const plugins = mode === TACOS_LOAD_MODE.WEBGL ? webglPlugin : unityPlugin;
-
-  for (const name in plugins) {
-    if (!meta.plugin.has(name)) {
-      meta.plugin.use(plugins[name].call());
-    }
-  }
-}
-
-export async function loadEngine(idSelector = THREE_SELECTOR) {
-  if (cachedMeta) return { meta: cachedMeta };
-  if (pending) return pending;
-
-  pending = Engine.createCloudEngine((config) => {
-    config.url = process.env.VUE_APP_DTENGINE_WS;
-    config.mode = "client";
-    return config;
-  }).then((meta) => {
-    meta.amount(idSelector);
-    const el = document.getElementById(idSelector);
-    if (el) el.style.background = "transparent";
-    usePlugin(meta);
-    cachedMeta = meta;
-    pending = null;
-    return { meta };
-  });
-
-  return pending;
-}
-
-export async function init(idSelector = THREE_SELECTOR) {
-  const { meta } = await loadEngine(idSelector);
-  meta.addEventListener("click", (event) => {
-    if (!event.params?.component) return;
-  });
-  return meta;
-}
+```text
+skill assets/template/integrations/dt-engine.js
+  -> project src/utils/dt-engine.js
 ```
 
-Use a cached promise so concurrent components do not create multiple engine instances.
+Its public lifecycle is:
+
+```js
+loadEngine(idSelector); // shared concurrent promise; rejection can retry
+init(idSelector);       // installs the shared click listener once
+disposeEngine();        // removes listeners and awaits meta.dispose()
+```
+
+The template was checked against the installed `@tslfe/dt-engine@4.3.1-1` declarations: `addEventListener()` returns an unsubscribe function and `Meta.dispose()` returns a Promise. Keep `pending` reset in `finally`; otherwise one failed connection permanently poisons all later attempts.
 
 ## Scene Hook
 
@@ -109,32 +83,15 @@ Add POI, line effects, wall effects, lights, and room controls only when the req
 
 ## View Integration
 
-Use a stable route-level container. For the default home screen, create `src/views/home/index.vue` with a real `three-container` element and initialize dt-engine after the element exists.
+Use a stable route-level container. Follow the canonical structure and CSS in `references/big-screen-ui.md`; do not duplicate that layout in this integration reference. The scene-owning view initializes after the container exists and disposes on unmount:
 
 ```vue
-<template>
-  <div class="home-screen">
-    <Header class="home-header" />
-
-    <main class="scene-shell">
-      <div id="three-container" class="three-container"></div>
-
-      <div class="dashboard-layer">
-        <LeftPanel class="dashboard-panel dashboard-panel-left" />
-        <RightPanel class="dashboard-panel dashboard-panel-right" />
-      </div>
-
-      <PageSwitch v-if="switchShow" class="page-switch-layer" />
-    </main>
-  </div>
-</template>
-
 <script setup>
-import { onMounted, ref } from "vue";
-import { init } from "@/utils/dt-engine";
+import { onBeforeUnmount, onMounted, shallowRef } from "vue";
+import { disposeEngine, init } from "@/utils/dt-engine";
 import { useEngine } from "@/hooks";
 
-const metaRef = ref(null);
+const metaRef = shallowRef(null);
 
 onMounted(async () => {
   const meta = await init();
@@ -143,67 +100,11 @@ onMounted(async () => {
   const engine = useEngine(meta);
   // Use engine actions here or pass meta/engine to feature composables.
 });
+
+onBeforeUnmount(() => {
+  void disposeEngine();
+});
 </script>
-
-<style lang="less" scoped>
-.home-screen {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.scene-shell {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.three-container {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.home-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 20;
-  width: 100%;
-}
-
-.dashboard-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.dashboard-panel {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  pointer-events: auto;
-}
-
-.dashboard-panel-left {
-  left: 0;
-}
-
-.dashboard-panel-right {
-  right: 0;
-}
-
-.page-switch-layer {
-  position: absolute;
-  z-index: 30;
-}
-</style>
 ```
 
 This initialization is mandatory whenever the project includes dt-engine. Creating `src/utils/dt-engine.js` is not enough.
@@ -216,6 +117,7 @@ Rules:
 - Page Switch, LLM/MCP, `frontControl`, and `useEngine(meta)` must reuse the same initialized `meta` or call `loadEngine()` to access the cached instance.
 - If a custom container id is used, pass it explicitly: `await init("three-container")`.
 - Do not run scene actions until `init()` resolves.
+- Only the route/scene owner calls `disposeEngine()`. Child panels, Page Switch, and LLM/MCP code reuse the cached instance and never dispose shared ownership independently.
 
 ## Cleanup
 

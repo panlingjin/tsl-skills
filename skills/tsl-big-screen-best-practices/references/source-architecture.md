@@ -1,5 +1,19 @@
 # Source Architecture
 
+## Contents
+
+- [Directory Contract](#directory-contract)
+- [Responsibilities](#responsibilities)
+- [Common Asset Pack](#common-asset-pack)
+- [Foundation And Integration Templates](#foundation-and-integration-templates)
+- [Data Visualization Templates](#data-visualization-templates)
+- [Modal Templates](#modal-templates)
+- [SVG Icon Component](#svg-icon-component)
+- [Entry Flow](#entry-flow)
+- [Root App](#root-app)
+- [DT Engine View Ownership](#dt-engine-view-ownership)
+- [Naming](#naming)
+
 ## Directory Contract
 
 Use this source shape for new projects:
@@ -22,9 +36,11 @@ src/
     svg-icon/
   constant/
   hooks/
+    use-scale.js
   mock/
   plugin/
   router/
+  services/
   store/
   utils/
   views/
@@ -45,6 +61,7 @@ Use `src/store` for new projects. Only use `src/stores` when maintaining an exis
 - `mock/`: MockJS registration only. Components and stores must not import mock records directly.
 - `plugin/`: app-wide Vue plugin registration, global components, icon registration, and error handler wiring.
 - `router/`: route definitions and optional guards.
+- `services/`: lifecycle-free orchestration that can be called from components, stores, MCP handlers, or tests.
 - `store/`: Pinia stores for cross-feature state, modal state, scene state, and LLM state.
 - `utils/`: Axios instance, query parsing, dt-engine initialization, WebSocket helpers, action sequencing, and generic utilities.
 - `views/`: route-level screens. Keep them as composition surfaces that assemble feature components.
@@ -75,6 +92,17 @@ Included common assets:
 Keep the existing project `svg-icon` registration mechanism. Do not add another icon system only to consume these assets.
 
 Do not copy font files or `@font-face` declarations from the reference projects by default. Generated projects and reusable title templates use the browser/page font unless an explicit user, design-system, or maintenance requirement supplies a brand font.
+
+## Foundation And Integration Templates
+
+Copy these only when the project uses the corresponding feature:
+
+```text
+skill assets/template/layout/use-scale.js
+  -> project src/hooks/use-scale.js
+skill assets/template/integrations/dt-engine.js
+  -> project src/utils/dt-engine.js
+```
 
 ## Data Visualization Templates
 
@@ -238,7 +266,7 @@ Vue maps `icon-class` to the `iconClass` prop. Keep asset file names aligned wit
 3. Create the Vue app.
 4. Install Pinia, Router, and app plugins.
 5. Mount to `#infraApp`.
-6. Import `src/mock` only when `VUE_APP_MOCK === "true"`. The default `.env` value is `true` for every mode.
+6. Import `src/mock` only when `VUE_APP_MOCK === "true"`; development defaults to true, while test/master default to false.
 
 `src/main.js` must not initialize dt-engine. Initialize dt-engine only inside the route view or scene container that owns the rendered `three-container` element. This prevents `meta.amount(idSelector)` from running before the container exists.
 
@@ -273,7 +301,7 @@ Keep `App.vue` thin:
 <script setup>
 import { useScale } from "@/hooks";
 
-useScale("#infraApp");
+useScale("#infraApp", { width: 1920, height: 1080 });
 </script>
 ```
 

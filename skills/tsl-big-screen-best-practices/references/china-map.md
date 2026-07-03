@@ -1,5 +1,13 @@
 # Static China Map
 
+## Contents
+
+- [Source Assets](#source-assets)
+- [Three-Layer Contract](#three-layer-contract)
+- [Static Behavior](#static-behavior)
+- [Registration And Lifecycle](#registration-and-lifecycle)
+- [Acceptance](#acceptance)
+
 Use this pattern only when the screen needs the static Ya'an-style national map surface. It renders the national base map and its depth treatment; it does not own business regions, points, routes, tooltips, rotation, drill-down, refresh, or interaction.
 
 ## Source Assets

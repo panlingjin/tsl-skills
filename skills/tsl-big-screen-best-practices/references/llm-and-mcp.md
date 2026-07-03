@@ -1,5 +1,14 @@
 # LLM And MCP
 
+## Contents
+
+- [Scope](#scope)
+- [Dependencies](#dependencies)
+- [Files](#files)
+- [LLM Component](#llm-component)
+- [MCP Tools](#mcp-tools)
+- [Front Control](#front-control)
+
 ## Scope
 
 Use only the `@tslfe/ai-sdk` plus MCP tool integration pattern for new projects.
@@ -27,16 +36,13 @@ Use:
 src/components/llm-modal/
   index.vue
   mcp.js
+  use-llm-mcp.js
+src/services/
   front-control.js
+  page-switch.js
 ```
 
-Copy quick-question icons from this skill before implementing the component:
-
-```text
-assets/icons/svg/icon-refresh.svg     -> src/assets/icons/svg/icon-refresh.svg
-assets/icons/svg/icon-question-1.svg  -> src/assets/icons/svg/icon-question-1.svg
-assets/icons/svg/icon-question-2.svg  -> src/assets/icons/svg/icon-question-2.svg
-```
+Copy the quick-question icons through the paths in `references/source-architecture.md`.
 
 Optional helpers may live in `utils.js` only when actions need dynamic modals or data shaping.
 
@@ -63,52 +69,125 @@ src/components/llm-modal/
 
 Do not add iframe/chat-panel/postMessage bridge files for new projects.
 
-Example control flow:
+Use a composable that owns SDK instances and releases both of them. Do not add `lodash-es` only for throttling; use a small leading-only helper unless the project already depends on it.
 
 ```js
-import { onMounted } from "vue";
-import { throttle } from "lodash-es";
+// src/components/llm-modal/use-llm-mcp.js
+import { onBeforeUnmount, onMounted, shallowRef } from "vue";
 import { createllm, getMcpInfo } from "@tslfe/ai-sdk";
 import { loadEngine } from "@/utils/dt-engine";
 import { createMcp } from "./mcp";
 
-const conversationId = createConversationId();
-let robot = null;
-let mcpInfo = null;
+export function createConversationId(length = 32) {
+  const bytes = new Uint8Array(Math.ceil(length / 2));
+  crypto.getRandomValues(bytes);
+  return [...bytes]
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, length);
+}
 
-const handleQuestion = throttle((text) => {
-  if (!robot || !mcpInfo?.config?.client_id) return;
-  robot.inputMessage(text, {
-    context: {
-      conversation_id: conversationId,
-      params: {
-        mcp_hub_id: mcpInfo.config.client_id
+function leadingThrottle(callback, waiting) {
+  let timer = 0;
+  const wrapped = (...args) => {
+    if (timer) return;
+    callback(...args);
+    timer = window.setTimeout(() => { timer = 0; }, waiting);
+  };
+  wrapped.cancel = () => {
+    window.clearTimeout(timer);
+    timer = 0;
+  };
+  return wrapped;
+}
+
+export function useLlmMcp() {
+  const robot = shallowRef(null);
+  const mcp = shallowRef(null);
+  const info = shallowRef(null);
+  const error = shallowRef(null);
+  const ready = shallowRef(false);
+  const conversationId = createConversationId();
+  let initVersion = 0;
+  let initializing = null;
+
+  const sendQuestion = leadingThrottle((text) => {
+    const clientId = info.value?.config?.client_id;
+    if (!robot.value || !clientId) return;
+    robot.value.inputMessage(text, {
+      context: {
+        conversation_id: conversationId,
+        params: { mcp_hub_id: clientId },
+      },
+      notifications: [`${process.env.VUE_APP_LLM_APP_CODE}-${clientId}`],
+    });
+  }, 10_000);
+
+  const initialize = () => {
+    if (initializing) return initializing;
+    const version = ++initVersion;
+    error.value = null;
+    initializing = (async () => {
+      let nextRobot = null;
+      let nextMcp = null;
+      try {
+        const nextInfo = await getMcpInfo();
+        if (!nextInfo?.config?.client_id) throw new Error("MCP client id is unavailable");
+        if (version !== initVersion) return;
+        nextRobot = createllm({
+          autoInitRecorder: false,
+          notify: 0,
+          tts: { enable: false },
+          token: nextInfo.token,
+          application: process.env.VUE_APP_LLM_APP_CODE,
+        });
+        const { meta } = await loadEngine();
+        if (version !== initVersion) return;
+        nextMcp = await createMcp(meta);
+        if (version !== initVersion) return;
+        info.value = nextInfo;
+        robot.value = nextRobot;
+        mcp.value = nextMcp;
+        nextRobot = null;
+        nextMcp = null;
+        ready.value = true;
+      } catch (cause) {
+        if (version === initVersion) {
+          error.value = cause instanceof Error ? cause : new Error("LLM initialization failed");
+          ready.value = false;
+        }
+      } finally {
+        nextRobot?.close();
+        if (nextMcp) await nextMcp.close();
       }
-    },
-    notifications: [`${process.env.VUE_APP_LLM_APP_CODE}-${mcpInfo.config.client_id}`]
-  });
-}, 10000, { leading: true, trailing: false });
+    })().finally(() => { initializing = null; });
+    return initializing;
+  };
 
-onMounted(async () => {
-  mcpInfo = await getMcpInfo();
-  robot = createllm({
-    autoInitRecorder: false,
-    notify: 0,
-    tts: { enable: false },
-    token: mcpInfo?.token,
-    application: process.env.VUE_APP_LLM_APP_CODE
-  });
+  const close = async () => {
+    initVersion += 1;
+    sendQuestion.cancel();
+    ready.value = false;
+    robot.value?.close();
+    robot.value = null;
+    if (mcp.value) await mcp.value.close();
+    mcp.value = null;
+  };
 
-  const { meta } = await loadEngine();
-  createMcp(meta);
-});
+  onMounted(() => { void initialize(); });
+  onBeforeUnmount(() => { void close(); });
+
+  return { ready, error, sendQuestion, initialize, close };
+}
 ```
+
+Render a concise retry state when `error` is set. Disable quick questions until `ready` is true. Keep SDK class instances in `shallowRef`; do not place them in `reactive` or Pinia.
 
 ### Quick Question UI
 
-Use the same fixed component form across projects:
+Use the same canvas-overlay component form across projects:
 
-- container fixed at `right: 440px; bottom: 24px; z-index: 1999`
+- container absolute inside the scaled root at `right: 440px; bottom: 24px; z-index: 1999`
 - vertical group layout with `16px` gaps
 - each group width `56px`
 - each quick question button height `55px`
@@ -121,7 +200,7 @@ Default style:
 
 ```less
 .question-container {
-  position: fixed;
+  position: absolute;
   right: 440px;
   bottom: 24px;
   z-index: 1999;
@@ -177,7 +256,7 @@ import { mcpServer } from "@tslfe/ai-sdk";
 import { z } from "zod";
 import { frontControl } from "./front-control";
 
-export function createMcp(meta) {
+export async function createMcp(meta) {
   const mcp = new mcpServer(process.env.VUE_APP_MCP_SERVER_NAME || "bigscreen");
 
   mcp.on("fail", (data) => console.log(data));
@@ -209,7 +288,12 @@ export function createMcp(meta) {
     }
   ]);
 
-  mcp.connect();
+  await mcp.connect();
+  if (!mcp.isConnected) {
+    await mcp.close();
+    throw new Error("MCP connection failed");
+  }
+  return mcp;
 }
 ```
 
@@ -232,7 +316,7 @@ Rules:
 - Keep action type strings in constants when they are reused.
 - Always reset conflicting UI before starting a new scene sequence.
 - Clear previous POI/effects before creating new ones.
-- Use `usePageSwitch().switchProject(params)` for `switchScene`.
+- Use the lifecycle-free `switchProject(meta, params)` service for `switchScene`.
 - Use `useEngine(meta).resetScene()` for `refresh`.
 - Keep long staged playback in a stepper or action-sequence helper, not inline nested timers.
 
@@ -241,7 +325,7 @@ Minimal shape:
 ```js
 import router from "@/router";
 import { useEngine } from "@/hooks";
-import { usePageSwitch } from "@/components/page-switch/usePageSwitch";
+import { switchProject } from "@/services/page-switch";
 
 export async function frontControl(payload, meta, callback) {
   if (!meta) throw new Error("frontControl requires initialized meta");
@@ -256,8 +340,7 @@ export async function frontControl(payload, meta, callback) {
   }
 
   if (type === "switchScene") {
-    const { switchProject } = usePageSwitch();
-    await switchProject(params);
+    await switchProject(meta, params);
     return;
   }
 

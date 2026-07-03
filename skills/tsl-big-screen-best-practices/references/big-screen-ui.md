@@ -1,39 +1,27 @@
 # Big-Screen UI
 
+## Contents
+
+- [Canvas And Scaling](#canvas-and-scaling)
+- [Layout](#layout)
+- [Header, Panels, And Scene Layer](#header-panels-and-scene-layer)
+- [Side-Panel Height Budget](#side-panel-height-budget)
+- [Visual Components](#visual-components)
+- [Assets](#assets)
+- [Interaction And Motion](#interaction-and-motion)
+
 ## Canvas And Scaling
 
 Big-screen pages use a fixed design canvas and scale to the current terminal/browser window.
 
-Create `useScale`:
+Copy the reusable scale helper:
 
-```js
-import { onMounted, onUnmounted, ref } from "vue";
-
-export function useScale(selector, designHeight = 1080) {
-  const computedScale = ref(1);
-
-  const handleScale = () => {
-    const element = document.querySelector(selector);
-    if (!element) return;
-    computedScale.value = window.innerHeight / designHeight;
-    element.style.zoom = computedScale.value;
-    element.style.height = `${designHeight}px`;
-  };
-
-  onMounted(() => {
-    handleScale();
-    window.addEventListener("resize", handleScale);
-  });
-
-  onUnmounted(() => {
-    window.removeEventListener("resize", handleScale);
-  });
-
-  return { computedScale, handleScale };
-}
+```text
+skill assets/template/layout/use-scale.js
+  -> project src/hooks/use-scale.js
 ```
 
-Use `designHeight = 1080` by default. Use `2160` only when the screen design is explicitly 4K/tall.
+It fixes the authoring canvas at `1920 × 1080`, scales by `min(viewportWidth / 1920, viewportHeight / 1080)`, and centers the canvas with a transform. This prevents both horizontal clipping and vertical overflow. Keep Header, panels, Page Switch, LLM controls, and Modal Teleport targets inside this same root. The compatibility overload `useScale(target, 1080)` remains valid; new code should use `useScale(target, { width: 1920, height: 1080 })`.
 
 ## Layout
 
@@ -60,8 +48,13 @@ body,
 }
 
 #infraApp {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
   overflow: hidden;
+  transform-origin: center center;
 }
 
 *,
@@ -283,25 +276,7 @@ Use the unified blue-cyan data theme by default. Reserve gold for selected or de
 
 ## Assets
 
-Use:
-
-- `src/assets/icons/svg` for local SVG symbols
-- `src/assets/icons/svg/weather` for reusable weather SVG symbols
-- `src/assets/img` grouped by feature
-- `src/assets/img/switch` for Page Switch base and item backgrounds
-- `src/assets/font` for screen fonts
-- `src/assets/style/font.less`, `reset.less`, `var.less`, and optional `common.less`
-- `src/assets/style/data-tokens.less` and `data-display.less` when using the bundled data-visualization baseline
-- `src/assets/style/modal.less` when using the bundled modal baseline
-
-This skill bundles a common asset pack. Copy only the relevant files into the generated project:
-
-- Page Switch assets: `swiper-item-icon.svg`, `switch-base.png`, `switch-icon.png`, `switch-item-bg.png`
-- LLM quick-question icons: `icon-refresh.svg`, `icon-question-1.svg`, `icon-question-2.svg`
-- Common control icon: `ganta.svg`
-- Weather icons: `qing.svg`, `duoyun.svg`, `yin.svg`, `yu.svg`, `xue.svg`, `feng.svg`, `wu.svg`, `mai.svg`, `shachenbao.svg`, `longjuanfeng.svg`
-
-Do not embed generated iconfont blobs in new projects unless a provided icon package requires it.
+Use the directory and copy contracts in `references/source-architecture.md` as the single source of truth. Copy only assets required by the selected features. Do not embed generated iconfont blobs or source-project font files unless a supplied package or explicit brand requirement needs them.
 
 ## Interaction And Motion
 
