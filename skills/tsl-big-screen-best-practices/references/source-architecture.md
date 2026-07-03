@@ -12,7 +12,10 @@ src/
     icons/svg/
       weather/
     img/
+      decorations/
       switch/
+    map/
+      china/
     style/
   components/
     modal/
@@ -56,6 +59,8 @@ Copy targets:
 skill assets/icons/svg/*.svg          -> project src/assets/icons/svg/
 skill assets/icons/svg/weather/*.svg  -> project src/assets/icons/svg/weather/
 skill assets/img/switch/*.png         -> project src/assets/img/switch/
+skill assets/img/decorations/*        -> project src/assets/img/decorations/
+skill assets/map/china/*              -> project src/assets/map/china/
 ```
 
 Included common assets:
@@ -63,9 +68,13 @@ Included common assets:
 - Page Switch: `swiper-item-icon.svg`, `switch-base.png`, `switch-icon.png`, `switch-item-bg.png`
 - LLM quick questions: `icon-refresh.svg`, `icon-question-1.svg`, `icon-question-2.svg`
 - Common controls: `ganta.svg`
+- Card titles and decoration: `card-title-cap.svg`, `card-title-rail.png`, `section-title-marker.png`, `floating-title-bracket.svg`, `icon-orbit.svg`
+- Static Ya'an China map: `china.json`, `china-map-outline.js`
 - Weather: `qing.svg`, `duoyun.svg`, `yin.svg`, `yu.svg`, `xue.svg`, `feng.svg`, `wu.svg`, `mai.svg`, `shachenbao.svg`, `longjuanfeng.svg`
 
 Keep the existing project `svg-icon` registration mechanism. Do not add another icon system only to consume these assets.
+
+Do not copy font files or `@font-face` declarations from the reference projects by default. Generated projects and reusable title templates use the browser/page font unless an explicit user, design-system, or maintenance requirement supplies a brand font.
 
 ## Data Visualization Templates
 
@@ -82,17 +91,24 @@ skill assets/template/data-visualization/chart-options.js
   -> project src/utils/chart-options.js
 skill assets/template/data-visualization/use-echarts.js
   -> project src/hooks/use-echarts.js
+skill assets/template/data-visualization/china-map.js
+  -> project src/utils/china-map.js
 ```
 
 Import `data-display.less` once from the global style entry. Keep both Less files in the same directory because `data-display.less` imports `data-tokens.less`.
+
+When decorated titles are used, also copy every file under `assets/img/decorations/` to `src/assets/img/decorations/`. Keep this target path because `data-display.less` resolves them through `../img/decorations/`. Do not register the SVG background masks in the SVG symbol plugin; they are CSS decoration rather than semantic icons. Preserve `card-title-rail.png` and `section-title-marker.png` as raster assets with their original alpha and fixed colors.
+
+When the static Ya'an-style national map is used, copy only `assets/map/china/china.json` and `assets/map/china/china-map-outline.js` plus `china-map.js`. Keep the target paths shown above because the registration helper lazy-imports them through `@/assets/map/china/`. Do not copy the reference project's unused `china-map.js` or `china-out.js` geography files.
 
 Keep chart responsibilities separated:
 
 - `chart-theme.js` owns the stable palette and shared axis, grid, tooltip, and legend styling.
 - `chart-options.js` turns normalized feature data into ECharts options.
-- `use-echarts.js` waits for measurable geometry, then owns ECharts initialization, reactive updates, `ResizeObserver`, resize handling, and disposal.
+- `china-map.js` registers the two static Ya'an map assets once and builds the fixed one-geo-plus-two-map option without business data or interaction.
+- `use-echarts.js` waits for measurable geometry, then owns ECharts initialization, dirty option updates, resize-only geometry handling, and disposal.
 - chart components own the DOM ref, option source, loading/empty UI, and feature interaction wiring.
-- feature code owns business labels, units, threshold meaning, geographic data, and advanced map/radar/heatmap/bar-line options.
+- feature code owns business labels, units, threshold meaning, data-driven geographic displays, and advanced map/radar/heatmap/bar-line options. Do not extend the static China-map template into a business map.
 
 Do not fetch APIs, start timers, or create ECharts instances inside an option builder.
 

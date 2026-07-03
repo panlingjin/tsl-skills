@@ -127,12 +127,15 @@ Keep each card responsible for one question. Use normal Grid/Flex flow inside it
 - Start a bar-chart value axis at zero unless negative values or a clearly disclosed analytical range require otherwise.
 - Keep legends close to the chart and in the same order as the series. Do not rely on color alone; always include a text label.
 - Keep donut geometry under one source of truth: pass `center` and `radius` to `createCompositionOption`; never move `title.left` or `series[0].center` independently through `overrides`.
+- Keep donut center typography subordinate to the ring: the default value is `22px / 28px / 600`, the unit is `12px / 28px`, and the label is `12px / 18px / 400`. Pass an unadorned number or value through `centerValue` and pass `类`, `%`, `台`, or another suffix through `unit`; never concatenate the unit into `centerValue`.
+- Center text is display-only. The builder forces `title.triggerEvent: false` after merging `overrides`. If feature code uses ECharts `graphic`, set every center-text element to `silent: true`; if it uses an absolutely positioned HTML center layer, set that layer to `pointer-events: none`. A center overlay must never create a rectangular dead zone over the donut ring.
 - Use `legendMode: "echarts"` only when ECharts owns the full chart-and-legend canvas. Use `legendMode: "external"` with `.composition-layout` when the legend needs a separate value or percentage column; never render both legends.
-- In external-legend mode, give the left chart its own `.composition-layout__chart` canvas and keep its donut at the builder default `50%/50%`. Do not render a full-width ECharts canvas underneath a separate HTML legend.
+- In external-legend mode, split `.composition-layout` into equal `1fr / 1fr` columns. Give the left chart its own `.composition-layout__chart` canvas and keep its donut at the builder default `50%/50%`. Do not render a full-width ECharts canvas underneath a separate HTML legend.
+- Keep the `16px` column gap outside the equal tracks: the left chart and right legend receive the same available track width after the gap is removed. Do not reintroduce `42% / 58%` or another feature-specific ratio.
 - Use `.composition-layout--stacked` when the available card width is below `360px`; do not shrink the donut and legend into overlapping columns.
 - A composition legend may show raw values with their real unit, or calculate `value / validTotal × 100` before adding `%`. Never append `%` directly to raw counts whose sum is not approximately 100.
 - Use semantic colors for status, not for ordinary series ordering. Series colors must remain stable across refreshes.
-- Build advanced map, radar, heatmap, and bar-line options locally because their scales, geometry, and semantics vary by feature.
+- Read `references/china-map.md` and use the bundled `china-map.js` only for the static Ya'an-style national base map. Build data-driven maps, radar, heatmap, and bar-line options locally because their scales, geometry, and semantics vary by feature.
 
 ## Tables, Timelines, And Lists
 
@@ -176,6 +179,10 @@ skill assets/template/data-visualization/chart-options.js
   -> project src/utils/chart-options.js
 skill assets/template/data-visualization/use-echarts.js
   -> project src/hooks/use-echarts.js
+skill assets/template/data-visualization/china-map.js
+  -> project src/utils/china-map.js
+skill assets/map/china/*
+  -> project src/assets/map/china/
 ```
 
 Keep `data-tokens.less` and `data-display.less` beside each other because the display stylesheet imports the token file. Import `data-display.less` once from the global style entry.
@@ -221,6 +228,8 @@ useECharts(container, option, {
 
 `container` and `option` accept a plain value, ref, computed ref, or getter. Config values may also be plain or reactive. Keep callable ECharts callbacks inside the option object; only the top-level `option` argument treats a function as a getter. The template targets Vue 3.2, so it uses a local `unref`-based resolver rather than Vue 3.3-only `toValue`.
 
+The lifecycle helper marks options dirty only when their source changes. ResizeObserver and window resize events resize the existing instance without calling `setOption` again; calling the returned `render()` explicitly forces one option application.
+
 The option builders expose:
 
 ```js
@@ -238,6 +247,15 @@ createCompositionOption({
 });
 createGaugeOption({ value, min, max, unit, name, thresholds, overrides });
 ```
+
+The static national-map template separately exposes:
+
+```js
+await ensureChinaMapRegistered();
+createChinaMapOption({ overrides });
+```
+
+It accepts no business data and is governed by `references/china-map.md` rather than the general chart-builder merge contract below.
 
 Use `{ name, data, color? }` for trend/comparison series and `{ name, value, color? }` for composition data. Use six-digit hex values for optional series colors so the area-gradient preset can derive transparent stops. Pass gauge thresholds as `{ ratio, color }`, where `ratio` is between `0` and `1`.
 
@@ -259,6 +277,18 @@ External legend structure:
   </div>
 </div>
 ```
+
+The external layout contract is:
+
+```less
+.composition-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+```
+
+Equal columns describe the chart and legend regions, not the ECharts series center relative to the whole card. The donut remains centered at `50% / 50%` inside the left half. When the card is narrower than `360px`, use `.composition-layout--stacked` instead of squeezing either half.
 
 ## Lifecycle And Accessibility
 

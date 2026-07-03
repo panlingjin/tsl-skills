@@ -23,6 +23,8 @@ Use cards at three levels. Do not style every rectangle as the same component.
 
 Keep modals separate. A modal owns focus, dismissal, and application-level layering; it is not a card variant. Use `references/modal-patterns.md` for Dialog, Confirm, Drawer, Media Viewer, and non-modal Scene Callout behavior.
 
+A Ya'an Rail title requires an open Panel surface. Combine `.data-card--panel` with `.data-card--rail-panel`; the latter removes the closed card fill, border, radius, blur, and padding so the long Rail can define the Panel edge. Never place a Rail header directly inside the standard rounded Panel shown below it.
+
 Use at most two visible card surfaces in one branch: a panel plus content/item cards. Avoid panel → content card → decorated item card → decorated inner block nesting.
 
 ## Standard Anatomy
@@ -43,6 +45,9 @@ data-card
 - Let the body use `flex: 1` and `min-height: 0` so charts and bounded lists can size correctly.
 - Omit the footer when it has no real content. Do not render an empty divider.
 - Keep decorative title backgrounds independent of text sizing and padding; a supplied image may decorate the header but must not define its layout.
+- Read `title-decoration.md` before choosing a Panel cap, content rail, section marker/line, floating bracket, divider, corner, or icon orbit. Keep repeated KPI/status item titles plain by default.
+- Keep reusable card-title typography on the browser/page default font. Add a brand or third-party font only when the user, supplied design, or existing project explicitly requires it.
+- Reset heading margins through `.data-card__title`; do not rely on browser `h2/h3` defaults for title placement.
 
 ## Choose The Card Type
 
@@ -102,11 +107,14 @@ Defaults:
 
 Prefer minimum sizes over fixed heights. Use a fixed height only when aligned charts, bounded tables, media ratios, or passive auto-scrolling require it.
 
+Minimum card sizes do not override the side-panel height budget. Before stacking cards in a left or right dashboard column, verify that all sections, gaps, and safe areas fit the 1080p canvas contract in `big-screen-ui.md`. If they do not fit, reduce information density through prioritization, aggregation, tabs/paging, or drill-down overlays; never make the whole card stack vertically scrollable.
+
 ## Surface And Visual States
 
 Use the unified blue-cyan theme from `data-tokens.less`.
 
 - **Panel**: dark blue-green gradient, stronger border, and one `32px` backdrop blur.
+- **Open Rail Panel**: transparent surface with no border, radius, shadow, blur, or outer padding. Its Rail header and inner content/item cards provide the visible structure.
 - **Standard content/item card**: translucent `rgba(13, 29, 48, 0.6)` surface, structural border, no backdrop blur.
 - **Floating card**: more opaque surface, stronger border, backdrop blur, and a restrained external shadow for separation from the scene.
 - **Active**: gold border/accent and a small focus shadow. Do not recolor ordinary chart series gold.
@@ -116,6 +124,26 @@ Use the unified blue-cyan theme from `data-tokens.less`.
 Static cards do not move or glow on hover. Add hover and keyboard focus only with `.data-card--interactive`, and only when clicking the whole card performs an action.
 
 Keep radius consistent within one screen. Do not mix sharp-corner panels, pill cards, and heavily rounded cards without a supplied design reason.
+
+Do not combine the open horizontal language of a Rail background with the complete border of a rounded Panel. Choose one of these compositions:
+
+```html
+<section class="data-card data-card--panel data-card--rail-panel">
+  <header class="data-card__header data-card__header--rail">
+    <h2 class="data-card__title">核心运营数据</h2>
+  </header>
+  <div class="data-card__body">...</div>
+</section>
+```
+
+```html
+<section class="data-card data-card--panel">
+  <header class="data-card__header">
+    <h2 class="data-card__title">核心运营数据</h2>
+  </header>
+  <div class="data-card__body">...</div>
+</section>
+```
 
 ## Content Patterns
 
@@ -172,11 +200,24 @@ Card anatomy and variants:
 
 ```text
 .data-card
-.data-card--panel | --floating
+.data-card--panel | --rail-panel | --floating
 .data-card--compact | --spacious
 .data-card--interactive | --active | --disabled
 .data-card--success | --warning | --danger
 .data-card__header | __title | __meta | __unit | __body | __footer
+.data-card__header--cap | --rail | --bracket
+.data-card__title-icon
+.data-card__meta--en | --preserve-case
+```
+
+Section titles and restrained decoration:
+
+```text
+.section-title
+.section-title--marker | --line
+.decor-divider | .decor-divider--capped
+.decor-corner | .decor-corner--right
+.decor-icon-orbit | .decor-icon-orbit--running
 ```
 
 Specialized item patterns:
@@ -189,6 +230,10 @@ Specialized item patterns:
 ```
 
 Do not reproduce these surface values in scoped component styles. Use the classes and tokens, then add feature-specific layout only where needed.
+
+Treat `.data-card--rail-panel` as a Panel modifier, not as another visible nesting level. Keep its direct children in normal flow and place visible surfaces on the inner metric/content cards only.
+
+Do not combine `.data-card--rail-panel` with `.data-card--interactive`, status, or active card modifiers. Put interaction and semantic state on the appropriate inner card so the open Panel remains structural rather than behaving like one large button.
 
 ## Accessibility And Data States
 

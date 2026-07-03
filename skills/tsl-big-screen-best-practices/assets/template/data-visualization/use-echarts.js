@@ -28,11 +28,13 @@ export function useECharts(containerRef, optionSource, config = {}) {
   let observedElement = null;
   let animationFrame = 0;
   let mounted = false;
+  let optionDirty = true;
 
   const dispose = () => {
     if (chart.value && !chart.value.isDisposed()) chart.value.dispose();
     chart.value = null;
     ready.value = false;
+    optionDirty = true;
   };
 
   const render = () => {
@@ -54,8 +56,9 @@ export function useECharts(containerRef, optionSource, config = {}) {
     }
 
     const option = resolveSource(optionSource);
-    if (option && typeof option === "object") {
+    if (optionDirty && option && typeof option === "object") {
       chart.value.setOption(option, resolveSource(config.setOptionOptions) || {});
+      optionDirty = false;
     }
     ready.value = true;
     return true;
@@ -100,7 +103,10 @@ export function useECharts(containerRef, optionSource, config = {}) {
 
   watch(
     () => resolveSource(optionSource),
-    () => scheduleRender(),
+    () => {
+      optionDirty = true;
+      scheduleRender();
+    },
     { deep: true, flush: "post" },
   );
 
@@ -126,7 +132,10 @@ export function useECharts(containerRef, optionSource, config = {}) {
   return {
     chart,
     ready,
-    render,
+    render: () => {
+      optionDirty = true;
+      return render();
+    },
     resize: scheduleRender,
     dispose,
   };

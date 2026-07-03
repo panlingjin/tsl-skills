@@ -144,10 +144,40 @@ Canonical Less baseline:
 }
 
 .dashboard-panel {
+  --panel-safe-top: 80px;
+  --panel-safe-bottom: 24px;
+  --panel-section-gap: 16px;
+
   position: absolute;
   top: 0;
   bottom: 0;
+  height: auto;
+  min-height: 0;
+  padding-top: var(--panel-safe-top);
+  padding-bottom: var(--panel-safe-bottom);
+  overflow: hidden;
   pointer-events: auto;
+}
+
+.dashboard-panel__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-section-gap);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dashboard-panel__section {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.dashboard-panel__section--fill {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .dashboard-panel-left {
@@ -164,17 +194,73 @@ Canonical Less baseline:
 }
 ```
 
+Canonical panel-internal structure:
+
+```vue
+<template>
+  <aside>
+    <div class="dashboard-panel__content">
+      <section class="dashboard-panel__section">
+        <!-- fixed KPI or summary card group -->
+      </section>
+
+      <section class="dashboard-panel__section dashboard-panel__section--fill">
+        <!-- the one bounded chart, table, or list that may use remaining height -->
+      </section>
+    </div>
+  </aside>
+</template>
+```
+
 Panel details:
 
 - Reserve top padding inside left/right panels for the visual header area, instead of pushing the whole scene down.
+- Reserve bottom padding for Page Switch, legal text, or other fixed controls. Increase `--panel-safe-bottom` when those controls overlap a side column.
 - Use fixed design-width panels on fixed-canvas screens, then let root scaling adapt them.
 - Use left/right gradient shadows when the panel needs to blend into the 3D scene.
 - Keep the center area visually open for the model. Center overlays must be absolute and must not resize the 3D container.
 - Keep page composition layers predictable: scene `0`, panels `10`, header `20`, and Page Switch `30`. The application-level LLM/modal/Confirm/Toast stack uses `1999/2000/2100/2200`; do not invent feature-level values such as `9999`.
 
+## Side-Panel Height Budget
+
+Left and right dashboard columns must fit inside the scaled 1080p canvas. A passive big-screen dashboard must not create a page scrollbar or a scrollbar for the whole side panel.
+
+Wrap the cards in `.dashboard-panel__content` and make each top-level card or card group a `.dashboard-panel__section`. At most one section in a column may use `.dashboard-panel__section--fill`; use it for the chart, bounded table, or list that is allowed to consume the remaining height.
+
+Budget the column before implementation:
+
+```text
+available height = 1080 - safe top - safe bottom
+required height  = sum(section heights) + section gap × (section count - 1)
+required height <= available height
+```
+
+For the default `80px` top inset, `24px` bottom inset, and `16px` gaps, the content budget is `976px`. Replace these values with the actual header and fixed-control safe areas used by the screen; do not compensate with browser scrolling.
+
+When the content exceeds the budget, resolve it in this order:
+
+1. Remove, merge, or move lower-priority cards so the column answers fewer, clearer questions.
+2. Use compact card density and `12px` section gaps while preserving minimum type and control sizes.
+3. Aggregate repetitive statuses and reduce the number of visible table/list rows.
+4. Put secondary peer sections behind tabs, pagination, or a controlled carousel/rotation with a visible current state.
+5. Move long records and drill-down detail into a Drawer or Dialog.
+
+Do not solve overflow by adding `overflow-y: auto` or `overflow-y: scroll` to `.dashboard-panel`, `.dashboard-panel__content`, the page root, or the screen root. Do not use `height: max-content`, shrink text below the documented baseline, or silently clip critical cards. A table or live-event list may scroll or auto-scroll only inside an explicitly bounded card body; that local region must pause automatic movement on hover/focus and must not move the entire side column.
+
+The geometry contract is:
+
+```text
+dashboard panel: top = 0, bottom = 0, overflow = hidden
+panel content:   height = 100%, min-height = 0, overflow = hidden
+fixed section:   flex = 0 0 auto
+one fill section: flex = 1 1 0, min-height = 0
+```
+
+After rendering data, both side panels and their content wrappers must satisfy `scrollHeight <= clientHeight + 1`. Treat a larger value as a layout failure even when `overflow: hidden` makes the scrollbar invisible.
+
 ## Visual Components
 
-Read `references/data-visualization.md` before choosing a data-display form. Read `references/card-patterns.md` before defining card hierarchy, panel/content/item surfaces, card layouts, or floating cards. Read `references/modal-patterns.md` before implementing modal types, focus behavior, close rules, or application-level overlay layers. Keep this file focused on page composition and scene-overlay layout.
+Read `references/data-visualization.md` before choosing a data-display form. Read `references/card-patterns.md` before defining card hierarchy, panel/content/item surfaces, card layouts, or floating cards. Read `references/title-decoration.md` before adding card-title backgrounds or decoration. Read `references/modal-patterns.md` before implementing modal types, focus behavior, close rules, or application-level overlay layers. Keep this file focused on page composition and scene-overlay layout.
 
 Standard shared components:
 

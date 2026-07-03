@@ -41,14 +41,46 @@
   max-width: 100%;
   max-height: 100%;
   overflow: hidden;
-  background:
-    linear-gradient(@modal-surface, @modal-surface) padding-box,
-    @modal-border-gradient border-box;
-  border: @modal-border-width solid transparent;
+  background: @modal-surface;
+  background-clip: padding-box;
+  border: @modal-border-width solid rgba(101, 242, 252, 0.48);
   border-radius: @modal-radius;
   box-shadow: @modal-shadow;
   backdrop-filter: blur(@modal-backdrop-blur);
   outline: none;
+}
+
+@supports ((-webkit-mask-composite: xor) or (mask-composite: exclude)) {
+  .modal-shell {
+    border: 0;
+  }
+
+  .modal-shell::before {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    padding: @modal-border-width;
+    background: @modal-border-gradient;
+    border-radius: inherit;
+    content: "";
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .modal-shell--drawer.modal-shell--left::before {
+    clip-path: inset(0 0 0 @modal-border-width);
+  }
+
+  .modal-shell--drawer.modal-shell--right::before {
+    clip-path: inset(0 @modal-border-width 0 0);
+  }
 }
 
 .modal-shell:focus-visible {

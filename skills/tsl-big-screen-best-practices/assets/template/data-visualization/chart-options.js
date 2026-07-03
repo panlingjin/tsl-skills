@@ -199,6 +199,7 @@ export function createCompositionOption({
       itemHeight: 8,
     }),
     title: {
+      triggerEvent: false,
       left: actualCenter[0],
       top: actualCenter[1],
       padding: 0,
@@ -207,9 +208,24 @@ export function createCompositionOption({
       text: `{value|${displayValue}}{unit|${displayUnit}}\n{label|${centerLabel}}`,
       textStyle: {
         rich: {
-          value: { color: CHART_TOKENS.textPrimary, fontSize: 28, fontWeight: 600 },
-          unit: { color: CHART_TOKENS.textMuted, fontSize: 12, padding: [8, 0, 0, 4] },
-          label: { color: CHART_TOKENS.textSecondary, fontSize: 12, lineHeight: 22 },
+          value: {
+            color: CHART_TOKENS.textPrimary,
+            fontSize: 22,
+            fontWeight: 600,
+            lineHeight: 28,
+          },
+          unit: {
+            color: CHART_TOKENS.textMuted,
+            fontSize: 12,
+            lineHeight: 28,
+            padding: [4, 0, 0, 3],
+          },
+          label: {
+            color: CHART_TOKENS.textSecondary,
+            fontSize: 12,
+            fontWeight: 400,
+            lineHeight: 18,
+          },
         },
       },
     },
@@ -234,6 +250,7 @@ export function createCompositionOption({
   // even when feature overrides replace nested title or series properties.
   const alignTitle = (title) => ({
     ...(isPlainObject(title) ? title : {}),
+    triggerEvent: false,
     left: actualCenter[0],
     top: actualCenter[1],
     padding: 0,
