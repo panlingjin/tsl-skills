@@ -272,7 +272,7 @@ Charts must own their ECharts instance and dispose it on unmount. Use the bundle
 
 Counters should accept value, decimals, duration, prefix/suffix, and unit. Watch value changes and update the CountUp instance instead of remounting.
 
-Use the unified blue-cyan data theme by default. Reserve gold for selected or deliberately highlighted states instead of mixing it into the ordinary chart-series palette.
+Use the maintained project's theme first. In the bundled blue-cyan fallback, reserve gold for selected or deliberately highlighted states instead of mixing it into the ordinary chart-series palette.
 
 ## Assets
 

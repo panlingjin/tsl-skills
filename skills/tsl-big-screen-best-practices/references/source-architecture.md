@@ -75,14 +75,17 @@ Copy targets:
 ```text
 skill assets/icons/svg/*.svg          -> project src/assets/icons/svg/
 skill assets/icons/svg/weather/*.svg  -> project src/assets/icons/svg/weather/
-skill assets/img/switch/*.png         -> project src/assets/img/switch/
+skill assets/img/switch/switch-base.png
+  -> project src/assets/img/switch/switch-base.png
+skill assets/img/switch/switch-item-bg.png
+  -> project src/assets/img/switch/switch-item-bg.png
 skill assets/img/decorations/*        -> project src/assets/img/decorations/
 skill assets/map/china/*              -> project src/assets/map/china/
 ```
 
 Included common assets:
 
-- Page Switch: `swiper-item-icon.svg`, `switch-base.png`, `switch-icon.png`, `switch-item-bg.png`
+- Page Switch: `swiper-item-icon.svg`, `switch-base.png`, `switch-item-bg.png`; do not copy or render the legacy `switch-icon.png`
 - LLM quick questions: `icon-refresh.svg`, `icon-question-1.svg`, `icon-question-2.svg`
 - Common controls: `ganta.svg`
 - Card titles and decoration: `card-title-cap.svg`, `card-title-rail.png`, `section-title-marker.png`, `floating-title-bracket.svg`, `icon-orbit.svg`

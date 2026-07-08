@@ -96,7 +96,7 @@ Use dark translucent surfaces and restrained structure:
 - striped row: `rgba(255, 255, 255, 0.04)`
 - hover/current row: `rgba(72, 232, 255, 0.24)`
 
-Do not use gold as another chart-series color. Reserve it for selection, active Page Switch items, or a deliberately highlighted business value.
+Do not use the active/selected theme color as another chart-series color. The bundled fallback uses gold, but Page Switch must map its active state to the maintained project's theme.
 
 ## Grid And Flex Layout
 

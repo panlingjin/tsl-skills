@@ -3,7 +3,9 @@ import * as echarts from "echarts";
 const CHINA_MAP_NAME = "china";
 const CHINA_OUTLINE_MAP_NAME = "china-map-outline";
 
-const DEFAULT_LAYOUT = Object.freeze({
+const DEFAULT_SAFE_INSET = 64;
+
+const LEGACY_LAYOUT = Object.freeze({
   outlineCenter: ["50%", "40%"],
   mapCenter: ["50%", "42%"],
   size: "105%",
@@ -31,15 +33,52 @@ function resolveString(value, fallback) {
   return typeof value === "string" && value ? value : fallback;
 }
 
-function createBaseMap({ map, layoutCenter, layoutSize, z }) {
+function resolveDimension(value, fallback) {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) return value;
+  if (typeof value === "string" && value.trim()) return value;
+  return fallback;
+}
+
+function hasLegacyLayout(layout) {
+  return layout.mode === "legacy"
+    || Object.prototype.hasOwnProperty.call(layout, "outlineCenter")
+    || Object.prototype.hasOwnProperty.call(layout, "mapCenter")
+    || Object.prototype.hasOwnProperty.call(layout, "size");
+}
+
+function resolveLayouts(layout) {
+  if (hasLegacyLayout(layout)) {
+    const layoutSize = resolveString(layout.size, LEGACY_LAYOUT.size);
+    return {
+      outline: {
+        layoutCenter: resolveCenter(layout.outlineCenter, LEGACY_LAYOUT.outlineCenter),
+        layoutSize,
+      },
+      map: {
+        layoutCenter: resolveCenter(layout.mapCenter, LEGACY_LAYOUT.mapCenter),
+        layoutSize,
+      },
+    };
+  }
+
+  const inset = resolveDimension(layout.inset, DEFAULT_SAFE_INSET);
+  const fit = {
+    top: resolveDimension(layout.top, inset),
+    right: resolveDimension(layout.right, inset),
+    bottom: resolveDimension(layout.bottom, inset),
+    left: resolveDimension(layout.left, inset),
+  };
+  return { outline: fit, map: fit };
+}
+
+function createBaseMap({ map, layout, z }) {
   return {
     map,
     aspectScale: 1,
     roam: false,
     silent: true,
     zoom: 1,
-    layoutCenter,
-    layoutSize,
+    ...layout,
     selectedMode: false,
     z,
     zlevel: 0,
@@ -82,9 +121,7 @@ export function ensureChinaMapRegistered() {
 export function createChinaMapOption({ overrides = {} } = {}) {
   const layout = overrides?.layout || {};
   const colors = overrides?.colors || {};
-  const outlineCenter = resolveCenter(layout.outlineCenter, DEFAULT_LAYOUT.outlineCenter);
-  const mapCenter = resolveCenter(layout.mapCenter, DEFAULT_LAYOUT.mapCenter);
-  const layoutSize = resolveString(layout.size, DEFAULT_LAYOUT.size);
+  const resolvedLayouts = resolveLayouts(layout);
   const areaColor = resolveString(colors.area, DEFAULT_COLORS.area);
   const borderColor = resolveString(colors.border, DEFAULT_COLORS.border);
   const bottomOutlineColor = resolveString(colors.bottomOutline, DEFAULT_COLORS.bottomOutline);
@@ -96,8 +133,7 @@ export function createChinaMapOption({ overrides = {} } = {}) {
     geo: {
       ...createBaseMap({
         map: CHINA_OUTLINE_MAP_NAME,
-        layoutCenter: outlineCenter,
-        layoutSize,
+        layout: resolvedLayouts.outline,
         z: 0,
       }),
       id: "china-outline-shadow-bottom",
@@ -115,8 +151,7 @@ export function createChinaMapOption({ overrides = {} } = {}) {
       {
         ...createBaseMap({
           map: CHINA_MAP_NAME,
-          layoutCenter: mapCenter,
-          layoutSize,
+          layout: resolvedLayouts.map,
           z: 1,
         }),
         id: "china-base-map",
@@ -132,8 +167,7 @@ export function createChinaMapOption({ overrides = {} } = {}) {
       {
         ...createBaseMap({
           map: CHINA_OUTLINE_MAP_NAME,
-          layoutCenter: outlineCenter,
-          layoutSize,
+          layout: resolvedLayouts.outline,
           z: 2,
         }),
         id: "china-outline-shadow-top",

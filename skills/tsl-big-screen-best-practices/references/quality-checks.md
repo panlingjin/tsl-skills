@@ -55,6 +55,8 @@ Validate every owned resource through open, update, replacement, route leave, an
 Validate against `big-screen-ui.md`, `card-patterns.md`, `title-decoration.md`, and `modal-patterns.md`:
 
 - Header, panels, Page Switch, LLM controls, and Teleported modals remain in the same scaled coordinate system.
+- Page Switch never copies or renders `switch-icon.png`; the collapsed line is its only toggle ornament.
+- Page Switch maps text, muted, border, surface, and active states to the project theme variables; changing theme does not leave a fallback gold glow behind.
 - Full-page scene remains the bottom layer; overlays do not resize it.
 - Side panels pass the documented height budget and `scrollHeight <= clientHeight + 1`; only a bounded card body may scroll.
 - Card hierarchy, density, nesting, blur, interaction, and status treatment follow the card reference.
@@ -75,6 +77,7 @@ Validate against `data-visualization.md` and `china-map.md`:
 - Tables use `.data-table__scroll` for bounded sticky headers and never make the whole side panel scroll.
 - Loading, empty, error, stale, and partial states preserve layout and provide meaningful recovery/context.
 - Static China map registers only the two documented maps, keeps three static layers on one Canvas, and creates no animation, interaction, timer, or business series.
+- Static China map defaults to a shared `64px` fit box on all three layers; no layer uses `105%` overscan unless the caller explicitly selects legacy mode.
 
 ## Security And Delivery
 

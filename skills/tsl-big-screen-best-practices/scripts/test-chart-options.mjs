@@ -60,4 +60,38 @@ const merged = mergeChartOption(base, override);
 assert.deepEqual(merged, { nested: { keep: true, value: 2 }, list: [3] });
 assert.deepEqual(base, { nested: { keep: true, value: 1 }, list: [1, 2] });
 
+const echartsMockUrl = `data:text/javascript;base64,${Buffer.from(`
+  export function getMap() { return null; }
+  export function registerMap() {}
+`).toString("base64")}`;
+const chinaMapSource = (await readFile(
+  join(root, "assets/template/data-visualization/china-map.js"),
+  "utf8",
+)).replace('from "echarts"', `from "${echartsMockUrl}"`);
+const chinaMapUrl = `data:text/javascript;base64,${Buffer.from(chinaMapSource).toString("base64")}`;
+const { createChinaMapOption } = await import(chinaMapUrl);
+
+const fitMap = createChinaMapOption();
+[fitMap.geo, ...fitMap.series].forEach((layer) => {
+  assert.equal(layer.top, 64);
+  assert.equal(layer.right, 64);
+  assert.equal(layer.bottom, 64);
+  assert.equal(layer.left, 64);
+  assert.equal(layer.layoutCenter, undefined);
+  assert.equal(layer.layoutSize, undefined);
+});
+
+const asymmetricMap = createChinaMapOption({
+  overrides: { layout: { mode: "fit", inset: 64, top: 80 } },
+});
+[asymmetricMap.geo, ...asymmetricMap.series].forEach((layer) => {
+  assert.equal(layer.top, 80);
+  assert.equal(layer.right, 64);
+});
+
+const legacyMap = createChinaMapOption({ overrides: { layout: { mode: "legacy" } } });
+assert.deepEqual(legacyMap.geo.layoutCenter, ["50%", "40%"]);
+assert.deepEqual(legacyMap.series[0].layoutCenter, ["50%", "42%"]);
+assert.equal(legacyMap.geo.layoutSize, "105%");
+
 console.log("chart option regression checks passed");

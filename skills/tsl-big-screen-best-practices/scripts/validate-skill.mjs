@@ -64,6 +64,11 @@ const modal = read("assets/template/modal/BaseModal.vue");
 assert(modal.includes("A titleless modal requires ariaLabel"), "titleless modal warning is missing");
 assert(modal.includes("completeClose();"), "BaseModal must delegate focus completion");
 
+const chinaMap = read("assets/template/data-visualization/china-map.js");
+assert(chinaMap.includes("const DEFAULT_SAFE_INSET = 64"), "China map must reserve its shadow safe area");
+assert(chinaMap.includes('layout.mode === "legacy"'), "China map must retain explicit legacy mode");
+assert(chinaMap.includes("top: resolveDimension(layout.top, inset)"), "China map must use fit-box layout");
+
 const vuePatterns = read("references/vue-patterns.md");
 const projectSetup = read("references/project-setup.md");
 assert(
@@ -75,7 +80,23 @@ assert(projectSetup.includes('publicPath: "/"'), "history mode requires an absol
 assert(vuePatterns.includes("try_files $uri $uri/ /index.html;"), "history mode must document SPA fallback");
 
 const pageSwitch = read("references/page-switch.md");
+const sourceArchitecture = read("references/source-architecture.md");
 assert(pageSwitch.includes("position: absolute"), "Page Switch must stay inside the scaled root");
 assert(pageSwitch.includes("setTimeout"), "Page Switch auto-close must be one-shot");
+assert(
+  pageSwitch.includes("must not be copied, imported, or rendered"),
+  "legacy switch-icon.png must be explicitly prohibited",
+);
+[
+  "--page-switch-text-color",
+  "--page-switch-muted-color",
+  "--page-switch-active-color",
+  "--page-switch-item-background",
+  "--page-switch-active-background",
+].forEach((token) => assert(pageSwitch.includes(token), `missing Page Switch theme token: ${token}`));
+assert(
+  !sourceArchitecture.includes("assets/img/switch/*.png"),
+  "Page Switch assets must be copied explicitly so the legacy icon is excluded",
+);
 
 console.log(`validated ${routedReferences.length} routes, ${references.length} references, and ${templates.length} template files`);

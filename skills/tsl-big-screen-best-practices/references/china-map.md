@@ -39,12 +39,15 @@ The source project uses a `2160p` design baseline. Normalize line and shadow geo
 
 Keep every layer at `zlevel: 0`. Use `z` for paint order so the static map remains on one Canvas instead of allocating one Canvas per layer.
 
-Keep the Ya'an composition:
+Use safe-fit composition by default:
 
-- outline center: `50% / 40%`
-- main map center: `50% / 42%`
-- layout size: `105%`
+- all three layers share `top/right/bottom/left: 64px`
+- `64px` covers `42px` shadow blur, `17px` shadow offset, and half of the `4px` outline border, rounded up to the 8px spacing grid
+- ECharts fits the map inside the remaining layout box as the container aspect ratio changes
+- do not combine fit-mode insets with `layoutCenter` or `layoutSize`
 - aspect scale and zoom: `1`
+
+The former Ya'an composition remains available only through `layout.mode: "legacy"`: outline center `50% / 40%`, main center `50% / 42%`, and size `105%`. Use it only when the target reproduces the original Ya'an center-container geometry and visual clipping has been checked. Supplying the legacy `outlineCenter`, `mapCenter`, or `size` keys also selects legacy mode for backward compatibility.
 
 ## Static Behavior
 
@@ -66,9 +69,10 @@ The option must retain all of these constraints:
 createChinaMapOption({
   overrides: {
     layout: {
-      outlineCenter: ["50%", "40%"],
-      mapCenter: ["50%", "42%"],
-      size: "105%",
+      mode: "fit",
+      inset: 64,
+      // Optional asymmetric safe area:
+      // top: 72, right: 64, bottom: 64, left: 64,
     },
     colors: {
       area: "rgba(29, 49, 64, 0.5)",
@@ -106,10 +110,14 @@ useECharts(mapRef, option, {
 
 Render into `.china-map-canvas`. Its parent must provide a measurable height. The lifecycle helper waits for positive geometry, sets the static option once, resizes the existing instance on element changes, and disposes it on unmount.
 
+Fit mode relies on ECharts `top/right/bottom/left` layout and therefore adapts when the existing instance is resized; it does not require rebuilding the option for each container size. Keep the chart canvas at `width/height: 100%`. Do not compensate for clipping with a larger canvas, negative offsets, CSS transforms, or `overflow: visible`.
+
 ## Acceptance
 
 - Preserve the two source assets byte-for-byte.
 - Render exactly one `geo` layer and two `map` series.
 - Keep all three layers on `zlevel: 0` with stable `z` values `0/1/2`.
+- In default fit mode, keep identical insets on all three layers and omit `layoutCenter/layoutSize`.
+- Preserve at least `64px` on every side unless the shadow geometry is reduced by the same amount.
 - Keep the map idle after first paint: no animation frame loop, interval, timeout, data refresh, or DOM-node growth.
-- Confirm Taiwan, Hong Kong, Macao, Hainan, and every other geometry present in the source remain visible at `1920 x 1080`; do not claim that the source includes a separately named South China Sea inset.
+- Confirm Taiwan, Hong Kong, Macao, Hainan, and every other geometry present in the source remain visible at `1920 x 1080`, `16:10`, and `4:3` map-container ratios; do not claim that the source includes a separately named South China Sea inset.
