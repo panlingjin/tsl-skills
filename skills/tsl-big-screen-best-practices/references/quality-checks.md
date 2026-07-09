@@ -54,6 +54,7 @@ Validate every owned resource through open, update, replacement, route leave, an
 
 Validate against `big-screen-ui.md`, `card-patterns.md`, `title-decoration.md`, and `modal-patterns.md`:
 
+- Supplied Figma/design-MCP/design-file visuals are honored for explicit layout, color, typography, decoration, and component-state decisions; TSL defaults only fill unspecified areas.
 - Header, panels, Page Switch, LLM controls, and Teleported modals remain in the same scaled coordinate system.
 - Page Switch never copies or renders `switch-icon.png`; the collapsed line is its only toggle ornament.
 - Page Switch maps text, muted, border, surface, and active states to the project theme variables; changing theme does not leave a fallback gold glow behind.

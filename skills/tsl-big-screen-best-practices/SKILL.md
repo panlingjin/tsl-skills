@@ -1,6 +1,6 @@
 ---
 name: tsl-big-screen-best-practices
-description: Build or maintain TSL-style Vue 3 big-screen projects from scratch using the Vue CLI-compatible stack. Use when Codex needs to scaffold, specify, review, or extend a digital-twin/data-visualization screen; select and standardize card, panel, card-title decoration, modal, dialog, drawer, media-viewer, floating-card, KPI, chart, table, timeline, map, or Grid/Flex data displays; or add Vue Router, Pinia, Axios, MockJS, ECharts, CountUp, Page Switch, @tslfe/dt-engine, and @tslfe/ai-sdk MCP/LLM control flows.
+description: Build or maintain TSL-style Vue 3 big-screen projects from scratch using the Vue CLI-compatible stack. Use when Codex needs to scaffold, specify, review, or extend a digital-twin/data-visualization screen; honor supplied Figma/design-MCP visuals while preserving TSL engineering constraints; select and standardize card, panel, card-title decoration, modal, dialog, drawer, media-viewer, floating-card, KPI, chart, table, timeline, map, or Grid/Flex data displays; or add Vue Router, Pinia, Axios, MockJS, ECharts, CountUp, Page Switch, @tslfe/dt-engine, and @tslfe/ai-sdk MCP/LLM control flows.
 ---
 
 # TSL Big Screen Project
@@ -23,6 +23,19 @@ Create, maintain, or review TSL big-screen projects. The compatibility baseline 
 12. Read `references/page-switch.md` when the project needs multi-project or multi-scene switching.
 13. Read `references/llm-and-mcp.md` when adding the AI assistant, MCP tools, LLM questions, or `frontControl` actions.
 14. Read `references/quality-checks.md` before final delivery.
+
+## Design Source Priority
+
+When the user supplies a Figma file, design-system MCP, screenshot, marked visual reference, or generated design image and asks to implement from it, treat that source as the visual authority. Use this skill for engineering structure, runtime lifecycle, big-screen scaling, data semantics, accessibility, safety, and fallback decisions where the design source is silent.
+
+Priority order:
+
+1. Explicit user instructions.
+2. Supplied Figma/design-MCP/design-file output for visual details.
+3. Maintained project conventions when working inside an existing project.
+4. This skill's TSL visual defaults for unspecified areas.
+
+Resolve conflicts by domain: visual details follow the supplied design source; engineering, usability, security, and lifecycle constraints follow this skill. Do not force the bundled blue-cyan TSL defaults over a concrete design source, and do not let a design source break the `1920 x 1080` scaled root, bounded side-panel budget, overlay layering, cleanup ownership, or private-configuration rules.
 
 ## Build Defaults
 

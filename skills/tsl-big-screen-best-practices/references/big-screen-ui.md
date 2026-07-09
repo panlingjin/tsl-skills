@@ -3,6 +3,7 @@
 ## Contents
 
 - [Canvas And Scaling](#canvas-and-scaling)
+- [Design Sources And Visual Priority](#design-sources-and-visual-priority)
 - [Layout](#layout)
 - [Header, Panels, And Scene Layer](#header-panels-and-scene-layer)
 - [Side-Panel Height Budget](#side-panel-height-budget)
@@ -22,6 +23,22 @@ skill assets/template/layout/use-scale.js
 ```
 
 It fixes the authoring canvas at `1920 × 1080`, scales by `min(viewportWidth / 1920, viewportHeight / 1080)`, and centers the canvas with a transform. This prevents both horizontal clipping and vertical overflow. Keep Header, panels, Page Switch, LLM controls, and Modal Teleport targets inside this same root. The compatibility overload `useScale(target, 1080)` remains valid; new code should use `useScale(target, { width: 1920, height: 1080 })`.
+
+## Design Sources And Visual Priority
+
+When the user provides a Figma node, design-system MCP output, exported design file, screenshot, or approved generated visual, use it as the primary source for visual implementation. Extract and preserve its layout, spacing, typography intent, colors, radii, borders, shadows, decorative assets, component states, and chart styling unless the user limits the scope.
+
+Use the TSL defaults in this reference only for areas the design source does not specify. Do not restyle an explicit design source back into the bundled blue-cyan TSL look just because this skill contains fallback card, title, chart, or modal treatments.
+
+Keep these constraints even when a visual source suggests otherwise:
+
+- the page still renders inside the scaled `1920 × 1080` root unless the user explicitly changes the target canvas
+- Header, panels, Page Switch, LLM controls, and modals remain in the same scaled coordinate system
+- the full-page 3D scene or map stays as the bottom layer unless the design explicitly removes it
+- side panels must pass the documented height budget and may not create page-level or whole-panel scrolling
+- text, controls, and chart labels must remain readable, non-overlapping, and visible inside the canvas
+- application overlays, dt-engine resources, ECharts instances, timers, WebSockets, and MCP tools keep their documented lifecycle ownership
+- private URLs, secrets, model ids, and customer data are never copied from source projects or design annotations
 
 ## Layout
 

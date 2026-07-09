@@ -1,0 +1,4 @@
+interface:
+  display_name: "TSL Admin"
+  short_description: "复刻 TSL/Tacos 运维后台的布局、样式、组件和页面范式规范"
+  default_prompt: "Use $tsl-admin-best-practices to create a Vue admin page that matches the TSL/Tacos operations console."
