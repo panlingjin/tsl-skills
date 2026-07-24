@@ -139,5 +139,5 @@ const treeData = [
 | 搜索属性 | `showFilter` | `showSearch` | `filterable` |
 | 数据源 | `treeData` | `treeData` | `data` |
 | 多选 | `multiple` | `multiple` | `multiple`（需 `show-checkbox`） |
-| 组件组合 | Tree + Select 组合 | 独立组件 | 独立组件 |
-| API 文档 | 引用 Tree + Select 文档 | 独立完整文档 | 独立完整文档 |
+| 组件组合 | Tree + Select 组合 | 独立组件 | 独立组件 || API 文档 | 引用 Tree + Select 文档 | 独立完整文档 | 独立完整文档 |
+
