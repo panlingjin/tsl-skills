@@ -1,101 +1,75 @@
-# Component Patterns
+# 组件范式
 
-Use this reference before implementing reusable admin components.
+## 直接导入
+
+组件目录不放置 `index.js` 或 `index.ts`。调用方直接指向真实文件：
+
+```ts
+import DetailBox from '@/components/common/DetailBox/DetailBox.vue'
+import type { TableColumn } from '@/components/business/AdminTable/types'
+```
+
+这样可以避免没有实际封装价值的二次导出，也能让依赖关系和类型来源保持明确。
 
 ## BaseBox
 
-- Wrap ordinary list/config pages in `BaseBox`.
-- Structure: outer full-height overlay scroller plus inner `.base-box.pd-20` with `min-height: 100%`.
-- Apply `.block__animation`; add `.cont-padding-right` when the page needs right scrollbar space.
+- 常规列表页和配置页使用 `BaseBox`。
+- 外层占满高度并负责滚动，内层使用 `20px` 内边距、白色背景和 `4px` 圆角。
+- 需要为右侧滚动条预留空间时使用 `hasRightPadding`。
 
-## Side Menu
+## AdminTable
 
-- Use origami-vue `Menu` for the left navigation shell; derive `MenuItem`, `SubMenu`, and `MenuItemGroup` from `Menu.menuItem`, `Menu.subMenu`, and `Menu.menuItemGroup`.
-- Use `Divider` from origami-vue for grouped-menu separators.
-- Keep the source structure: flat modules are one `SubMenu` with direct `MenuItem` children; grouped modules are one `SubMenu` with `MenuItemGroup` sections and leaf `MenuItem` children.
-- Use `active-text-color="#5E66F2"`, `mode="vertical"`, `:collapse="collapsed"`, `:default-active="activeName"`, and `:default-openeds="defaultOpeneds"`.
-- Override `ori-menu` internals with scoped `:deep()` selectors for exact Tacos density, active background, group label spacing, and collapsed width.
+TSL 表格封装必须基于 Origami Vue `Table`，并遵守其真实 API：
 
-## Table
+- 数据使用 `data-source`。
+- 表格尺寸只使用 `medium | small | mini`，后台默认 `mini`。
+- 分页变化通过 `pagination.onChange`，不监听 Table `change`。
+- 列只能通过 `<OriTable.column>` 渲染，不能把列配置直接传给 Origami Table 的 `columns` prop。
+- 序号列映射为 `type="seq"`，选择列映射为 `type="checkbox"`。
+- 仅传递 Origami 文档支持的 `checkbox-config`、`row-config`、`expand-config` 和 `tree-config`。
 
-- Build list pages around the bundled `components/table` wrapper, which must use origami-vue `Table`, `Dropdown`, and `Checkbox`.
-- Keep the source wrapper surface:
-  - `tableSearch` on the left, flex-wrapped.
-  - `tableOperate` on the right, no wrap, 16px bottom margin.
-  - default slot between the header and table for rare inline alerts or secondary controls.
-- Operation icon buttons are 32px square, 1px `#e5e6eb` border, 2px radius, hover `#f2f3f5`.
-- Include column setting and refresh icons unless a page explicitly disables them with `noColsSetting` or `noRefresh`.
-- Column settings use an origami dropdown containing:
-  - an all-columns checkbox with indeterminate state;
-  - fixed-left columns and ordinary columns split into sections;
-  - pin/unpin icons (`icon_top`, `icon_no_top`) on hover or always visible in simplified templates.
-- Persist user column visibility/fixed choices when a project has a front-cache API; otherwise use localStorage keyed by `tableKey`. Do not copy source-project private cache APIs into new projects.
-- Pagination total text should read like `共 N 项数据` in Chinese projects.
-- Guard pagination `onChange`: page values less than 1 should be coerced to `1`.
-- When a page becomes empty after deletion and current page is greater than 1, request the previous page.
-- Empty values render `-`; time columns default to `min-width: 170px`.
-- Use tooltip overflow for long cell text.
-- Standard column config:
+封装内部可接收 typed `columns` 配置，再逐项生成 `<OriTable.column>`：
 
-```js
-[
+```ts
+const columns: TableColumn[] = [
   { type: 'checkbox' },
-  { type: 'index', title: '序号', minWidth: 80 },
+  { type: 'index', title: '序号', width: 72 },
   { title: '名称', dataIndex: 'name', minWidth: 160 },
   { title: '状态', dataIndex: 'status', slot: 'status', minWidth: 120 },
   { title: '创建时间', dataIndex: 'createdAt', type: 'time' },
-  { title: '操作', dataIndex: 'operate', slot: 'operate', width: 160, fixed: 'right' }
+  { title: '操作', dataIndex: 'operate', slot: 'operate', width: 160, fixed: 'right' },
 ]
 ```
 
-- Supported column types:
-  - `checkbox`: fixed-left selection column.
-  - `index`: one-based row number.
-  - `time`: formatted date/time and wider default width.
-  - `version`: render `V${value}` when present.
-  - `address`: read `row.location.address`.
-  - `slot`: delegate to a named slot with `{ row, column, rowIndex }`.
-  - `expandSlot`: use the table expand content slot.
-- Emit `checkChange(records, checked)` for checkbox changes and `refresh` for refresh icon clicks.
-- Expose `clearSelectEvent()` and `initTable()` from the table wrapper for parent pages that need imperative reset after batch operations.
-- Keep `:deep(.ori-input .ori-input__inner) { padding-bottom: 0; }` inside `.table-search` even if the global reset also exists.
+职责拆分：
+
+- `AdminTable.vue`：表格渲染、分页、选择事件和刷新。
+- `TableColumnSettings.vue`：列显示与固定交互。
+- `useTableColumns.ts`：列归一化、计算状态和本地缓存。
+- `types.ts`：公开契约。
+
+行为约定：
+
+- 搜索区使用 `tableSearch` 插槽，操作区使用 `tableOperate` 插槽。
+- 操作图标按钮为 `32px`，边框 `#e5e6eb`，圆角 `2px`。
+- `tableKey` 存在时持久化列显示与左侧固定状态。
+- 空值显示 `-`，时间列默认最小宽度 `170px`，长文本使用 tooltip。
+- 页码最小为 `1`；删除后当前页为空且页码大于 `1` 时请求上一页。
+- 公开 `clearSelection()` 与 `resetColumns()`，避免父组件访问内部实例。
+- 发出 `refresh` 和 `checkChange(records, checked)`。
 
 ## DetailBox
 
-- Detail pages use a top white header with title, optional back icon, and right operations.
-- Header padding: `16px 20px 0`; title size `16px`, weight `500`.
-- Body padding: `16px 20px`; white background; bottom corners radius `4px`.
-- Footer action bar, when present, is fixed to the bottom of the detail content with 64px height and top shadow.
-- `noBgHeader` creates transparent header/body for embedded or custom pages.
+- 顶部白色页头包含标题、可选返回图标和右侧操作区。
+- 页头内边距 `16px 20px 0`；正文内边距 `16px 20px`。
+- 底部操作栏高 `64px`，固定在详情容器底部并带顶部阴影。
+- 使用 `transparentHeader` 适配已有视觉框架的嵌入页面。
+- 使用 typed `RouteLocationRaw` 作为 `backPath`。
 
-## Status And Labels
+## 组件契约
 
-- Status chips should be compact, table-friendly, and color-coded.
-- Prefer text plus subtle color; do not use large decorative badges in dense tables.
-- Common states:
-  - online/success: green.
-  - offline/disabled: gray.
-  - warning/processing: orange.
-  - error/fail: red.
-  - primary/current: `#5E66F2`.
-
-## Link Actions
-
-- Use link-style actions for table row operations.
-- Primary link color is `#5E66F2`; hover is darker `#3a3dc9`; disabled is `#c9cdd4`.
-- Space adjacent row actions by 16px.
-
-## Search And Filters
-
-- Search areas flex-wrap and align with the table operation area.
-- Filter items use right margin `8px` and bottom margin `16px`.
-- Standard select width is `180px`; wider multi-select is `280px`.
-- Search/reset controls align with `margin-top: 6px` when inline with filters.
-
-## Drawers And Modals
-
-- Use `ori-drawer` for create/edit/detail flows that are secondary to a list page.
-- Use top-label forms inside drawers.
-- Keep footer buttons primary first, cancel second.
-- Use `v-model:visible` and emit `update:visible` from child components.
-- Use origami-vue form controls by default. If origami-vue lacks a required behavior, first consider a small project-local wrapper; introduce another component library only with explicit project need and keep it isolated.
+- 使用 TypeScript interface 定义 props。
+- 使用类型式 `defineEmits`，事件名表达业务结果。
+- 不修改 props；父组件持有数据，子组件通过事件请求变更。
+- 组件超过约 250 行或同时负责状态、渲染和弹层时继续拆分。
+- Origami Vue 子组件按文档提供的点号 API 使用，例如 `OriMenu.menuItem` 和 `OriBreadcrumb.Item`。

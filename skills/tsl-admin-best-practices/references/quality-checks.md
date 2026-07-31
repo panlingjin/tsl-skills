@@ -1,48 +1,52 @@
-# Quality Checks
+# 质量检查
 
-Run these checks before handing off a Tacos-style admin project or page.
+## 工程检查
 
-## Visual Acceptance
+以下规则来自 `frontend-engineering-standards`，本技能不得覆盖：
 
-- Header height is 48px and the content region starts directly below it.
-- Top header has no left collapse icon before the logo; logo area is 210px wide and the top menu starts immediately after it.
-- Breadcrumb header includes the 20px sider collapse/expand control before the breadcrumb text.
-- Sider is 224px expanded, 56px collapsed, and uses Tacos active/hover states.
-- Left navigation is rendered with origami-vue `Menu`/`MenuItem`/`SubMenu`/`MenuItemGroup`, not a hand-written list.
-- Small modules use the flat sider menu: blue module title, direct 36px icon rows, no group labels, no dividers, and `#E8EDFF` active background.
-- Resource-heavy modules use the grouped sider menu: blue module title, gray group labels, 36px leaf rows, 16px icons, group dividers, and `#E8EDFF` active background.
-- Breadcrumbs sit in a 48px white workspace header above the gray content canvas, not inside the content card.
-- Breadcrumb ancestors are clickable only when `routeConfig` exists; the current item is never clickable and uses stronger text.
-- Page background is `#F2F3F5`; ordinary content uses white panels with 4px radius and 20px padding.
-- Text density matches the console: 14px base, 22px line height, 12px secondary metadata.
-- Primary actions and active navigation use `#5E66F2`.
-- Table search wraps cleanly and operation icons remain 32px square.
-- List pages use the bundled Table wrapper with `tableSearch` and `tableOperate` slots, not raw `ori-table` unless the table is genuinely special.
-- Table column settings, refresh animation, pagination total `共 N 项数据`, `-` empty values, tooltip overflow, and `tableKey` column persistence are present where appropriate.
-- Drawers, detail pages, and footer action bars match the spacing and hierarchy in the references.
-- `ori-input__inner` has no unintended `padding-bottom: 16px`; filter/search inputs and form controls align on the same baseline.
-- Generic control icons use `origami-vue/es/icon` when available; business/menu/resource icons use the local SVG sprite.
+- 源码使用 TypeScript，Vue SFC 使用 `<script setup lang="ts">`。
+- 组件目录和文件使用 PascalCase。
+- 组件目录没有只做二次导出的 `index.js` 或 `index.ts`。
+- 使用 `stores/`、`layouts/`、`src/icons/` 和 `vite.config.ts`。
+- 只使用 Yarn；不存在 npm/pnpm 命令或额外锁文件。
+- 路由视图按需加载，Pinia setup store 返回全部需要使用的响应式状态。
+- 组件契约有类型，复杂组件已拆分。
 
-## Engineering Acceptance
-
-- Vite aliases, Less global token import, SVG icon plugin, Pinia, Router, and origami-vue are configured.
-- Any additional component library has an explicit reason, is scoped to the needed feature, and does not replace origami-vue as the default admin component surface.
-- Route views are not large monoliths; forms/search sections/drawers are split when they have their own responsibility.
-- Component communication uses props down and emits up; `v-model:visible` is used for drawers/modals.
-- Global styles live in `src/assets/styles`; component-specific styles stay scoped unless overriding library internals.
-- No source-project `.env`, private proxy host, key, token, or business dataset is present.
-
-## Suggested Commands
-
-Run the target project's normal commands when available:
+将组件集成到目标项目后执行：
 
 ```bash
-npm run lint
-npm run build
+yarn lint
+yarn typecheck
+yarn test
+yarn build
 ```
 
-For Skill validation, run:
+不得因“模板只是示例”而跳过类型检查和构建。
 
-```bash
-python3 /Users/panlingjin/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/tsl-admin-best-practices
-```
+## Origami Vue 检查
+
+- Table 使用 `data-source`。
+- 列由 `<OriTable.column>` 渲染，没有向 Origami Table 传 `columns`。
+- 分页通过 `pagination.onChange`。
+- Table size 为 `medium | small | mini`。
+- Button 的主按钮使用布尔 `primary`，不使用 `type="primary"`。
+- Menu、Breadcrumb、Dropdown 和 Checkbox 的子组件访问方式符合 Origami 文档。
+
+## 视觉检查
+
+- 页头 `48px`，侧栏 `224px / 56px`，面包屑栏 `48px`。
+- 折叠按钮位于面包屑文字之前，而不是 Logo 之前。
+- 页面背景 `#F2F3F5`，白色内容表面为 `20px` 内边距和 `4px` 圆角。
+- 基础文字 `14px / 22px`，主色为 `#5E66F2`。
+- 表格搜索区允许换行，操作图标为 `32px`。
+- 空值、长文本、列设置、刷新状态和分页边界均有正确表现。
+
+## 安全检查
+
+- 不包含源项目 `.env`、内部主机、私有代理、密钥或令牌。
+- 示例数据不包含真实用户、设备、告警、工单或监控记录。
+- localStorage key 不包含用户身份或敏感业务数据。
+
+## 技能包验证
+
+修改技能本身后，使用 `skill-creator` 提供的 `quick_validate.py` 校验 `skills/tsl-admin-best-practices`，并检查所有引用路径都存在。

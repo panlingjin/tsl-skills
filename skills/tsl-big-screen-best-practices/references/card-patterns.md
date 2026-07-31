@@ -1,17 +1,17 @@
-# Card Patterns
+# 卡片模式
 
-## Contents
+## 目录
 
-- [Card Hierarchy](#card-hierarchy)
-- [Standard Anatomy](#standard-anatomy)
-- [Choose The Card Type](#choose-the-card-type)
-- [Grid And Stack Layout](#grid-and-stack-layout)
-- [Density And Size](#density-and-size)
-- [Surface And Visual States](#surface-and-visual-states)
-- [Content Patterns](#content-patterns)
-- [Nesting And Performance](#nesting-and-performance)
-- [Reusable CSS Contract](#reusable-css-contract)
-- [Accessibility And Data States](#accessibility-and-data-states)
+- [卡片层级](#card-hierarchy)
+- [标准结构](#standard-anatomy)
+- [选择卡片类型](#choose-the-card-type)
+- [网格与堆叠布局](#grid-and-stack-layout)
+- [密度与尺寸](#density-and-size)
+- [表面与视觉状态](#surface-and-visual-states)
+- [内容模式](#content-patterns)
+- [嵌套与性能](#nesting-and-performance)
+- [可复用 CSS 契约](#reusable-css-contract)
+- [无障碍与数据状态](#accessibility-and-data-states)
 
 ## Card Hierarchy
 

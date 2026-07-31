@@ -1,30 +1,49 @@
 ---
 name: tsl-admin-best-practices
-description: Build, scaffold, review, or refactor Vue 3 management-console projects that must match the TSL/Tacos computing operations admin style with origami-vue as the default and preferred component library. Use when Codex needs to recreate the tacos-fe-computing-operations-management layout, navigation, density, colors, Less utilities, component usage, tables, drawers, details, list pages, icons, or admin page patterns for a new or existing project.
+description: 为 Vue 3 PC 管理后台提供 TSL/Tacos 风格的专项实现规范。用于新建、改造或审查采用 origami-vue 的后台项目，覆盖应用外壳、顶部导航、侧栏、面包屑、紧凑型表格、详情容器、Less 视觉令牌、本地 SVG 和 Wujie 子应用适配；通用工程规范服从 frontend-engineering-standards。
 ---
 
-# TSL Admin Best Practices
+# TSL 管理后台最佳实践
 
-Create Vue 3 admin projects that visually and structurally match the Tacos computing operations console. Prefer the bundled template for new projects and the references for existing-project changes.
+本技能是 `frontend-engineering-standards` 的专项补充，只定义 TSL/Tacos 管理后台独有的视觉、布局和组件模式。通用的 TypeScript、目录、命名、依赖管理、路由、Pinia、测试和构建规则不在此重复定义。
 
-## Workflow
+## 优先级
 
-1. Read `references/project-setup.md` first for the stack, Vite setup, app shell, and dependency baseline.
-2. Read `references/layout-and-navigation.md` before building the app frame, header, menus, content area, or micro-frontend shell.
-3. Read `references/style-system.md` before writing global Less, tokens, utility classes, component overrides, or page-level spacing.
-4. Read `references/component-patterns.md` before implementing BaseBox, Table, DetailBox, status chips, link actions, search areas, drawers, modals, or common operations.
-5. Read `references/page-patterns.md` before creating list, tree-table, detail, config, login, or error pages.
-6. Read `references/assets-and-icons.md` before copying template assets, adding SVG icons, using image assets, or deriving a new project from the source console.
-7. Finish with `references/quality-checks.md`.
+同时应用两个技能，并按以下顺序处理规则：
 
-## Template
+1. `frontend-engineering-standards` 是通用基线，优先级最高。
+2. 本技能只在基线未规定或明确允许项目特化时补充 TSL 约束。
+3. 发生冲突时，使用 TypeScript、Yarn、PascalCase、`stores/`、`layouts/`、`src/icons/`、`vite.config.ts` 和基线规定的 Vite 插件。
+4. 保留 TSL 的布局尺寸、信息密度、配色、Origami Vue 用法、页面范式和 Wujie 条件适配。
 
-For greenfield work, copy `assets/tsl-admin-template/` into the target project, then adapt names, routes, APIs, and product content. The template is intentionally脱敏: it keeps the admin shell, theme, layout, reusable components, and icon mechanics, but excludes source-project `.env` files, internal proxy hosts, tokens, hard-coded credentials, and business datasets.
+## 工作流
 
-## Defaults
+1. 阅读 `references/project-setup.md`，确认模板、技术栈和目录边界。
+2. 修改应用外壳、导航或面包屑时，阅读 `references/layout-and-navigation.md`。
+3. 修改视觉令牌、Less 或 Origami 样式覆盖时，阅读 `references/style-system.md`。
+4. 实现公共组件或表格封装时，阅读 `references/component-patterns.md`。
+5. 创建列表、详情、配置或树表页面时，阅读 `references/page-patterns.md`。
+6. 添加本地图标或图片时，阅读 `references/assets-and-icons.md`。
+7. 交付前执行 `references/quality-checks.md`。
 
-- Use Vue 3, Vite 4, JavaScript, Less, Pinia, Vue Router 4, origami-vue, and `vite-plugin-svg-icons`.
-- Keep source-project styling density: 14px base text, 22px line height, 4px default radius, neutral gray surfaces, Tacos purple-blue primary actions.
-- Prefer Composition API and `<script setup>` for new code. Preserve Options API only when maintaining copied legacy components or matching an existing local file.
-- Use `origami-vue` as the default and preferred component library. Add another UI component library only when the user explicitly requires it, the target project already depends on it, or origami-vue cannot reasonably satisfy a specific interaction; keep such usage local and documented.
-- Do not copy private URLs, environment files, authentication secrets, customer data, or source-project business logic.
+## 组件模板
+
+`assets/tsl-admin-template/` 不是完整项目脚手架，只保存可复制的通用组件及其直接依赖。先按 `frontend-engineering-standards` 建立目标项目，再按需复制其中的组件、Less 令牌、工具函数和通用 SVG。
+
+模板不提供应用入口、布局、路由、Store、页面、包清单或构建配置，也不包含源系统的 `.env`、内部主机、令牌、密钥、客户数据或私有业务逻辑。
+
+## 组件导入约定
+
+- 组件目录和 SFC 使用 PascalCase。
+- 组件目录不创建 `index.js` 或 `index.ts` 二次导出。
+- 统一直接导入具体文件，例如 `@/components/common/BaseBox/BaseBox.vue`。
+- 类型直接从其定义文件导入，例如 `@/components/business/AdminTable/types`。
+- 只有真正的独立 npm 包才设计包级公共入口；项目内部组件不使用 barrel。
+
+## 默认约定
+
+- 新代码使用 Composition API 与 `<script setup lang="ts">`。
+- Origami Vue 是默认 UI 组件库；其他 UI 库只能在明确缺失能力时局部引入并记录原因。
+- 组件保持单一职责，使用 typed props、typed emits、属性向下和事件向上。
+- 业务、菜单和资源 SVG 使用本地雪碧图；通用控件图标优先使用 `origami-vue/es/icon`。
+- Wujie 支持是条件能力，普通独立项目保持 `base: '/'`。

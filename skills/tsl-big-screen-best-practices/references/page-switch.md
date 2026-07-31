@@ -1,16 +1,16 @@
-# Page Switch
+# 页面切换
 
-## Contents
+## 目录
 
-- [Purpose](#purpose)
-- [Files](#files)
-- [Engine Contract](#engine-contract)
+- [用途](#purpose)
+- [文件](#files)
+- [引擎契约](#engine-contract)
 - [Composable](#composable)
-- [Auto Close Timer](#auto-close-timer)
-- [UI Behavior](#ui-behavior)
-- [Theme Contract](#theme-contract)
-- [Default Style](#default-style)
-- [Route Integration](#route-integration)
+- [自动关闭定时器](#auto-close-timer)
+- [界面行为](#ui-behavior)
+- [主题契约](#theme-contract)
+- [默认样式](#default-style)
+- [路由集成](#route-integration)
 
 ## Purpose
 

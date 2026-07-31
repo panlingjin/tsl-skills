@@ -1,18 +1,18 @@
-# Source Architecture
+# 源码架构
 
-## Contents
+## 目录
 
-- [Directory Contract](#directory-contract)
-- [Responsibilities](#responsibilities)
-- [Common Asset Pack](#common-asset-pack)
-- [Foundation And Integration Templates](#foundation-and-integration-templates)
-- [Data Visualization Templates](#data-visualization-templates)
-- [Modal Templates](#modal-templates)
-- [SVG Icon Component](#svg-icon-component)
-- [Entry Flow](#entry-flow)
-- [Root App](#root-app)
-- [DT Engine View Ownership](#dt-engine-view-ownership)
-- [Naming](#naming)
+- [目录契约](#directory-contract)
+- [职责](#responsibilities)
+- [通用资源包](#common-asset-pack)
+- [基础与集成模板](#foundation-and-integration-templates)
+- [数据可视化模板](#data-visualization-templates)
+- [Modal 模板](#modal-templates)
+- [SVG 图标组件](#svg-icon-component)
+- [入口流程](#entry-flow)
+- [根应用](#root-app)
+- [DT Engine 视图所有权](#dt-engine-view-ownership)
+- [命名](#naming)
 
 ## Directory Contract
 

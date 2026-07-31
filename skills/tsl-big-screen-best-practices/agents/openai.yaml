@@ -1,4 +1,4 @@
 interface:
-  display_name: "TSL Big Screen Project"
-  short_description: "Build, maintain, and review TSL big screens"
-  default_prompt: "Use $tsl-big-screen-best-practices to build, maintain, or review a Vue 3 TSL big-screen project."
+  display_name: "TSL 可视化大屏"
+  short_description: "搭建、维护和评审基于 Vue 3 的 TSL 数字孪生可视化大屏"
+  default_prompt: "使用 $tsl-big-screen-best-practices 搭建、维护或评审一个 Vue 3 TSL 可视化大屏项目。"

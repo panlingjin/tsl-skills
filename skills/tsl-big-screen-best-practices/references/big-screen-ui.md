@@ -1,15 +1,15 @@
-# Big-Screen UI
+# 大屏界面
 
-## Contents
+## 目录
 
-- [Canvas And Scaling](#canvas-and-scaling)
-- [Design Sources And Visual Priority](#design-sources-and-visual-priority)
-- [Layout](#layout)
-- [Header, Panels, And Scene Layer](#header-panels-and-scene-layer)
-- [Side-Panel Height Budget](#side-panel-height-budget)
-- [Visual Components](#visual-components)
-- [Assets](#assets)
-- [Interaction And Motion](#interaction-and-motion)
+- [画布与缩放](#canvas-and-scaling)
+- [设计来源与视觉优先级](#design-sources-and-visual-priority)
+- [布局](#layout)
+- [页头、面板与场景层](#header-panels-and-scene-layer)
+- [侧栏高度预算](#side-panel-height-budget)
+- [视觉组件](#visual-components)
+- [资源](#assets)
+- [交互与动效](#interaction-and-motion)
 
 ## Canvas And Scaling
 

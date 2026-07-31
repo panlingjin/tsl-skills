@@ -1,68 +1,50 @@
-# Style System
+# 样式系统
 
-Use this reference before writing tokens, Less utilities, or component overrides.
-
-## Core Colors
-
-Use these tokens first:
+## 核心令牌
 
 ```less
 @font-color-strong: #1d2129;
 @font-color-regular: #4e5969;
 @font-color-sub: #86909c;
 @tsl-blue: #5e66f2;
-@tsl-purple: #8080ff;
-@tsl-fuchsia: #a7419e;
-@tsl-green: #4fc08d;
 @tsl-background-color: #f7f8fa;
 @tsl-border-color: #f1f4f8;
+@layout-sider-default-width: 224px;
+@layout-header-default-height: 48px;
 ```
 
-Common literal colors:
+- 页面背景：`#F2F3F5`。
+- 白色表面：`#fff`。
+- 常规边框：`#e5e6eb`。
+- 悬停填充：`#f2f3f5`。
+- 禁用色：`#c9cdd4`。
+- 主色：`#5E66F2`。
+- 成功、警告、危险分别使用低饱和背景配合 `#00b42a`、`#ff7d00`、`#f24949`。
 
-- Page background: `#F2F3F5`.
-- White panels: `#fff`.
-- Border: `#e5e6eb`.
-- Light fill: `#f7f8fa`.
-- Hover fill: `#f2f3f5`.
-- Disabled/scrollbar gray: `#c9cdd4`.
-- Primary: `#5E66F2`.
-- Success/accent green: `#6AD6C7`, `#34AD9D`, `#00b42a`.
-- Warning: `#FDA64A`, `#FF7D00`.
-- Danger: `#F56C68`, `#F24949`, `#f53f3f`.
+## 排版与间距
 
-## Typography
+- 系统 UI 字体栈包含 `PingFang SC`、`Microsoft YaHei` 等中文回退字体。
+- 基础文字 `14px / 22px`。
+- 次要信息 `12px / 20px`。
+- 区块标题 `16px / 500`。
+- 主要间距使用 `8px`、`12px`、`16px`、`20px`、`24px`。
+- 默认圆角 `4px`，紧凑图标按钮可使用 `2px`。
 
-- Use system UI font stack with Chinese fallbacks:
-  `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif`.
-- Base text: `14px`, line height `22px`.
-- Secondary metadata: `12px`, line height `20px`.
-- Section titles: `16px`, `font-weight: 500` or bold only where the source uses stronger emphasis.
-- Do not use oversized marketing typography in admin surfaces.
+## Less 边界
 
-## Shape, Spacing, Motion
+- 全局令牌和 Less mixin 放在 `src/styles/var.less`，不在令牌文件中堆积组件类名。
+- Reset 放在 `src/styles/reset.less`。
+- 组件专属样式使用 `<style scoped lang="less">`。
+- 布局跨子组件的共享结构样式可放在布局目录的单独 Less 文件。
+- 不把页面私有选择器加入全局样式。
 
-- Default radius is `4px`; compact icon buttons may use `2px`.
-- Use 8px, 12px, 16px, 20px, and 24px spacing utilities.
-- Prefer dense but readable tables and forms.
-- Page-level entry animation:
-  - duration `0.5s`;
-  - translate from `100px` to `0`;
-  - fade from `0` to `1`.
+## Origami 样式覆盖
 
-## Global Utilities
+- 只在 TSL 信息密度确实需要时使用 `:deep()`。
+- 覆盖范围必须由当前组件根类限定。
+- 不依赖未记录的 DOM 层级来实现业务功能。
+- 控件对齐问题优先通过容器布局解决，再考虑覆盖组件内部样式。
 
-Keep the following utilities available:
+## 动效
 
-- Spacing: `.mr-rt-8`, `.mr-lt-8`, `.mr-bt-16`, `.mr-tp-16`, `.pd-20`, `.cont-padding-right`.
-- Flex: `.flex-ac`, `.flex-c-c`, `.flex-js`, `.flex-b-c-n`, `.flex-cc`, `.flex-ccc`.
-- Text: `.text-nowrap`, `.word-row`, `.font-bold`.
-- Interaction: `.cursor-p`, `.transform-icon`, `.scroll-y`.
-- Surface: `.base-box`.
-
-## Component Overrides
-
-- Override origami-vue internals with `:deep()` only where the source-console density requires it.
-- Reset `.ori-input .ori-input__inner { padding-bottom: 0; }` in the global reset or the relevant form/search/table scope. The upstream default `padding-bottom: 16px` can break input height, filter alignment, and form-row baselines.
-- Use global dropdown classes for avatar, menu, select header, and operation dropdowns.
-- Scrollbars are 6px, transparent track, thumb `#c9cdd4`, radius `4px`; in inner panels, hide the thumb until hover when appropriate.
+页面进入动效保持轻量：约 `0.3s` 至 `0.5s`，由轻微位移和透明度过渡组成。遵循系统的减少动态效果偏好，不使用营销式大幅动画。

@@ -1,62 +1,40 @@
-# Assets And Icons
+# 资源与图标
 
-Use this reference before copying assets or adding icons.
+## 本地 SVG
 
-## SVG Icons
-
-- Store SVGs in `src/assets/icons/svg`.
-- Register with `vite-plugin-svg-icons` and `symbolId: 'icon-[dir]-[name]'`.
-- Render through the bundled `SvgIcon` component:
-
-```vue
-<SvgIcon icon-class="icon_settings" size="16" />
-```
-
-- Use the source naming style: `icon_menu_*` for menu icons, `icon_*` for actions/status.
-- Prefer single-color SVGs that can follow `currentColor` or an explicit color prop.
-
-## Origami Icon Components
-
-- Use `origami-vue/es/icon` for built-in UI glyphs that already exist in origami-vue, especially search, add, upload, download, more, delete, close, edit, prompt/help, direction arrows, and status symbols.
-- Import named icons directly from `origami-vue/es/icon`; alias when the semantic role is clearer or when avoiding local name conflicts:
+- 文件存放在 `src/icons/`。
+- 文件名使用 kebab-case，不添加重复的 `icon_` 前缀，例如 `menu-workbench.svg`。
+- `vite-plugin-svg-icons` 使用 `symbolId: 'icon-[name]'`。
+- 使用 `SvgIcon` 渲染：
 
 ```vue
-<script setup>
-import { Search as OriIconSearch, Increase, MoreHorizontal, QuestionMarkCircle } from 'origami-vue/es/icon'
-</script>
+<SvgIcon name="settings" size="16" />
 ```
 
-- Render these icons as normal Vue components and size/color them with class styles or inline font-size, matching the source console:
+`SvgIcon` 内部生成 `#icon-settings`，支持 `currentColor` 和显式 `color`。
 
-```vue
-<OriIconSearch class="search-icon" />
-<QuestionMarkCircle class="header-icon" />
+## Origami 图标
+
+通用控件图标优先从 `origami-vue/es/icon` 具名导入：
+
+```ts
+import { QuestionMarkCircle, Search as OriIconSearch } from 'origami-vue/es/icon'
 ```
 
-- Prefer local `SvgIcon` for product/menu/business icons from `src/assets/icons/svg`, such as `icon_menu_workbench`, `icon_monitor`, and resource-category icons.
-- Do not mix both systems for the same semantic icon in one component. If an icon is a generic control and exists in `origami-vue/es/icon`, prefer the origami icon; if it is a product or resource symbol, use `SvgIcon`.
+- 搜索、关闭、帮助、增删改等通用 UI 语义优先使用 Origami 图标。
+- 产品、菜单、资源类型和业务状态使用本地 SVG。
+- 同一语义在同一组件内只使用一套图标系统。
 
-## Bitmap Assets
+## 图片资源
 
-- Keep only product-generic images in reusable templates: logo placeholders, empty states, 401/404 illustrations, upload placeholders, and safe icons.
-- Do not copy customer-specific screenshots, maps, internal diagrams, or source-project operational data.
-- For a new product, replace logo and login imagery while preserving dimensions, density, and placement.
+- 模板只保留与具体客户无关的占位资源。
+- 替换 Logo 或登录插图时保持原布局尺寸与信息密度。
+- 不复制客户截图、地图、内部图表或运维数据。
 
-## Security And Privacy
+## 安全与隐私
 
-Never copy these from the source console into the Skill or a new project:
+不得复制：
 
-- `.env` files or deployment notes containing hosts.
-- Internal IP addresses, private proxy targets, tokens, API keys, AMap keys, JWTs, or credentials.
-- Real user, organization, device, alarm, order, or monitoring data.
-- Business-only route lists that disclose internal product modules unless the user asks to build the same product.
-
-## Template Contract
-
-The bundled `assets/tsl-admin-template/` is a starting point. Copy it into a target project, then:
-
-1. Replace package name and product name.
-2. Add project-specific routes and API modules.
-3. Replace placeholder icons/logo assets.
-4. Add `.env` files in the target project only.
-5. Review `quality-checks.md` before delivery.
+- `.env`、内部 IP、私有代理目标、令牌、API 密钥、地图密钥、JWT 或凭据。
+- 真实用户、组织、设备、告警、工单或监控数据。
+- 会暴露内部产品模块的完整私有路由表。

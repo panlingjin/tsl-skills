@@ -1,21 +1,21 @@
-# Modal And Overlay Patterns
+# Modal 与弹层模式
 
 Use this reference for Dialog, Confirm, Drawer, Media Viewer, and non-modal Callout/Popover overlays attached to a 3D scene. Classify an overlay by interaction semantics before choosing its size, backdrop, focus, and dismissal behavior. Do not treat everything that floats above the page as a Modal.
 
-## Contents
+## 目录
 
-- [Type Selection](#type-selection)
-- [Visual Source And Normalization](#visual-source-and-normalization)
-- [Structure And Responsibilities](#structure-and-responsibilities)
-- [Layers And Concurrency](#layers-and-concurrency)
-- [Mounting And Scaling](#mounting-and-scaling)
-- [Dismissal Rules](#dismissal-rules)
-- [Focus And Keyboard](#focus-and-keyboard)
-- [Size And Layout](#size-and-layout)
-- [Async Work And Cleanup](#async-work-and-cleanup)
-- [Non-Modal Scene Overlays](#non-modal-scene-overlays)
-- [Template Usage](#template-usage)
-- [Checklist](#checklist)
+- [类型选择](#type-selection)
+- [视觉来源与标准化](#visual-source-and-normalization)
+- [结构与职责](#structure-and-responsibilities)
+- [层级与并发](#layers-and-concurrency)
+- [挂载与缩放](#mounting-and-scaling)
+- [关闭规则](#dismissal-rules)
+- [焦点与键盘](#focus-and-keyboard)
+- [尺寸与布局](#size-and-layout)
+- [异步任务与清理](#async-work-and-cleanup)
+- [非模态场景弹层](#non-modal-scene-overlays)
+- [模板使用](#template-usage)
+- [检查清单](#checklist)
 
 ## Type Selection
 

@@ -1,0 +1,55 @@
+.table-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.table-search {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+
+  :deep(.ori-button) {
+    margin-right: 8px;
+    white-space: nowrap;
+  }
+}
+
+.refresh-button {
+  margin-left: 8px;
+}
+
+.table-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid #e5e6eb;
+  border-radius: 2px;
+  cursor: pointer;
+
+  &:hover {
+    background: #f2f3f5;
+  }
+}
+
+.is-refreshing {
+  animation: rotate 0.5s linear;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}

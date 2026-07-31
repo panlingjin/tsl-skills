@@ -1,10 +1,10 @@
-# Data Integration
+# 数据集成
 
-## Contents
+## 目录
 
 - [Axios](#axios)
 - [MockJS](#mockjs)
-- [Timed Refresh](#timed-refresh)
+- [定时刷新](#timed-refresh)
 - [WebSocket](#websocket)
 
 ## Axios

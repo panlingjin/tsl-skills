@@ -1,13 +1,13 @@
-# Quality Checks
+# 质量检查
 
-## Contents
+## 目录
 
-- [Automated Skill Validation](#automated-skill-validation)
-- [Project Foundation](#project-foundation)
-- [Runtime Lifecycle](#runtime-lifecycle)
-- [Layout And Visual QA](#layout-and-visual-qa)
-- [Data Display QA](#data-display-qa)
-- [Security And Delivery](#security-and-delivery)
+- [Skill 自动验证](#automated-skill-validation)
+- [项目基础](#project-foundation)
+- [运行时生命周期](#runtime-lifecycle)
+- [布局与视觉验收](#layout-and-visual-qa)
+- [数据展示验收](#data-display-qa)
+- [安全与交付](#security-and-delivery)
 
 This file is the acceptance entry point. Exact dimensions, colors, APIs, and copy targets live in their owning references; do not duplicate them here.
 

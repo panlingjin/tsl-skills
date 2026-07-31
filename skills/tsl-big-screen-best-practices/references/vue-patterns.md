@@ -1,16 +1,16 @@
-# Vue Patterns
+# Vue 编码模式
 
-## Contents
+## 目录
 
-- [SFC Defaults](#sfc-defaults)
-- [Component Boundaries](#component-boundaries)
-- [Props And Emits](#props-and-emits)
+- [SFC 默认规范](#sfc-defaults)
+- [组件边界](#component-boundaries)
+- [Props 与 Emits](#props-and-emits)
 - [Composables](#composables)
-- [Modal Ownership](#modal-ownership)
-- [Chart Ownership](#chart-ownership)
+- [Modal 所有权](#modal-ownership)
+- [图表所有权](#chart-ownership)
 - [Pinia](#pinia)
 - [Router](#router)
-- [Lifecycle Safety](#lifecycle-safety)
+- [生命周期安全](#lifecycle-safety)
 
 ## SFC Defaults
 

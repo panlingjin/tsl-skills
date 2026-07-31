@@ -23,7 +23,12 @@ const references = walk(join(root, "references")).filter((path) => path.endsWith
 references.forEach((path) => {
   const source = readFileSync(path, "utf8");
   const lineCount = source.split(/\r?\n/).length;
-  if (lineCount > 100) assert(source.includes("## Contents"), `${relative(root, path)} needs a Contents section`);
+  if (lineCount > 100) {
+    assert(
+      /^## (目录|Contents)$/m.test(source),
+      `${relative(root, path)} needs a 目录/Contents section`,
+    );
+  }
 });
 
 const templates = walk(join(root, "assets", "template"));

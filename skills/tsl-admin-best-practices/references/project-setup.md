@@ -1,50 +1,102 @@
-# Project Setup
+# 项目设置
 
-Use this reference before scaffolding or changing a Tacos-style Vue admin project.
+本文件只记录 TSL 模板对通用工程标准的落地方式。未提及的工程规则直接服从 `frontend-engineering-standards`。
 
-## Stack
+## 技术基线
 
-- Build the default template with Vue 3, Vite 4, JavaScript, Less, Pinia, Vue Router 4, origami-vue, `vite-plugin-svg-icons`, and `vite-plugin-style-import`.
-- Keep JavaScript + Less as the default when reproducing the source console. Do not migrate to TypeScript unless the user explicitly asks.
-- Use Composition API and `<script setup>` for new files. Accept Options API only when adapting legacy copied components.
-- Register the origami-vue locale provider at the root when localization is required.
-- Import global styles in this order: runtime config if any, reset/theme Less, component libraries, virtual SVG registration, plugins.
+- Vue 3、TypeScript、Composition API、`<script setup lang="ts">`。
+- Vite 4、Less、Pinia、Vue Router 4、origami-vue。
+- Yarn 是唯一包管理器；不生成 npm 或 pnpm 命令与锁文件。
+- 使用 `vite-plugin-importer` 加载 Origami Vue 组件样式。
+- 使用 `vite-plugin-svg-icons` 注册本地业务图标。
 
-## Vite
-
-- Use `base: './'` so the same build can run standalone or as a micro-frontend child.
-- Set `@` to `src`.
-- Configure Less `modifyVars.hack` to import `src/assets/styles/var.less` by reference.
-- Register SVG icons from `src/assets/icons/svg` with `symbolId: 'icon-[dir]-[name]'`.
-- Configure origami-vue style loading by default. Add resolver/config for another component library only when the target project explicitly needs that library.
-- Keep dev proxies and deployment hosts project-local. Never copy source-project internal IPs into a new project.
-
-## App Shell
-
-- Mount with `createApp(App)`, then install Pinia, Router, i18n if required, and selected origami-vue components.
-- Wrap the root view in origami-vue `ConfigProvider`.
-- Prefer project-local SVG icons through `vite-plugin-svg-icons`. Use another icon package only when it is already part of the target project's chosen UI dependency.
-- Support `window.__POWERED_BY_WUJIE__` only when the target project actually runs as a Wujie child. In that case set a body marker such as `data-wujie="true"` and expose mount/unmount lifecycle hooks.
-
-## Source Structure
-
-Use this shape for new projects:
+## 目标项目目录
 
 ```text
 src/
-  assets/styles/var.less
-  assets/styles/reset.less
-  assets/icons/svg/
-  components/layout/
-  components/base-box/
-  components/table/
-  components/detail-box/
-  components/svg-icon/
-  components/link-button/
+  components/
+    common/
+      BaseBox/
+        BaseBox.vue
+    business/
+      AdminTable/
+        AdminTable.vue
+        TableColumnSettings.vue
+        useTableColumns.ts
+        types.ts
+  icons/
+  layouts/
+    AdminLayout/
   router/
-  store/
+    index.ts
+    routes.ts
+    guards.ts
+  stores/
+    index.ts
+    modules/
+  styles/
+    reset.less
+    var.less
+  types/
   utils/
   views/
 ```
 
-Keep route-level views thin. Put reusable admin patterns in `components/`, feature-local sections in `views/<feature>/components/`, and API-specific behavior in composables or services.
+- 路由视图负责数据编排、API 调用与页面组合。
+- 页面私有组件放在 `views/<Feature>/components/`。
+- 跨页面组件按 `common` 和 `business` 分层。
+- 布局放在 `layouts/`，状态放在 `stores/`，全局样式放在 `styles/`。
+
+## 组件模板范围
+
+`assets/tsl-admin-template/` 只包含：
+
+```text
+src/
+  components/
+    common/
+      BaseBox/
+      DetailBox/
+      LinkButton/
+      SvgIcon/
+    business/
+      AdminTable/
+  icons/
+    back.svg
+    pin.svg
+    refresh.svg
+    settings.svg
+    unpin.svg
+  styles/
+    var.less
+  utils/
+    tools.ts
+```
+
+它是可复制的组件资产包，不负责创建应用入口、路由、Store、布局、页面或工程配置。目标项目的这些内容按 `frontend-engineering-standards` 自行建立。
+
+## Vite
+
+- `@` 指向 `src`。
+- Less `additionalData` 全局导入 `@/styles/var.less`。
+- SVG 目录使用 `src/icons`，`symbolId` 固定为 `icon-[name]`。
+- 普通独立应用使用 `base: '/'`。
+- 仅当 `VITE_WUJIE_BUILD=true` 时使用 `base: './'`。
+- 开发代理和部署主机必须由目标项目自行配置，不复制任何内部 IP。
+
+## 应用入口
+
+- 入口按 `createApp → Pinia → Router → mount` 安装。
+- Origami Vue 组件在使用处按需导入，不在入口全局注册整套组件。
+- 根视图使用 Origami Vue `ConfigProvider` 提供中文 locale。
+- Pinia 应用实例由 `createAppStore()` 创建，测试和多应用挂载时不复用全局单例。
+
+## Wujie
+
+仅当目标项目确实作为 Wujie 子应用运行时：
+
+- 根据 `window.__POWERED_BY_WUJIE__` 设置 `data-wujie="true"`。
+- 暴露 `__WUJIE_MOUNT` 与 `__WUJIE_UNMOUNT`。
+- 卸载时清理 Vue 应用实例和项目创建的副作用。
+
+不要让 Wujie 配置改变独立应用的默认部署路径。

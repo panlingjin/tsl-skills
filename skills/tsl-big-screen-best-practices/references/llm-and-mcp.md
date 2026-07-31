@@ -1,13 +1,13 @@
-# LLM And MCP
+# LLM 与 MCP
 
-## Contents
+## 目录
 
-- [Scope](#scope)
-- [Dependencies](#dependencies)
-- [Files](#files)
-- [LLM Component](#llm-component)
-- [MCP Tools](#mcp-tools)
-- [Front Control](#front-control)
+- [范围](#scope)
+- [依赖](#dependencies)
+- [文件](#files)
+- [LLM 组件](#llm-component)
+- [MCP 工具](#mcp-tools)
+- [前端控制](#front-control)
 
 ## Scope
 

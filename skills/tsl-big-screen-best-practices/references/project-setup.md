@@ -1,14 +1,14 @@
-# Project Setup
+# 项目搭建
 
-## Contents
+## 目录
 
-- [Baseline](#baseline)
-- [Package Scripts](#package-scripts)
-- [Required Project Config](#required-project-config)
-- [Vue CLI Config](#vue-cli-config)
-- [Environment Files](#environment-files)
-- [HTML Shell](#html-shell)
-- [TSL Config](#tsl-config)
+- [基线](#baseline)
+- [包脚本](#package-scripts)
+- [必要项目配置](#required-project-config)
+- [Vue CLI 配置](#vue-cli-config)
+- [环境文件](#environment-files)
+- [HTML 外壳](#html-shell)
+- [TSL 配置](#tsl-config)
 
 ## Baseline
 

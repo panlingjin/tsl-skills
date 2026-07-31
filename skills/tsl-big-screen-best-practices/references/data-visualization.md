@@ -1,17 +1,17 @@
-# Data Visualization
+# 数据可视化
 
-## Contents
+## 目录
 
-- [Start From The Question](#start-from-the-question)
-- [Display Selection Matrix](#display-selection-matrix)
-- [Selection And Degradation Rules](#selection-and-degradation-rules)
-- [1080p Visual Baseline](#1080p-visual-baseline)
-- [Grid And Flex Layout](#grid-and-flex-layout)
-- [Chart Conventions](#chart-conventions)
-- [Tables, Timelines, And Lists](#tables-timelines-and-lists)
-- [Data States](#data-states)
-- [Reusable Templates](#reusable-templates)
-- [Lifecycle And Accessibility](#lifecycle-and-accessibility)
+- [从问题出发](#start-from-the-question)
+- [展示形式选择矩阵](#display-selection-matrix)
+- [选择与降级规则](#selection-and-degradation-rules)
+- [1080p 视觉基线](#1080p-visual-baseline)
+- [Grid 与 Flex 布局](#grid-and-flex-layout)
+- [图表约定](#chart-conventions)
+- [表格、时间线与列表](#tables-timelines-and-lists)
+- [数据状态](#data-states)
+- [可复用模板](#reusable-templates)
+- [生命周期与无障碍](#lifecycle-and-accessibility)
 
 ## Start From The Question
 

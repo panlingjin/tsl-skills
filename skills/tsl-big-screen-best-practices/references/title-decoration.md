@@ -1,18 +1,18 @@
-# Card Titles And Decoration
+# 卡片标题与装饰
 
-## Contents
+## 目录
 
-- [Source Patterns](#source-patterns)
-- [Hierarchy And Selection](#hierarchy-and-selection)
-- [Typography Matrix](#typography-matrix)
-- [Default Font Policy](#default-font-policy)
-- [Title Variants](#title-variants)
-- [Icons And Bilingual Meta](#icons-and-bilingual-meta)
-- [Decoration Primitives](#decoration-primitives)
-- [Markup](#markup)
-- [Assets And Tokens](#assets-and-tokens)
-- [Restraint And Layout Safety](#restraint-and-layout-safety)
-- [Accessibility And Motion](#accessibility-and-motion)
+- [来源模式](#source-patterns)
+- [层级与选择](#hierarchy-and-selection)
+- [排版矩阵](#typography-matrix)
+- [默认字体策略](#default-font-policy)
+- [标题变体](#title-variants)
+- [图标与双语元信息](#icons-and-bilingual-meta)
+- [装饰基元](#decoration-primitives)
+- [标记结构](#markup)
+- [资源与 Token](#assets-and-tokens)
+- [克制与布局安全](#restraint-and-layout-safety)
+- [无障碍与动效](#accessibility-and-motion)
 
 ## Source Patterns
 
