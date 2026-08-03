@@ -25,7 +25,7 @@
 
 Vite 插件通过 `plugins` 数组注册，支持以下两种方式：
 
-```typescript
+```javascript
 // 方式一：直接调用（推荐用于需要配置的插件）
 plugins: [usePluginImport({ ... })]
 
@@ -68,9 +68,9 @@ yarn add -D less
 
 ### 配置方法
 
-在 `vite.config.ts` 中注册插件：
+在 `vite.config.js` 中注册插件：
 
-```typescript
+```javascript
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import usePluginImport from 'vite-plugin-importer'
@@ -99,22 +99,22 @@ export default defineConfig({
 
 配置后，代码中的全量引入写法：
 
-```typescript
+```javascript
 import { Button as OriButton } from 'origami-vue'
 ```
 
 会被自动转换为：
 
-```typescript
+```javascript
 import { Button as OriButton } from 'origami-vue/es/button'
 import 'origami-vue/es/button/style'
 ```
 
 ---
 
-## vite.config.ts 完整示例
+## vite.config.js 完整示例
 
-```typescript
+```javascript
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import usePluginImport from 'vite-plugin-importer'
@@ -177,7 +177,7 @@ export default defineConfig({
 
 通过 `build.rollupOptions.output.manualChunks` 将第三方依赖拆分为独立 chunk，优化缓存命中率和加载性能：
 
-```typescript
+```javascript
 build: {
   rollupOptions: {
     output: {
@@ -199,7 +199,7 @@ build: {
 
 ### Chunk 大小警告阈值
 
-```typescript
+```javascript
 build: {
   chunkSizeWarningLimit: 1000, // 单位 KB，默认 500
 },
@@ -223,12 +223,12 @@ build: {
 ### 依赖安装
 
 ```bash
-pnpm add -D vite-plugin-svg-icons
+yarn add -D vite-plugin-svg-icons
 ```
 
-### vite.config.ts 配置
+### vite.config.js 配置
 
-```typescript
+```javascript
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -256,9 +256,9 @@ export default defineConfig({
 
 ### 注册脚本引入
 
-在 `src/main.ts` 中引入注册脚本，使 Sprite 在页面加载时注入：
+在 `src/main.js` 中引入注册脚本，使 Sprite 在页面加载时注入：
 
-```typescript
+```javascript
 import 'virtual:svg-icons-register'
 ```
 
@@ -267,18 +267,24 @@ import 'virtual:svg-icons-register'
 在 `src/components/common/SvgIcon.vue` 中封装通用图标组件：
 
 ```vue
-<script setup lang="ts">
-interface Props {
-  name: string
-  prefix?: string
-  color?: string
-  size?: number | string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  prefix: 'icon',
-  color: 'currentColor',
-  size: '1em',
+<script setup>
+const props = defineProps({
+  name: {
+    type: String,
+    required: true,
+  },
+  prefix: {
+    type: String,
+    default: 'icon',
+  },
+  color: {
+    type: String,
+    default: 'currentColor',
+  },
+  size: {
+    type: [Number, String],
+    default: '1em',
+  },
 })
 
 const symbolId = computed(() => `#${props.prefix}-${props.name}`)
@@ -299,7 +305,7 @@ const symbolId = computed(() => `#${props.prefix}-${props.name}`)
 ### 使用方式
 
 ```vue
-<script setup lang="ts">
+<script setup>
 import SvgIcon from '@/components/common/SvgIcon.vue'
 </script>
 
@@ -361,9 +367,9 @@ src/
 | **manualChunks** | 包含 `origami-vue` 分包 | 不包含 `origami-vue` 分包 |
 | **SVG 图标插件** | 安装并配置 | 安装并配置（相同） |
 
-### 大屏项目 vite.config.ts 示例
+### 大屏项目 vite.config.js 示例
 
-```typescript
+```javascript
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'

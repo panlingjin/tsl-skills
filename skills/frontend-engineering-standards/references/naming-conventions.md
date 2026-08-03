@@ -27,7 +27,7 @@ components/
 ├── UserCard/
 │   ├── UserCard.vue        # 主组件
 │   ├── UserCardAvatar.vue  # 子组件
-│   └── index.ts            # 导出文件
+│   └── index.js            # 导出文件
 ```
 
 ### 基础组件命名
@@ -43,17 +43,17 @@ components/
 │   ├── BaseModal.vue       ✓ 基础模态框
 ```
 
-## TypeScript/JavaScript 文件命名
+## JavaScript 文件命名
 
 ### 组合式函数命名
 
 **使用 `use` 前缀 + camelCase:**
 ```
 composables/
-├── useAuth.ts              ✓ 认证相关
-├── useRequest.ts           ✓ 请求相关
-├── useStorage.ts           ✓ 存储相关
-├── useValidation.ts        ✓ 验证相关
+├── useAuth.js              ✓ 认证相关
+├── useRequest.js           ✓ 请求相关
+├── useStorage.js           ✓ 存储相关
+├── useValidation.js        ✓ 验证相关
 ```
 
 ### Store 文件命名
@@ -62,9 +62,9 @@ composables/
 ```
 stores/
 ├── modules/
-│   ├── user.ts             ✓ 用户状态
-│   ├── cart.ts             ✓ 购物车状态
-│   ├── app.ts              ✓ 应用状态
+│   ├── user.js             ✓ 用户状态
+│   ├── cart.js             ✓ 购物车状态
+│   ├── app.js              ✓ 应用状态
 ```
 
 ### 工具函数命名
@@ -72,21 +72,10 @@ stores/
 **使用功能描述 + camelCase:**
 ```
 utils/
-├── storage.ts              ✓ 存储工具
-├── validate.ts             ✓ 验证工具
-├── helpers.ts              ✓ 辅助函数
-├── format.ts               ✓ 格式化工具
-```
-
-### 类型定义文件命名
-
-**使用功能名 + camelCase 或 types.ts:**
-```
-types/
-├── user.ts                 ✓ 用户类型
-├── order.ts                ✓ 订单类型
-├── api.ts                  ✓ API 类型
-├── global.d.ts             ✓ 全局类型声明
+├── storage.js              ✓ 存储工具
+├── validate.js             ✓ 验证工具
+├── helpers.js              ✓ 辅助函数
+├── format.js               ✓ 格式化工具
 ```
 
 ### API 文件命名
@@ -95,10 +84,10 @@ types/
 ```
 api/
 ├── modules/
-│   ├── user.ts             ✓ 用户接口
-│   ├── order.ts            ✓ 订单接口
-│   ├── auth.ts             ✓ 认证接口
-├── request.ts              ✓ 请求封装
+│   ├── user.js             ✓ 用户接口
+│   ├── order.js            ✓ 订单接口
+│   ├── auth.js             ✓ 认证接口
+├── request.js              ✓ 请求封装
 ```
 
 ## 样式文件命名
@@ -107,7 +96,7 @@ api/
 
 **使用功能描述 + kebab-case:**
 ```
-styles/
+assets/styles/
 ├── variables.scss          ✓ 变量定义
 ├── mixins.scss             ✓ 混入定义
 ├── global.scss             ✓ 全局样式
@@ -116,13 +105,15 @@ styles/
 
 ### 组件样式文件
 
-**与组件文件同名:**
+**统一放入 `src/assets/styles/components/`，文件名使用 kebab-case:**
 ```
-components/
-├── UserCard/
-│   ├── UserCard.vue        # 组件文件
-│   ├── UserCard.scss       ✓ 组件样式(同名)
+assets/styles/
+├── components/
+│   ├── user-card.scss      ✓ UserCard 组件样式
+│   └── order-list.scss     ✓ OrderList 组件样式
 ```
+
+所有公共样式统一存放在 `src/assets/styles/`，不在组件目录旁创建独立的样式目录。
 
 ## 静态资源命名
 
@@ -175,22 +166,22 @@ components/
 
 ### 单元测试文件
 
-**使用 `.spec.ts` 或 `.test.ts` 后缀:**
+**使用 `.spec.js` 或 `.test.js` 后缀:**
 ```
 tests/
 ├── unit/
-│   ├── user.spec.ts        ✓ 用户模块测试
-│   ├── validation.spec.ts  ✓ 验证工具测试
+│   ├── user.spec.js        ✓ 用户模块测试
+│   ├── validation.spec.js  ✓ 验证工具测试
 ```
 
 ### 组件测试文件
 
-**使用 `.spec.ts` 后缀:**
+**使用 `.spec.js` 后缀:**
 ```
 tests/
 ├── components/
-│   ├── UserCard.spec.ts    ✓ UserCard 组件测试
-│   ├── OrderList.spec.ts   ✓ OrderList 组件测试
+│   ├── UserCard.spec.js    ✓ UserCard 组件测试
+│   ├── OrderList.spec.js   ✓ OrderList 组件测试
 ```
 
 ## 配置文件命名
@@ -209,8 +200,8 @@ tests/
 
 **使用工具名 + 配置类型:**
 ```
-vite.config.ts              ✓ Vite 配置
-tsconfig.json               ✓ TypeScript 配置
+vite.config.js              ✓ Vite 配置
+jsconfig.json               ✓ JavaScript 路径与编辑器配置
 .eslintrc.js                ✓ ESLint 配置
 .prettierrc                 ✓ Prettier 配置
 ```
@@ -222,8 +213,8 @@ tsconfig.json               ✓ TypeScript 配置
 | Vue 组件 | PascalCase | `UserProfile.vue` | 多词组件名 |
 | 组件目录 | PascalCase | `UserCard/` | 与组件名一致 |
 | 功能目录 | kebab-case | `user-profile/` | 模块目录 |
-| TS/JS 文件 | camelCase | `useAuth.ts` | 组合式函数、工具 |
+| JavaScript 文件 | camelCase | `useAuth.js` | 组合式函数、工具 |
 | 样式文件 | kebab-case | `global.scss` | 全局样式 |
 | 图片文件 | kebab-case | `logo-primary.png` | 静态资源 |
-| 测试文件 | camelCase + spec | `user.spec.ts` | 测试文件 |
-| 配置文件 | 工具名 + config | `vite.config.ts` | 配置文件 |
+| 测试文件 | camelCase + spec | `user.spec.js` | 测试文件 |
+| 配置文件 | 工具名 + config | `vite.config.js` | 配置文件 |

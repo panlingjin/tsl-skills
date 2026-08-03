@@ -11,16 +11,16 @@
 **目录结构:**
 ```
 src/router/
-├── index.ts          # 路由入口
-├── routes.ts         # 路由配置
-└── guards.ts         # 路由守卫
+├── index.js          # 路由入口
+├── routes.js         # 路由配置
+└── guards.js         # 路由守卫
 ```
 
 ### 路由配置结构
 
 **基本配置:**
-```typescript
-const routes: RouteRecordRaw[] = [
+```javascript
+const routes = [
   {
     path: '/',
     name: 'Layout',
@@ -46,12 +46,12 @@ const routes: RouteRecordRaw[] = [
 ### 动态导入配置
 
 **懒加载语法:**
-```typescript
+```javascript
 component: () => import('@/views/Home.vue')
 ```
 
 **命名chunk:**
-```typescript
+```javascript
 component: () => import(
   /* webpackChunkName: "home" */ 
   '@/views/Home.vue'
@@ -61,8 +61,8 @@ component: () => import(
 ### 路由分组
 
 **按模块分组:**
-```typescript
-// vite.config.ts
+```javascript
+// vite.config.js
 manualChunks(id) {
   if (id.includes('/views/user/')) return 'user-module'
   if (id.includes('/views/product/')) return 'product-module'
@@ -82,7 +82,7 @@ manualChunks(id) {
 - 数据预加载
 
 **配置示例:**
-```typescript
+```javascript
 router.beforeEach((to, from, next) => {
   // 权限检查
   if (to.meta.requiresAuth && !isAuthenticated()) {
@@ -107,7 +107,7 @@ router.beforeEach((to, from, next) => {
 ### 权限路由
 
 **动态添加路由:**
-```typescript
+```javascript
 const dynamicRoutes = getRoutesByPermission(userPermissions)
 dynamicRoutes.forEach(route => {
   router.addRoute('Layout', route)
@@ -115,14 +115,14 @@ dynamicRoutes.forEach(route => {
 ```
 
 **路由移除:**
-```typescript
+```javascript
 router.removeRoute(routeName)
 ```
 
 ### 嵌套路由
 
 **多级路由配置:**
-```typescript
+```javascript
 {
   path: '/user',
   component: UserLayout,
@@ -142,19 +142,19 @@ router.removeRoute(routeName)
 ### 编程式导航
 
 **路由跳转:**
-```typescript
+```javascript
 router.push('/home')
 router.push({ name: 'Home' })
 router.push({ path: '/user', query: { id: 1 } })
 ```
 
 **路由替换:**
-```typescript
+```javascript
 router.replace('/login')
 ```
 
 **路由返回:**
-```typescript
+```javascript
 router.back()
 router.go(-1)
 ```
@@ -171,10 +171,10 @@ router.go(-1)
 
 ## 路由参数处理
 
-### 路由参数类型
+### 路由参数读取
 
 **params 参数:**
-```typescript
+```javascript
 // 路由配置
 { path: '/user/:id', component: User }
 
@@ -187,7 +187,7 @@ route.params.id
 ```
 
 **query 参数:**
-```typescript
+```javascript
 // 跳转
 router.push({ path: '/search', query: { keyword: 'test' } })
 
@@ -198,7 +198,7 @@ route.query.keyword
 ### 参数验证
 
 **路由参数验证:**
-```typescript
+```javascript
 {
   path: '/user/:id(\\d+)',  // 只匹配数字
   component: User
@@ -212,7 +212,7 @@ route.query.keyword
 ### 捕获所有路由
 
 **配置方式:**
-```typescript
+```javascript
 {
   path: '/:pathMatch(.*)*',
   name: 'NotFound',
@@ -227,7 +227,7 @@ route.query.keyword
 ### KeepAlive 配置
 
 **组件级缓存:**
-```typescript
+```javascript
 {
   path: '/list',
   component: List,

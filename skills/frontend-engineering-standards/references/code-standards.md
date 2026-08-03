@@ -7,24 +7,24 @@
 Vue 单文件组件(SFC)的标准顺序:
 
 ```vue
-<script setup lang="ts">
+<script setup>
 // 1. 导入语句
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
-// 2. Props 定义
-interface Props {
-  title: string
-  count?: number
-}
-const props = withDefaults(defineProps<Props>(), {
-  count: 0,
+// 2. Props 定义与运行时校验
+const props = defineProps({
+  title: {
+    type: String,
+    required: true,
+  },
+  count: {
+    type: Number,
+    default: 0,
+  },
 })
 
 // 3. Emits 定义
-interface Emits {
-  (e: 'update', value: number): void
-}
-const emit = defineEmits<Emits>()
+const emit = defineEmits(['update'])
 
 // 4. 响应式状态
 const loading = ref(false)
@@ -65,8 +65,8 @@ watch(() => props.count, (newVal) => {
 ### Composition API 使用规范
 
 **必须使用:**
-- Composition API + `<script setup lang="ts">`
-- TypeScript 类型定义
+- Composition API + `<script setup>`
+- JavaScript 与 ES Modules
 
 **避免:**
 - Options API(除非项目明确要求)
@@ -78,74 +78,70 @@ watch(() => props.count, (newVal) => {
 
 ### Props 规范
 
-**使用 TypeScript 定义 Props:**
-```typescript
-interface Props {
-  id: number
-  title: string
-  items?: Array<{ id: number; name: string }>
-}
-const props = withDefaults(defineProps<Props>(), {
-  items: () => [],
+**使用运行时声明定义 Props:**
+```javascript
+const props = defineProps({
+  id: {
+    type: Number,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  items: {
+    type: Array,
+    default: () => [],
+  },
 })
 ```
 
 ### Emits 规范
 
-**使用 TypeScript 定义 Emits:**
-```typescript
-interface Emits {
-  (e: 'update', value: string): void
-  (e: 'delete', id: number): void
-}
-const emit = defineEmits<Emits>()
+**显式声明 Emits:**
+```javascript
+const emit = defineEmits(['update', 'delete'])
 ```
 
-## TypeScript 使用规范
+## JavaScript 使用规范
 
-### 类型定义
+### 数据结构与模块
 
-**优先使用 interface:**
-```typescript
-interface User {
-  id: number
-  name: string
-  email: string
-}
-
-// type 用于联合类型、映射类型
-type Status = 'active' | 'inactive' | 'pending'
-```
-
-**类型导入:**
-```typescript
-import type { User, Status } from '@/types'
-```
-
-### 泛型使用
-
-**API 请求泛型:**
-```typescript
-interface ApiResponse<T> {
-  data: T
-  message: string
-  code: number
-}
-
-async function fetchData<T>(url: string): Promise<ApiResponse<T>> {
-  return await axios.get<ApiResponse<T>>(url).then(res => res.data)
+**使用普通对象表达数据:**
+```javascript
+const user = {
+  id: 1,
+  name: 'Ada',
+  email: 'ada@example.com',
 }
 ```
 
-### 类型断言
+**使用 ES Modules:**
+```javascript
+import { formatUser } from '@/utils/formatUser'
+export { formatUser }
+```
 
-**谨慎使用类型断言:**
-```typescript
-// 明确类型时使用
-const input = event.target as HTMLInputElement
+### 参数与返回值说明
 
-// 避免滥用 as
-const data = response as any  // 失去类型检查
+**复杂公共函数使用 JSDoc:**
+```javascript
+/**
+ * @param {string} url
+ * @returns {Promise<{ data: unknown, message: string, code: number }>}
+ */
+async function fetchData(url) {
+  return axios.get(url).then(response => response.data)
+}
+```
+
+### 运行时校验
+
+**在外部数据边界进行校验:**
+```javascript
+if (!response || !Array.isArray(response.data)) {
+  throw new TypeError('Invalid response data')
+}
 ```
 
 ## 代码格式化配置
@@ -164,19 +160,15 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:vue/vue3-recommended',
-    '@vue/typescript/recommended',
     '@vue/prettier',
   ],
   parserOptions: {
     ecmaVersion: 'latest',
-    parser: '@typescript-eslint/parser',
     sourceType: 'module',
   },
   rules: {
     'vue/multi-word-component-names': 'error',
     'vue/no-v-html': 'warn',
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
   },
@@ -208,7 +200,6 @@ module.exports = {
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
-  "typescript.tsdk": "node_modules/typescript/lib",
   "volar.completion.preferredTagNameCase": "kebab",
   "volar.completion.preferredAttrNameCase": "kebab"
 }

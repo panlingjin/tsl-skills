@@ -70,20 +70,15 @@
 - `@returns` 说明返回值(包含类型)
 - `@throws` 说明可能抛出的异常
 
-### 类型注释规范
+### JSDoc 数据结构规范
 
-```typescript
+```javascript
 /**
- * 用户信息
+ * @typedef {Object} User
+ * @property {number} id 用户唯一标识符
+ * @property {string} name 用户名，长度为 2-20 个字符
+ * @property {string} email 用户邮箱
  */
-export interface User {
-  /** 用户唯一标识符 */
-  id: number
-  /** 用户名,长度为 2-20 个字符 */
-  name: string
-  /** 用户邮箱 */
-  email: string
-}
 ```
 
 ---
@@ -118,14 +113,13 @@ export interface User {
 
 - **Storybook**: 组件文档和交互式示例
 - **VitePress**: 静态文档站点生成
-- **TypeDoc**: TypeScript API 文档生成
 - **JSDoc**: JavaScript 文档注释标准
 
 ### 关键配置
 
 **Storybook:** 配置 stories 路径、addons、framework
 **VitePress:** 配置导航、侧边栏、搜索
-**TypeDoc:** 配置入口文件、输出路径、插件
+**JSDoc:** 配置入口文件、输出路径和模板
 
 ---
 

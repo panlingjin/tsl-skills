@@ -2,7 +2,7 @@
 
 ## 标准目录结构
 
-Vue 3 + Vite + TypeScript 项目的标准目录结构:
+Vue 3 + Vite + JavaScript 项目的标准目录结构：
 
 ```
 project-root/
@@ -11,45 +11,41 @@ project-root/
 ├── src/                    # 源代码目录
 │   ├── api/                # API 接口模块
 │   │   ├── modules/        # 按业务模块组织的接口
-│   │   ├── request.ts      # Axios 封装
-│   │   └── index.ts        # API 统一导出
+│   │   ├── request.js      # Axios 封装
+│   │   └── index.js        # API 统一导出
 │   ├── assets/             # 需要构建处理的静态资源
 │   │   ├── images/         # 图片资源
 │   │   ├── fonts/          # 字体资源
-│   │   └── styles/         # 全局样式
+│   │   └── styles/         # 全局主题、变量、重置和公共样式
 │   ├── components/         # 公共组件
 │   │   ├── common/         # 通用基础组件
 │   │   ├── business/       # 业务公共组件
 │   │   └── ui/             # UI 组件库扩展
 │   ├── composables/        # 组合式函数(hooks)
-│   │   ├── useAuth.ts      # 认证相关
-│   │   ├── useRequest.ts   # 请求相关
-│   │   └── useUtils.ts     # 工具函数
+│   │   ├── useAuth.js      # 认证相关
+│   │   ├── useRequest.js   # 请求相关
+│   │   └── useUtils.js     # 工具函数
 │   ├── directives/         # 自定义指令
 │   ├── layouts/            # 布局组件
 │   │   ├── DefaultLayout.vue
 │   │   └── AdminLayout.vue
 │   ├── router/             # 路由配置
 │   │   ├── modules/        # 路由模块
-│   │   ├── guards.ts       # 路由守卫
-│   │   └── index.ts        # 路由入口
+│   │   ├── guards.js       # 路由守卫
+│   │   └── index.js        # 路由入口
 │   ├── stores/             # Pinia 状态管理
 │   │   ├── modules/        # Store 模块
-│   │   └── index.ts        # Store 入口
-│   ├── styles/             # 样式文件
-│   │   ├── variables.scss  # 变量定义
-│   │   ├── mixins.scss     # 混入
-│   │   └── global.scss     # 全局样式
+│   │   └── index.js        # Store 入口
 │   ├── utils/              # 工具函数
-│   │   ├── storage.ts      # 本地存储
-│   │   ├── validate.ts     # 验证函数
-│   │   └── helpers.ts      # 辅助函数
+│   │   ├── storage.js      # 本地存储
+│   │   ├── validate.js     # 验证函数
+│   │   └── helpers.js      # 辅助函数
 │   ├── views/              # 页面视图
 │   │   ├── home/           # 首页模块
 │   │   ├── user/           # 用户模块
 │   │   └── admin/          # 管理模块
 │   ├── App.vue             # 根组件
-│   └── main.ts             # 应用入口
+│   └── main.js             # 应用入口
 ├── .env                    # 环境变量(通用)
 ├── .env.development        # 开发环境变量
 ├── .env.production         # 生产环境变量
@@ -59,8 +55,8 @@ project-root/
 ├── .gitignore              # Git 忽略文件
 ├── index.html              # HTML 入口模板
 ├── package.json            # 项目配置
-├── tsconfig.json           # TypeScript 配置
-├── vite.config.ts          # Vite 配置
+├── jsconfig.json           # JavaScript 路径与编辑器配置
+├── vite.config.js          # Vite 配置
 └── README.md               # 项目说明
 ```
 
@@ -74,6 +70,7 @@ project-root/
 ### assets/
 - 存放需要经过构建处理的静态资源
 - 包括图片、字体、样式等资源
+- 所有公共样式统一存放在 `src/assets/styles/`，按照标准目录结构组织
 - 避免放置大型静态资源(应使用 CDN 或 public)
 
 ### components/
@@ -85,7 +82,7 @@ project-root/
 ### composables/
 - 组合式函数(hooks),用于提取和复用逻辑
 - 状态逻辑复用、生命周期钩子封装
-- 使用 `use` 前缀: `useAuth.ts`、`useRequest.ts`
+- 使用 `use` 前缀: `useAuth.js`、`useRequest.js`
 
 ### views/
 - 页面级组件,对应路由
@@ -96,7 +93,7 @@ project-root/
 - Pinia 状态管理目录
 - 按功能模块组织 Store
 - `modules/`: 各功能模块的 Store
-- `index.ts`: 统一导出所有 Store
+- `index.js`: 统一导出所有 Store
 
 ### utils/
 - 纯工具函数,无副作用

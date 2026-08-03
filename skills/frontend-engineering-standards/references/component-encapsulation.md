@@ -21,18 +21,22 @@
 
 ### Props 定义
 
-使用 TypeScript 定义 Props：
+使用 JavaScript 运行时声明定义 Props：
 
-```typescript
-interface Props {
-  id: number          // 必需属性
-  title?: string      // 可选属性
-  items?: Item[]      // 数组类型
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  title: '',
-  items: () => [],
+```javascript
+const props = defineProps({
+  id: {
+    type: Number,
+    required: true,
+  },
+  title: {
+    type: String,
+    default: '',
+  },
+  items: {
+    type: Array,
+    default: () => [],
+  },
 })
 ```
 
@@ -44,14 +48,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 ### Emits 定义
 
-使用 TypeScript 定义 Emits：
+显式声明组件可能触发的事件：
 
-```typescript
-interface Emits {
-  (e: 'update'): void
-  (e: 'change', value: string): void
-  (e: 'update:modelValue', value: string): void
-}
+```javascript
+const emit = defineEmits(['update', 'change', 'update:modelValue'])
 ```
 
 ### Emits 命名规范
@@ -106,7 +106,7 @@ interface Emits {
 
 使用 Symbol 作为 key：
 
-```typescript
+```javascript
 export const ThemeKey = Symbol('theme')
 provide(ThemeKey, theme)
 const theme = inject(ThemeKey)
@@ -122,10 +122,16 @@ const theme = inject(ThemeKey)
 
 数组/对象使用函数：
 
-```typescript
-const props = withDefaults(defineProps<Props>(), {
-  title: '',
-  items: () => [],
+```javascript
+const props = defineProps({
+  title: {
+    type: String,
+    default: '',
+  },
+  items: {
+    type: Array,
+    default: () => [],
+  },
 })
 ```
 
@@ -133,7 +139,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 使用 provide/inject 替代层层传递：
 
-```typescript
+```javascript
 provide('user', user)
 const user = inject('user')
 ```
@@ -142,6 +148,6 @@ const user = inject('user')
 
 路由级或条件懒加载：
 
-```typescript
+```javascript
 const UserList = defineAsyncComponent(() => import('@/components/UserList.vue'))
 ```

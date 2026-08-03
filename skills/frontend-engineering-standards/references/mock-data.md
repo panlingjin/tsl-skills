@@ -35,13 +35,13 @@
 
 **安装:**
 ```bash
-pnpm add -D mockjs
-pnpm add -D vite-plugin-mock
+yarn add -D mockjs
+yarn add -D vite-plugin-mock
 ```
 
 **配置文件:**
-```typescript
-// vite.config.ts
+```javascript
+// vite.config.js
 import { viteMockServe } from 'vite-plugin-mock'
 
 export default {
@@ -59,18 +59,17 @@ export default {
 **目录结构:**
 ```
 mock/
-├── user.ts       # 用户相关接口
-├── product.ts    # 产品相关接口
-├── order.ts      # 订单相关接口
-└── index.ts      # 统一入口
+├── user.js       # 用户相关接口
+├── product.js    # 产品相关接口
+├── order.js      # 订单相关接口
+└── index.js      # 统一入口
 ```
 
 ### 接口 Mock 示例
 
 **基本结构:**
-```typescript
-// mock/user.ts
-import { MockMethod } from 'vite-plugin-mock'
+```javascript
+// mock/user.js
 
 export default [
   {
@@ -84,7 +83,7 @@ export default [
       }
     }
   }
-] as MockMethod[]
+]
 ```
 
 ---
@@ -116,7 +115,7 @@ export default [
 
 ### 数据生成示例
 
-```typescript
+```javascript
 Mock.mock({
   'id': '@id',
   'name': '@cname',
@@ -141,7 +140,7 @@ VITE_ENABLE_MOCK=false # 关闭 Mock
 ```
 
 **条件启用:**
-```typescript
+```javascript
 // 判断环境
 if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
   // 启用 Mock
@@ -155,9 +154,9 @@ if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
 - 字段名、类型保持一致
 - 分页、排序等参数一致
 
-**类型定义:**
-- 共享接口类型定义
-- Mock 和 API 使用相同类型
+**数据约定:**
+- Mock 与真实 API 使用相同字段名、数据类型和响应结构
+- 使用 JavaScript 对象表达数据，不添加静态类型声明或类型断言语法
 
 ---
 
@@ -182,7 +181,7 @@ if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
 ### 响应延迟
 
 **模拟网络延迟:**
-```typescript
+```javascript
 response: () => {
   return new Promise(resolve => {
     setTimeout(() => {

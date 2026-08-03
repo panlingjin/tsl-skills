@@ -72,21 +72,13 @@ VITE_APP_VERSION=1.0.0
 ### 环境变量使用
 
 **访问方式:**
-```typescript
+```javascript
 const apiUrl = import.meta.env.VITE_API_URL
 const isDev = import.meta.env.DEV
 const isProd = import.meta.env.PROD
 ```
 
-**类型定义:**
-```typescript
-// src/env.d.ts
-interface ImportMetaEnv {
-  VITE_APP_TITLE: string
-  VITE_API_URL: string
-  VITE_ENABLE_MOCK: string
-}
-```
+Vite 会把所有环境变量作为字符串暴露。读取后按业务需要显式转换，并在使用前校验必需值。
 
 ---
 
@@ -95,8 +87,8 @@ interface ImportMetaEnv {
 ### Vite 配置
 
 **核心配置:**
-```typescript
-// vite.config.ts
+```javascript
+// vite.config.js
 export default defineConfig({
   base: '/',
   mode: 'production',
@@ -136,7 +128,7 @@ export default defineConfig({
 - 代理配置(proxy)
 
 **代理配置示例:**
-```typescript
+```javascript
 server: {
   port: 3000,
   proxy: {

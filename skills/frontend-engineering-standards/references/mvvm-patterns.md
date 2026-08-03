@@ -12,10 +12,10 @@ Vue 3 采用响应式系统实现 MVVM 模式，通过 ref、reactive、computed
 - 单个独立值
 - 需要重新赋值的场景
 
-```typescript
+```javascript
 const count = ref(0)
 const message = ref('Hello')
-const user = ref<User | null>(null)
+const user = ref(null)
 user.value = await fetchUser()
 ```
 
@@ -25,7 +25,7 @@ user.value = await fetchUser()
 - 不需要重新赋值整个对象
 - 复杂的数据结构
 
-```typescript
+```javascript
 const user = reactive({
   name: 'Alice',
   age: 30,
@@ -37,7 +37,7 @@ const user = reactive({
 
 | 类型 | 推荐 API | 原因 |
 |-----|---------|------|
-| 基础类型 | ref | 简单直接，类型安全 |
+| 基础类型 | ref | 简单直接，便于读写 |
 | 对象（不重新赋值） | reactive | 更自然，无需 `.value` |
 | 对象（需要重新赋值） | ref | 支持重新赋值 |
 | 数组（整体替换） | ref | 方便重新赋值 |
@@ -53,7 +53,7 @@ const user = reactive({
 
 ### 基本用法
 
-```typescript
+```javascript
 const firstName = ref('Alice')
 const lastName = ref('Smith')
 
@@ -71,7 +71,7 @@ const fullName = computed(() => `${firstName.value} ${lastName.value}`)
 
 ### watch 基本用法
 
-```typescript
+```javascript
 const count = ref(0)
 
 // 监听 ref
@@ -91,7 +91,7 @@ watch(() => user.age, (newValue, oldValue) => {
 - **deep**: 深度监听对象变化（注意性能影响）
 - **flush**: 延迟执行到 DOM 更新后
 
-```typescript
+```javascript
 watch(userId, (id) => {
   fetchUser(id)
 }, { immediate: true })
@@ -101,7 +101,7 @@ watch(userId, (id) => {
 
 自动追踪所有响应式依赖：
 
-```typescript
+```javascript
 const count = ref(0)
 const multiplier = ref(2)
 
@@ -125,8 +125,8 @@ watchEffect(() => {
 
 只存储必要状态，派生数据使用 computed：
 
-```typescript
-const items = ref<Item[]>([])
+```javascript
+const items = ref([])
 const itemCount = computed(() => items.value.length)
 const hasItems = computed(() => items.value.length > 0)
 ```
@@ -135,8 +135,8 @@ const hasItems = computed(() => items.value.length > 0)
 
 使用 computed 派生数据，避免冗余状态：
 
-```typescript
-const products = ref<Product[]>([])
+```javascript
+const products = ref([])
 const activeProducts = computed(() => products.value.filter(p => p.active))
 const totalPrice = computed(() => products.value.reduce((sum, p) => sum + p.price, 0))
 ```
@@ -145,7 +145,7 @@ const totalPrice = computed(() => products.value.reduce((sum, p) => sum + p.pric
 
 避免解构 reactive 对象失去响应式：
 
-```typescript
+```javascript
 // ✓ 使用 toRefs 保持响应式
 const user = reactive({ name: 'Alice', age: 30 })
 const { name, age } = toRefs(user)
@@ -158,34 +158,36 @@ console.log(user.name)
 
 优先使用 computed 而非 watch：
 
-```typescript
+```javascript
 // ✓ 使用 computed
 const fullName = computed(() => `${firstName.value} ${lastName.value}`)
 ```
 
 ### 5. 响应式命名规范
 
-```typescript
+```javascript
 // ✓ 响应式变量不加特殊前缀
 const count = ref(0)
 const user = reactive({ name: 'Alice' })
 const fullName = computed(() => `${firstName.value} ${lastName.value}`)
 ```
 
-### 6. 类型标注
+### 6. 初始值约定
 
-```typescript
-const count = ref<number>(0)
-const user = ref<User | null>(null)
-const fullName = computed<string>(() => `${firstName.value} ${lastName.value}`)
+用明确的初始值表达数据形态；外部数据进入响应式状态前先校验：
+
+```javascript
+const count = ref(0)
+const user = ref(null)
+const fullName = computed(() => `${firstName.value} ${lastName.value}`)
 ```
 
 ### 7. 性能优化
 
 对于大型对象，使用 shallowRef/shallowReactive 减少响应式开销：
 
-```typescript
-const largeData = shallowRef<LargeObject>({ nested: { deep: { data: 'value' } } })
+```javascript
+const largeData = shallowRef({ nested: { deep: { data: 'value' } } })
 largeData.value = newData  // 响应式
 largeData.value.nested.deep.data = 'new'  // 不响应式
 ```

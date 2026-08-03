@@ -18,9 +18,9 @@
 ```
 src/
 ├── utils/
-│   ├── format.ts
+│   ├── format.js
 │   └── __tests__/
-│       └── format.test.ts
+│       └── format.test.js
 ├── composables/
 │   └── __tests__/
 └── components/
@@ -29,7 +29,7 @@ src/
 
 ### 测试用例结构(AAA 模式)
 
-```typescript
+```javascript
 describe('功能描述', () => {
   it('应正确实现某个功能', () => {
     // Arrange(准备)
@@ -86,12 +86,12 @@ describe('功能描述', () => {
 ```
 e2e/
 ├── auth/
-│   ├── login.spec.ts
-│   └── register.spec.ts
+│   ├── login.spec.js
+│   └── register.spec.js
 ├── user/
-│   └── profile.spec.ts
+│   └── profile.spec.js
 └── fixtures/
-    └── test-data.ts
+    └── test-data.js
 ```
 
 ### 页面对象模式(POM)
@@ -117,8 +117,8 @@ e2e/
 
 ### Vitest 配置
 
-```typescript
-// vitest.config.ts
+```javascript
+// vitest.config.js
 export default defineConfig({
   test: {
     coverage: {
@@ -167,8 +167,8 @@ src/
 
 ### 测试文件命名
 
-- 单元测试: `*.test.ts`
-- E2E 测试: `*.spec.ts`
+- 单元测试: `*.test.js`
+- E2E 测试: `*.spec.js`
 - 测试目录: `__tests__/`
 
 ### 测试用例命名
@@ -179,7 +179,7 @@ src/
 - 描述预期行为
 
 **示例:**
-```typescript
+```javascript
 it('应正确格式化日期', () => {})
 it('处理无效日期时应返回空字符串', () => {})
 ```

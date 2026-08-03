@@ -5,11 +5,10 @@
 ```
 stores/
 ├── modules/
-│   ├── user.ts    # 用户状态
-│   ├── auth.ts    # 认证状态
-│   ├── app.ts     # 应用状态
-├── index.ts       # Store 导出
-└── types.ts       # Store 类型定义
+│   ├── user.js    # 用户状态
+│   ├── auth.js    # 认证状态
+│   ├── app.js     # 应用状态
+├── index.js       # Store 导出
 ```
 
 ### Store 组织原则
@@ -21,16 +20,10 @@ stores/
 
 ## State 定义规范
 
-必须为 State 定义类型：
+使用返回对象的函数定义 State：
 
-```typescript
-interface UserState {
-  userInfo: User | null
-  token: string
-  loading: boolean
-}
-
-state: (): UserState => ({
+```javascript
+state: () => ({
   userInfo: null,
   token: '',
   loading: false,
@@ -45,11 +38,11 @@ state: (): UserState => ({
 
 ## Getter 定义规范
 
-- Getter 自动推断类型
+- Getter 直接从 state 派生数据
 - 有缓存，依赖不变时不会重新计算
 - 返回函数的 Getter 无缓存
 
-```typescript
+```javascript
 getters: {
   isLoggedIn: (state) => state.token !== '',
 }
@@ -61,10 +54,10 @@ getters: {
 - 异步 Action：需要错误处理
 - Action 可调用其他 Store
 
-```typescript
+```javascript
 actions: {
   increment() { this.count++ },
-  async fetchUser(id: number) {
+  async fetchUser(id) {
     this.loading = true
     try { this.userInfo = await userApi.getUser(id) }
     finally { this.loading = false }
@@ -76,7 +69,7 @@ actions: {
 
 ### Setup Store 语法（推荐）
 
-```typescript
+```javascript
 export const useCounterStore = defineStore('counter', () => {
   const count = ref(0)
   const doubleCount = computed(() => count.value * 2)
@@ -89,7 +82,7 @@ export const useCounterStore = defineStore('counter', () => {
 
 组合多个 Store：
 
-```typescript
+```javascript
 export function useUserDashboard() {
   const userStore = useUserStore()
   const authStore = useAuthStore()
@@ -102,7 +95,7 @@ export function useUserDashboard() {
 
 使用 pinia-plugin-persistedstate：
 
-```typescript
+```javascript
 persist: {
   key: 'user-store',
   storage: localStorage,
@@ -114,7 +107,7 @@ persist: {
 
 ### 在组件中使用
 
-```typescript
+```javascript
 const userStore = useUserStore()
 const userInfo = userStore.userInfo
 await userStore.login({ username, password })
@@ -127,7 +120,7 @@ await userStore.login({ username, password })
 
 ### 在组合式函数中使用
 
-```typescript
+```javascript
 export function useAuth() {
   const userStore = useUserStore()
   const isAuthenticated = computed(() => userStore.isLoggedIn)

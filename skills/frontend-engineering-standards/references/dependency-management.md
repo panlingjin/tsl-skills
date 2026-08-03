@@ -27,7 +27,7 @@
 - 工具库(lodash、dayjs)
 
 **开发依赖:**
-- Vite、TypeScript
+- Vite
 - ESLint、Prettier
 - Vitest、Playwright
 - 构建插件
@@ -57,7 +57,7 @@
 ### 版本锁定
 
 **推荐做法:**
-- 使用 `pnpm-lock.yaml` 锁定版本
+- 使用 `yarn.lock` 锁定版本
 - 提交锁文件到 Git
 - 不手动修改锁文件
 
@@ -67,20 +67,20 @@
 
 ### 安装命令
 
-**pnpm 命令:**
+**Yarn 命令:**
 ```bash
-pnpm add package-name        # 安装生产依赖
-pnpm add -D package-name     # 安装开发依赖
-pnpm install                 # 安装所有依赖
-pnpm update                  # 更新依赖
-pnpm remove package-name     # 删除依赖
+yarn add package-name        # 安装生产依赖
+yarn add -D package-name     # 安装开发依赖
+yarn install                 # 安装所有依赖
+yarn upgrade package-name    # 更新指定依赖
+yarn remove package-name     # 删除依赖
 ```
 
 ### 安装策略
 
 **避免全局安装:**
 - 项目依赖本地安装
-- 使用 npm scripts 运行
+- 使用 `yarn <script-name>` 运行 package.json scripts
 - 避免版本冲突
 
 **按需安装:**
@@ -116,9 +116,8 @@ pnpm remove package-name     # 删除依赖
 ### 更新工具
 
 **推荐工具:**
-- `pnpm outdated`: 检查过期依赖
-- `pnpm update`: 更新依赖
-- `npm-check-updates`: 批量更新
+- `yarn outdated`: 检查过期依赖
+- `yarn upgrade`: 更新依赖
 
 ---
 
@@ -128,8 +127,7 @@ pnpm remove package-name     # 删除依赖
 
 **检查命令:**
 ```bash
-pnpm audit        # 检查安全漏洞
-pnpm audit fix    # 修复安全漏洞
+yarn audit        # 检查安全漏洞
 ```
 
 ### 安全策略
@@ -156,7 +154,7 @@ pnpm audit fix    # 修复安全漏洞
 **分析工具:**
 - `vite-plugin-visualizer`: 构建产物分析
 - `bundlephobia`: 检查包大小
-- `pnpm list`: 查看依赖树
+- `yarn list`: 查看依赖树
 
 ---
 
