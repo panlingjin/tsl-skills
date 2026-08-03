@@ -1,19 +1,25 @@
-<script setup lang="ts">
+<script setup>
 import { useSlots } from 'vue'
-import { useRouter, type RouteLocationRaw } from 'vue-router'
+import { useRouter } from 'vue-router'
 import SvgIcon from '@/components/common/SvgIcon/SvgIcon.vue'
 
-interface Props {
-  backPath?: RouteLocationRaw
-  title?: string
-  transparentHeader?: boolean
-  showHeader?: boolean
-}
-
-withDefaults(defineProps<Props>(), {
-  title: '',
-  transparentHeader: false,
-  showHeader: true,
+defineProps({
+  backPath: {
+    type: [String, Object],
+    default: undefined,
+  },
+  title: {
+    type: String,
+    default: '',
+  },
+  transparentHeader: {
+    type: Boolean,
+    default: false,
+  },
+  showHeader: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const slots = useSlots()

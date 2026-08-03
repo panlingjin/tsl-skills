@@ -1,17 +1,15 @@
-import { computed, ref, watch, type ComputedRef } from 'vue'
-import type { TableColumn, TableFixed } from './types'
+import { computed, ref, watch } from 'vue'
 
-interface ColumnCache {
-  key: string
-  fixed?: TableFixed
-  visible: boolean
-}
-
-function getColumnKey(column: TableColumn) {
+/**
+ * 返回列的稳定标识。
+ * @param {Record<string, unknown>} column
+ * @returns {string}
+ */
+function getColumnKey(column) {
   return column.key ?? column.dataIndex ?? column.prop ?? column.field ?? column.type ?? ''
 }
 
-function normalizeColumns(columns: TableColumn[]) {
+function normalizeColumns(columns) {
   return columns.map((column) => ({
     ...column,
     dataIndex: column.dataIndex ?? column.prop ?? column.field,
@@ -19,11 +17,13 @@ function normalizeColumns(columns: TableColumn[]) {
   }))
 }
 
-export function useTableColumns(
-  source: () => TableColumn[],
-  tableKey: ComputedRef<string | undefined>,
-) {
-  const columns = ref<TableColumn[]>([])
+/**
+ * 管理表格列的显示、固定和本地缓存状态。
+ * @param {() => Array<Record<string, unknown>>} source
+ * @param {import('vue').ComputedRef<string | undefined>} tableKey
+ */
+export function useTableColumns(source, tableKey) {
+  const columns = ref([])
   const configurableColumns = computed(() =>
     columns.value.filter(
       (column) => column.dataIndex !== 'operate' && column.type !== 'checkbox',
@@ -54,12 +54,12 @@ export function useTableColumns(
     return tableKey.value ? `tsl-admin:table-columns:${tableKey.value}` : ''
   }
 
-  function loadCache(nextColumns: TableColumn[]) {
+  function loadCache(nextColumns) {
     const key = storageKey()
     if (!key || typeof window === 'undefined') return nextColumns
 
     try {
-      const cached = JSON.parse(localStorage.getItem(key) ?? '[]') as ColumnCache[]
+      const cached = JSON.parse(localStorage.getItem(key) ?? '[]')
       if (!Array.isArray(cached)) return nextColumns
 
       return nextColumns.map((column) => {
@@ -75,7 +75,7 @@ export function useTableColumns(
     const key = storageKey()
     if (!key || typeof window === 'undefined') return
 
-    const value: ColumnCache[] = columns.value.map((column) => ({
+    const value = columns.value.map((column) => ({
       key: getColumnKey(column),
       fixed: column.fixed,
       visible: column.visible !== false,
@@ -83,7 +83,7 @@ export function useTableColumns(
     try {
       localStorage.setItem(key, JSON.stringify(value))
     } catch {
-      // Storage may be unavailable in privacy mode; the table remains functional in memory.
+      // 隐私模式可能禁用 Storage；此时仅保留内存状态。
     }
   }
 
@@ -91,7 +91,7 @@ export function useTableColumns(
     columns.value = loadCache(normalizeColumns(source()))
   }
 
-  function setAllVisible(visible: boolean) {
+  function setAllVisible(visible) {
     columns.value = columns.value.map((column) =>
       column.dataIndex === 'operate' || column.type === 'checkbox'
         ? column
@@ -100,14 +100,14 @@ export function useTableColumns(
     saveCache()
   }
 
-  function setVisible(target: TableColumn, visible: boolean) {
+  function setVisible(target, visible) {
     columns.value = columns.value.map((column) =>
       getColumnKey(column) === getColumnKey(target) ? { ...column, visible } : column,
     )
     saveCache()
   }
 
-  function setFixed(target: TableColumn, fixed?: TableFixed) {
+  function setFixed(target, fixed) {
     columns.value = columns.value.map((column) =>
       getColumnKey(column) === getColumnKey(target) ? { ...column, fixed } : column,
     )

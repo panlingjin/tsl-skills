@@ -1,23 +1,31 @@
-<script setup lang="ts">
+<script setup>
 import { Checkbox as OriCheckbox, Dropdown as OriDropdown } from 'origami-vue'
 import SvgIcon from '@/components/common/SvgIcon/SvgIcon.vue'
-import type { TableColumn, TableFixed } from './types'
 
-interface Props {
-  allChecked: boolean
-  indeterminate: boolean
-  fixedColumns: TableColumn[]
-  otherColumns: TableColumn[]
-  getColumnKey: (column: TableColumn) => string
-}
+defineProps({
+  allChecked: {
+    type: Boolean,
+    required: true,
+  },
+  indeterminate: {
+    type: Boolean,
+    required: true,
+  },
+  fixedColumns: {
+    type: Array,
+    required: true,
+  },
+  otherColumns: {
+    type: Array,
+    required: true,
+  },
+  getColumnKey: {
+    type: Function,
+    required: true,
+  },
+})
 
-defineProps<Props>()
-
-defineEmits<{
-  toggleAll: [visible: boolean]
-  updateVisible: [column: TableColumn, visible: boolean]
-  updateFixed: [column: TableColumn, fixed?: TableFixed]
-}>()
+defineEmits(['toggleAll', 'updateVisible', 'updateFixed'])
 </script>
 
 <template>

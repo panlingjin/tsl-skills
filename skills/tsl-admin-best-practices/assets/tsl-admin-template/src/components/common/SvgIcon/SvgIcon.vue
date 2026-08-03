@@ -1,21 +1,27 @@
-<script setup lang="ts">
-import { computed, type CSSProperties } from 'vue'
+<script setup>
+import { computed } from 'vue'
 
-interface Props {
-  name: string
-  prefix?: string
-  color?: string
-  size?: string | number
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  prefix: 'icon',
-  color: 'currentColor',
-  size: 16,
+const props = defineProps({
+  name: {
+    type: String,
+    required: true,
+  },
+  prefix: {
+    type: String,
+    default: 'icon',
+  },
+  color: {
+    type: String,
+    default: 'currentColor',
+  },
+  size: {
+    type: [String, Number],
+    default: 16,
+  },
 })
 
 const symbolId = computed(() => `#${props.prefix}-${props.name}`)
-const iconStyle = computed<CSSProperties>(() => {
+const iconStyle = computed(() => {
   const size = typeof props.size === 'number' ? `${props.size}px` : props.size
   return {
     width: size,

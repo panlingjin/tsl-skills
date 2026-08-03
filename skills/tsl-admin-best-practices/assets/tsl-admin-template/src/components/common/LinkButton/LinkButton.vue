@@ -1,18 +1,15 @@
-<script setup lang="ts">
-interface Props {
-  disabled?: boolean
-}
-
-withDefaults(defineProps<Props>(), {
-  disabled: false,
+<script setup>
+defineProps({
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-const emit = defineEmits<{
-  click: [event: MouseEvent]
-}>()
+const emit = defineEmits(['click'])
 
-function handleClick(event: MouseEvent) {
-  if (!event.currentTarget || (event.currentTarget as HTMLButtonElement).disabled) return
+function handleClick(event) {
+  if (!event.currentTarget || event.currentTarget.disabled) return
   emit('click', event)
 }
 </script>

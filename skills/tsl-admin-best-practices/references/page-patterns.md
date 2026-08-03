@@ -10,17 +10,16 @@
 - 每个可复用列表表格提供稳定且不含用户敏感信息的 `tableKey`。
 
 ```vue
-<script setup lang="ts">
+<script setup>
 import { ref } from 'vue'
 import { Button as OriButton, Input as OriInput } from 'origami-vue'
 import AdminTable from '@/components/business/AdminTable/AdminTable.vue'
-import type { TableColumn, TableRow } from '@/components/business/AdminTable/types'
 import LinkButton from '@/components/common/LinkButton/LinkButton.vue'
 
-const tableRef = ref<InstanceType<typeof AdminTable>>()
+const tableRef = ref(null)
 const keyword = ref('')
-const selectedRows = ref<TableRow[]>([])
-const columns: TableColumn[] = [
+const selectedRows = ref([])
+const columns = [
   { type: 'checkbox' },
   { type: 'index', title: '序号' },
   { dataIndex: 'name', title: '名称' },
@@ -72,7 +71,7 @@ const columns: TableColumn[] = [
 - 使用带 `20px` 内边距的白色面板。
 - 设置区块标题为 `16px / 500`，区块间距 `12px` 至 `16px`。
 - 新增/编辑优先使用抽屉，确认或短流程使用弹窗。
-- 表单状态与校验封装在抽屉/弹窗组件中，通过 typed emits 返回提交结果。
+- 表单状态与校验封装在抽屉/弹窗组件中，通过明确的 emits 返回提交结果。
 
 ## 页面边界
 

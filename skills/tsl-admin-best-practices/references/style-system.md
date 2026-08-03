@@ -32,10 +32,10 @@
 
 ## Less 边界
 
-- 全局令牌和 Less mixin 放在 `src/styles/var.less`，不在令牌文件中堆积组件类名。
-- Reset 放在 `src/styles/reset.less`。
+- 全局令牌和 Less mixin 放在 `src/assets/styles/variables.less`，不在令牌文件中堆积组件类名。
+- Reset 放在 `src/assets/styles/reset.less`。
 - 组件专属样式使用 `<style scoped lang="less">`。
-- 布局跨子组件的共享结构样式可放在布局目录的单独 Less 文件。
+- 需要单独维护的共享组件样式放在 `src/assets/styles/components/`，文件名使用 kebab-case。
 - 不把页面私有选择器加入全局样式。
 
 ## Origami 样式覆盖

@@ -1,14 +1,17 @@
-<script setup lang="ts">
-interface Props {
-  statusClass?: string
-  text?: string
-  changeBackground?: boolean
-}
-
-withDefaults(defineProps<Props>(), {
-  statusClass: 'default',
-  text: '-',
-  changeBackground: true,
+<script setup>
+defineProps({
+  statusClass: {
+    type: String,
+    default: 'default',
+  },
+  text: {
+    type: String,
+    default: '-',
+  },
+  changeBackground: {
+    type: Boolean,
+    default: true,
+  },
 })
 </script>
 

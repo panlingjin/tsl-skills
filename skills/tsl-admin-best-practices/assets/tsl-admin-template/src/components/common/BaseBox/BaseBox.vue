@@ -1,10 +1,9 @@
-<script setup lang="ts">
-interface Props {
-  hasRightPadding?: boolean
-}
-
-withDefaults(defineProps<Props>(), {
-  hasRightPadding: false,
+<script setup>
+defineProps({
+  hasRightPadding: {
+    type: Boolean,
+    default: false,
+  },
 })
 </script>
 

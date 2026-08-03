@@ -5,7 +5,7 @@ description: 为 Vue 3 PC 管理后台提供 TSL/Tacos 风格的专项实现规�
 
 # TSL 管理后台最佳实践
 
-本技能是 `frontend-engineering-standards` 的专项补充，只定义 TSL/Tacos 管理后台独有的视觉、布局和组件模式。通用的 TypeScript、目录、命名、依赖管理、路由、Pinia、测试和构建规则不在此重复定义。
+本技能是 `frontend-engineering-standards` 的专项补充，只定义 TSL/Tacos 管理后台独有的视觉、布局和组件模式。通用的 JavaScript、目录、命名、依赖管理、路由、Pinia、测试和构建规则不在此重复定义。
 
 ## 优先级
 
@@ -13,7 +13,7 @@ description: 为 Vue 3 PC 管理后台提供 TSL/Tacos 风格的专项实现规�
 
 1. `frontend-engineering-standards` 是通用基线，优先级最高。
 2. 本技能只在基线未规定或明确允许项目特化时补充 TSL 约束。
-3. 发生冲突时，使用 TypeScript、Yarn、PascalCase、`stores/`、`layouts/`、`src/icons/`、`vite.config.ts` 和基线规定的 Vite 插件。
+3. 发生冲突时，使用 JavaScript、Yarn、PascalCase、`stores/`、`layouts/`、`src/assets/styles/`、`src/icons/`、`vite.config.js` 和基线规定的 Vite 插件。
 4. 保留 TSL 的布局尺寸、信息密度、配色、Origami Vue 用法、页面范式和 Wujie 条件适配。
 
 ## 工作流
@@ -37,13 +37,12 @@ description: 为 Vue 3 PC 管理后台提供 TSL/Tacos 风格的专项实现规�
 - 组件目录和 SFC 使用 PascalCase。
 - 组件目录不创建 `index.js` 或 `index.ts` 二次导出。
 - 统一直接导入具体文件，例如 `@/components/common/BaseBox/BaseBox.vue`。
-- 类型直接从其定义文件导入，例如 `@/components/business/AdminTable/types`。
 - 只有真正的独立 npm 包才设计包级公共入口；项目内部组件不使用 barrel。
 
 ## 默认约定
 
-- 新代码使用 Composition API 与 `<script setup lang="ts">`。
+- 新代码使用纯 JavaScript、Composition API 与 `<script setup>`；不创建 `.ts`、`.tsx` 文件，也不写 TypeScript 类型语法。
 - Origami Vue 是默认 UI 组件库；其他 UI 库只能在明确缺失能力时局部引入并记录原因。
-- 组件保持单一职责，使用 typed props、typed emits、属性向下和事件向上。
+- 组件保持单一职责，使用运行时 props、明确的 emits、属性向下和事件向上；复杂公共参数使用 JSDoc 补充说明。
 - 业务、菜单和资源 SVG 使用本地雪碧图；通用控件图标优先使用 `origami-vue/es/icon`。
 - Wujie 支持是条件能力，普通独立项目保持 `base: '/'`。

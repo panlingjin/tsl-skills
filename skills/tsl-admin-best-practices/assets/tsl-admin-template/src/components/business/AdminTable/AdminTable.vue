@@ -1,64 +1,73 @@
-<script setup lang="ts">
+<script setup>
 import { computed, nextTick, ref, watch } from 'vue'
 import { Table as OriTable } from 'origami-vue'
 import SvgIcon from '@/components/common/SvgIcon/SvgIcon.vue'
-import { formatDate } from '@/utils/tools'
+import { formatDate } from '@/utils/tools.js'
 import TableColumnSettings from './TableColumnSettings.vue'
-import { useTableColumns } from './useTableColumns'
-import type {
-  TableColumn,
-  TableInstance,
-  TableOptions,
-  TablePagination,
-  TableRow,
-} from './types'
+import { useTableColumns } from './useTableColumns.js'
 
-interface Props {
-  columns: TableColumn[]
-  dataSource?: TableRow[]
-  pagination?: TablePagination
-  loading?: boolean
-  hideRefresh?: boolean
-  hideColumnSettings?: boolean
-  tableKey?: string
-  checkMethod?: (params: unknown) => boolean
-  selectedRows?: TableRow[]
-  rowConfig?: {
-    keyField?: string
-    isHover?: boolean
-    isCurrent?: boolean
-  }
-  isTree?: boolean
-  treeConfig?: {
-    rowField?: string
-    parentField?: string
-    transform?: boolean
-  }
-  treeNode?: string
-  options?: TableOptions
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  dataSource: () => [],
-  loading: false,
-  hideRefresh: false,
-  hideColumnSettings: false,
-  tableKey: undefined,
-  checkMethod: undefined,
-  selectedRows: () => [],
-  rowConfig: () => ({ keyField: 'id', isHover: true }),
-  isTree: false,
-  treeConfig: () => ({ rowField: 'id', parentField: 'parentId', transform: true }),
-  treeNode: undefined,
-  options: () => ({ stripe: false, bordered: 'inner', size: 'mini' }),
+const props = defineProps({
+  columns: {
+    type: Array,
+    required: true,
+  },
+  dataSource: {
+    type: Array,
+    default: () => [],
+  },
+  pagination: {
+    type: Object,
+    default: undefined,
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  hideRefresh: {
+    type: Boolean,
+    default: false,
+  },
+  hideColumnSettings: {
+    type: Boolean,
+    default: false,
+  },
+  tableKey: {
+    type: String,
+    default: undefined,
+  },
+  checkMethod: {
+    type: Function,
+    default: undefined,
+  },
+  selectedRows: {
+    type: Array,
+    default: () => [],
+  },
+  rowConfig: {
+    type: Object,
+    default: () => ({ keyField: 'id', isHover: true }),
+  },
+  isTree: {
+    type: Boolean,
+    default: false,
+  },
+  treeConfig: {
+    type: Object,
+    default: () => ({ rowField: 'id', parentField: 'parentId', transform: true }),
+  },
+  treeNode: {
+    type: String,
+    default: undefined,
+  },
+  options: {
+    type: Object,
+    default: () => ({ stripe: false, bordered: 'inner', size: 'mini' }),
+  },
 })
 
-const emit = defineEmits<{
-  refresh: []
-  checkChange: [records: TableRow[], checked: boolean]
-}>()
+const emit = defineEmits(['refresh', 'checkChange'])
 
-const table = ref<TableInstance | null>(null)
+const table = ref(null)
 const refreshing = ref(false)
 const tableKey = computed(() => props.tableKey)
 const {
@@ -74,7 +83,7 @@ const {
   visibleColumns,
 } = useTableColumns(() => props.columns, tableKey)
 
-const tablePagination = computed<TablePagination | false>(() => {
+const tablePagination = computed(() => {
   if (!props.pagination) return false
 
   return {
@@ -97,9 +106,9 @@ function refresh() {
   }, 500)
 }
 
-function getCellValue(row: TableRow, column: TableColumn) {
+function getCellValue(row, column) {
   const value = column.dataIndex ? row[column.dataIndex] : undefined
-  if (column.type === 'time') return formatDate(value as string | number | Date | null)
+  if (column.type === 'time') return formatDate(value)
   if (column.type === 'version') return value ? `V${String(value)}` : '-'
   if (column.type === 'address') {
     const location = row.location
@@ -112,16 +121,16 @@ function getCellValue(row: TableRow, column: TableColumn) {
   return `${String(value)}${column.unit ?? ''}`
 }
 
-function invokeTableMethod<T>(name: string) {
-  return table.value?.methods?.(name)?.() as T | undefined
+function invokeTableMethod(name) {
+  return table.value?.methods?.(name)?.()
 }
 
 function clearSelection() {
   invokeTableMethod('clearCheckboxRow')
 }
 
-function emitSelectedRows(checked: boolean) {
-  emit('checkChange', invokeTableMethod<TableRow[]>('getCheckboxRecords') ?? [], checked)
+function emitSelectedRows(checked) {
+  emit('checkChange', invokeTableMethod('getCheckboxRecords') ?? [], checked)
 }
 
 async function clearSelectionWhenMissing() {
@@ -254,4 +263,4 @@ defineExpose({
   </div>
 </template>
 
-<style scoped lang="less" src="./AdminTable.less"></style>
+<style scoped lang="less" src="@/assets/styles/components/admin-table.less"></style>

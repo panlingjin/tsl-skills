@@ -23,15 +23,15 @@
 - 通过递归 `AdminMenuItem` 渲染层级，避免在侧栏组件里堆叠多组重复分支。
 - 菜单项使用统一数据契约：
 
-```ts
-interface MenuItem {
-  key: string
-  label: string
-  path?: string
-  activePath?: string
-  icon?: string
-  disabled?: boolean
-  children?: MenuItem[]
+```js
+const menuItem = {
+  key: 'alarm-center',
+  label: '告警中心',
+  path: '/alarm-center',
+  activePath: '/alarm-center',
+  icon: 'alarm',
+  disabled: false,
+  children: [],
 }
 ```
 

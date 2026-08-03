@@ -17,7 +17,7 @@
 
 通用控件图标优先从 `origami-vue/es/icon` 具名导入：
 
-```ts
+```js
 import { QuestionMarkCircle, Search as OriIconSearch } from 'origami-vue/es/icon'
 ```
 
