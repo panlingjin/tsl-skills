@@ -7,6 +7,7 @@
 **使用 PascalCase:**
 - 所有 Vue 组件文件使用 PascalCase 命名
 - 组件名应该是多词的(避免与 HTML 元素冲突)
+- `App.vue` 等框架约定的入口组件可作为单词名称例外
 
 **示例:**
 ```
@@ -94,26 +95,26 @@ api/
 
 ### 全局样式文件
 
-**使用功能描述 + kebab-case:**
+**使用功能描述 + kebab-case，扩展名跟随项目已选的 CSS 方案：**
 ```
 assets/styles/
-├── variables.scss          ✓ 变量定义
-├── mixins.scss             ✓ 混入定义
-├── global.scss             ✓ 全局样式
-├── reset.scss              ✓ 重置样式
+├── variables.less          ✓ 变量定义
+├── mixins.less             ✓ 混入定义
+├── global.css              ✓ 全局样式
+├── reset.css               ✓ 重置样式
 ```
 
 ### 组件样式文件
 
-**统一放入 `src/assets/styles/components/`，文件名使用 kebab-case:**
+**抽取为共享文件时统一放入 `src/assets/styles/components/`，文件名使用 kebab-case：**
 ```
 assets/styles/
 ├── components/
-│   ├── user-card.scss      ✓ UserCard 组件样式
-│   └── order-list.scss     ✓ OrderList 组件样式
+│   ├── user-card.less      ✓ UserCard 共享样式
+│   └── order-list.less     ✓ OrderList 共享样式
 ```
 
-所有公共样式统一存放在 `src/assets/styles/`，不在组件目录旁创建独立的样式目录。
+组件私有样式保留在 SFC 的 `<style scoped>` 中；跨组件公共样式统一存放在 `src/assets/styles/`。
 
 ## 静态资源命名
 
@@ -166,22 +167,22 @@ components/
 
 ### 单元测试文件
 
-**使用 `.spec.js` 或 `.test.js` 后缀:**
+**单元测试和组件测试统一使用 `.test.js` 后缀:**
 ```
 tests/
 ├── unit/
-│   ├── user.spec.js        ✓ 用户模块测试
-│   ├── validation.spec.js  ✓ 验证工具测试
+│   ├── user.test.js        ✓ 用户模块测试
+│   ├── validation.test.js  ✓ 验证工具测试
 ```
 
-### 组件测试文件
+### E2E 测试文件
 
 **使用 `.spec.js` 后缀:**
 ```
-tests/
-├── components/
-│   ├── UserCard.spec.js    ✓ UserCard 组件测试
-│   ├── OrderList.spec.js   ✓ OrderList 组件测试
+e2e/
+├── auth/
+│   ├── login.spec.js       ✓ 登录流程测试
+│   ├── register.spec.js    ✓ 注册流程测试
 ```
 
 ## 配置文件命名
@@ -202,7 +203,7 @@ tests/
 ```
 vite.config.js              ✓ Vite 配置
 jsconfig.json               ✓ JavaScript 路径与编辑器配置
-.eslintrc.js                ✓ ESLint 配置
+eslint.config.js            ✓ 新项目 ESLint Flat Config
 .prettierrc                 ✓ Prettier 配置
 ```
 
@@ -214,7 +215,8 @@ jsconfig.json               ✓ JavaScript 路径与编辑器配置
 | 组件目录 | PascalCase | `UserCard/` | 与组件名一致 |
 | 功能目录 | kebab-case | `user-profile/` | 模块目录 |
 | JavaScript 文件 | camelCase | `useAuth.js` | 组合式函数、工具 |
-| 样式文件 | kebab-case | `global.scss` | 全局样式 |
+| 样式文件 | kebab-case | `global.css` | 扩展名跟随项目 |
 | 图片文件 | kebab-case | `logo-primary.png` | 静态资源 |
-| 测试文件 | camelCase + spec | `user.spec.js` | 测试文件 |
+| 单元/组件测试 | camelCase + test | `user.test.js` | Vitest 测试 |
+| E2E 测试 | kebab-case + spec | `login.spec.js` | Playwright 测试 |
 | 配置文件 | 工具名 + config | `vite.config.js` | 配置文件 |

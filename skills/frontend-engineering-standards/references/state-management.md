@@ -93,14 +93,22 @@ export function useUserDashboard() {
 
 ## 持久化策略
 
-使用 pinia-plugin-persistedstate：
+使用 `pinia-plugin-persistedstate` 时只持久化非敏感的必要字段。不要持久化密码、会话标识或访问令牌。Setup Store 将配置放在 `defineStore` 的第三个参数中：
 
 ```javascript
-persist: {
-  key: 'user-store',
-  storage: localStorage,
-  paths: ['token', 'preferences'],
-}
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+
+export const useUserStore = defineStore('user', () => {
+  const preferences = ref({})
+  return { preferences }
+}, {
+  persist: {
+    key: 'user-preferences',
+    storage: localStorage,
+    pick: ['preferences'],
+  },
+})
 ```
 
 ## Store 使用规范
@@ -108,8 +116,10 @@ persist: {
 ### 在组件中使用
 
 ```javascript
+import { storeToRefs } from 'pinia'
+
 const userStore = useUserStore()
-const userInfo = userStore.userInfo
+const { userInfo } = storeToRefs(userStore)
 await userStore.login({ username, password })
 ```
 

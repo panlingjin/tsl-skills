@@ -218,7 +218,4 @@ hotfix → main: Merge Commit
 
 ### CHANGELOG 要求
 
-- 遵循 Keep a Changelog 格式
-- 按变更类型分类
-- 包含版本号、日期和变更说明
-- 关联相关 Issue
+生成工具只负责从提交历史整理候选条目；版本号、分类、日期、Issue 和文案格式统一遵循 `documentation-standards.md`，不要在本文件维护第二套格式规则。

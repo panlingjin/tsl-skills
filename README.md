@@ -16,7 +16,7 @@
 | TSL 专项 | [`tsl-admin-best-practices`](skills/tsl-admin-best-practices/SKILL.md) | 创建、还原或重构 TSL 风格的 Vue 3 管理后台 |
 | TSL 专项 | [`tsl-big-screen-best-practices`](skills/tsl-big-screen-best-practices/SKILL.md) | 创建、维护或评审 TSL 风格的 Vue 3 数字孪生与数据可视化大屏 |
 | 前端开发 | [`frontend-developer`](skills/frontend-developer/SKILL.md) | 实现前端功能、修复缺陷、还原设计并开展界面质量检查 |
-| 工程规范 | [`frontend-engineering-standards`](skills/frontend-engineering-standards/SKILL.md) | 规范 Vue 3、TypeScript、Vite 项目的架构、编码、测试、性能与安全 |
+| 工程规范 | [`frontend-engineering-standards`](skills/frontend-engineering-standards/SKILL.md) | 规范 Vue 3、JavaScript、Vite 项目的架构、编码、测试、性能与安全 |
 | 工程规范 | [`document-structure-standards`](skills/document-structure-standards/SKILL.md) | 统一产品需求、前后端设计及整体说明文档的结构和存放路径 |
 | 生态参考 | [`pinia`](skills/pinia/SKILL.md) | 使用 Pinia 定义 Store、组织状态逻辑以及处理 SSR、插件和测试 |
 | 生态参考 | [`anime`](skills/anime/SKILL.md) | 使用 Anime.js v4 创建时间轴、拖拽、滚动、SVG 和文本动画 |

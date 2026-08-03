@@ -46,11 +46,8 @@ project-root/
 │   │   └── admin/          # 管理模块
 │   ├── App.vue             # 根组件
 │   └── main.js             # 应用入口
-├── .env                    # 环境变量(通用)
-├── .env.development        # 开发环境变量
-├── .env.production         # 生产环境变量
-├── .env.staging            # 预发布环境变量
-├── .eslintrc.js            # ESLint 配置
+├── .env*                   # 环境变量文件
+├── eslint.config.js        # ESLint 配置（新项目）
 ├── .prettierrc             # Prettier 配置
 ├── .gitignore              # Git 忽略文件
 ├── index.html              # HTML 入口模板
@@ -77,12 +74,12 @@ project-root/
 - `common/`: 通用基础组件(Button、Input、Form 等)
 - `business/`: 业务公共组件(UserCard、OrderItem 等)
 - `ui/`: UI 组件库扩展或自定义 UI 组件
-- 组件文件使用 PascalCase: `UserCard.vue`
+- 具体文件与目录命名遵循文件命名规范
 
 ### composables/
 - 组合式函数(hooks),用于提取和复用逻辑
 - 状态逻辑复用、生命周期钩子封装
-- 使用 `use` 前缀: `useAuth.js`、`useRequest.js`
+- 不放置与响应式或生命周期无关的普通工具函数
 
 ### views/
 - 页面级组件,对应路由
@@ -96,33 +93,8 @@ project-root/
 - `index.js`: 统一导出所有 Store
 
 ### utils/
-- 纯工具函数,无副作用
-- 数据转换、格式化、验证、本地存储操作
-- 避免放置有副作用的函数(应在 composables)
+- 优先放置数据转换、格式化和验证等纯函数
+- 浏览器存储等适配器必须通过命名和文档明确其副作用
+- 依赖响应式状态或生命周期的逻辑放入 composables
 
-## 环境配置文件
-
-### .env 文件组织
-
-**文件命名:**
-- `.env`: 通用环境变量
-- `.env.development`: 开发环境
-- `.env.production`: 生产环境
-- `.env.staging`: 预发布环境
-
-**变量命名规范:**
-- 使用 `VITE_` 前缀(Vite 要求)
-- 使用 UPPER_SNAKE_CASE
-
-**示例:**
-```env
-# .env.development
-VITE_API_BASE_URL=http://localhost:3000/api
-VITE_APP_TITLE=My App (Dev)
-VITE_ENABLE_MOCK=true
-
-# .env.production
-VITE_API_BASE_URL=https://api.example.com
-VITE_APP_TITLE=My App
-VITE_ENABLE_MOCK=false
-```
+环境变量、Node.js 与构建文件的详细约定统一参见 `build-environment.md`；本文件只定义它们在项目根目录中的位置。

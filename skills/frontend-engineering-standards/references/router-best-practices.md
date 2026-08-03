@@ -12,7 +12,7 @@
 ```
 src/router/
 ├── index.js          # 路由入口
-├── routes.js         # 路由配置
+├── modules/          # 按业务拆分的路由模块
 └── guards.js         # 路由守卫
 ```
 
@@ -50,24 +50,9 @@ const routes = [
 component: () => import('@/views/Home.vue')
 ```
 
-**命名chunk:**
-```javascript
-component: () => import(
-  /* webpackChunkName: "home" */ 
-  '@/views/Home.vue'
-)
-```
-
 ### 路由分组
 
-**按模块分组:**
-```javascript
-// vite.config.js
-manualChunks(id) {
-  if (id.includes('/views/user/')) return 'user-module'
-  if (id.includes('/views/product/')) return 'product-module'
-}
-```
+默认让 Vite 按动态导入拆分路由。只有构建分析证明存在缓存或体积问题时，才在 `vite.config.js` 中配置手动分组；不要使用 Webpack magic comment。
 
 ---
 
@@ -216,7 +201,7 @@ route.query.keyword
 {
   path: '/:pathMatch(.*)*',
   name: 'NotFound',
-  component: () => import('@/views/error/404.vue')
+  component: () => import('@/views/error/NotFound.vue')
 }
 ```
 
@@ -237,10 +222,11 @@ route.query.keyword
 
 **视图级缓存:**
 ```vue
-<RouterView v-slot="{ Component }">
+<RouterView v-slot="{ Component, route }">
   <KeepAlive>
-    <component :is="Component" />
+    <component :is="Component" v-if="route.meta.keepAlive" />
   </KeepAlive>
+  <component :is="Component" v-if="!route.meta.keepAlive" />
 </RouterView>
 ```
 
