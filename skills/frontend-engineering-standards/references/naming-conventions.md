@@ -95,13 +95,13 @@ api/
 
 ### 全局样式文件
 
-**使用功能描述 + kebab-case，扩展名跟随项目已选的 CSS 方案：**
+**使用功能描述 + kebab-case，样式文件统一使用 Less：**
 ```
 assets/styles/
 ├── variables.less          ✓ 变量定义
 ├── mixins.less             ✓ 混入定义
-├── global.css              ✓ 全局样式
-├── reset.css               ✓ 重置样式
+├── global.less             ✓ 全局样式
+├── reset.less              ✓ 重置样式
 ```
 
 ### 组件样式文件
@@ -215,7 +215,7 @@ eslint.config.js            ✓ 新项目 ESLint Flat Config
 | 组件目录 | PascalCase | `UserCard/` | 与组件名一致 |
 | 功能目录 | kebab-case | `user-profile/` | 模块目录 |
 | JavaScript 文件 | camelCase | `useAuth.js` | 组合式函数、工具 |
-| 样式文件 | kebab-case | `global.css` | 扩展名跟随项目 |
+| 样式文件 | kebab-case | `global.less` | 统一使用 Less |
 | 图片文件 | kebab-case | `logo-primary.png` | 静态资源 |
 | 单元/组件测试 | camelCase + test | `user.test.js` | Vitest 测试 |
 | E2E 测试 | kebab-case + spec | `login.spec.js` | Playwright 测试 |
