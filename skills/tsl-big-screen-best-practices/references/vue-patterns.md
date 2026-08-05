@@ -1,166 +1,84 @@
-# Vue 编码模式
+# 大屏 Vue 所有权模式
 
 ## 目录
 
-- [SFC 默认规范](#sfc-defaults)
-- [组件边界](#component-boundaries)
-- [Props 与 Emits](#props-and-emits)
-- [Composables](#composables)
-- [Modal 所有权](#modal-ownership)
-- [图表所有权](#chart-ownership)
-- [Pinia](#pinia)
-- [Router](#router)
-- [生命周期安全](#lifecycle-safety)
+- [组件分区](#组件分区)
+- [状态归属](#状态归属)
+- [ECharts 所有权](#echarts-所有权)
+- [弹层所有权](#弹层modal所有权)
+- [dt-engine 所有权](#dt-engine-所有权)
+- [资源清理](#资源清理)
 
-## SFC Defaults
+通用 SFC、Props/Emits、响应式数据、Router、Pinia 和组件抽离规则读取 `frontend-engineering-standards`。本文件只定义大屏特有的组合和运行时所有权。
 
-Use Vue 3 Composition API with `<script setup>`.
+## 组件分区
 
-Order SFC blocks:
+保持根组件和路由视图轻量。典型场景拆为：
 
-```vue
-<script setup>
-</script>
+- 场景路由容器：组合页面并拥有 dt-engine 生命周期。
+- Header：页面标题、时间和全局状态。
+- LeftPanel / RightPanel：组织卡片，不创建全局场景资源。
+- Scene、Map 或 Canvas：渲染底层空间内容。
+- Feature Card / Chart：拥有局部展示和交互。
+- PageSwitch、Modal、LlmControls：按各自 reference 维护独立契约。
 
-<template>
-</template>
+一块 UI 同时包含独立数据编排、多个展示区域或资源副作用时，按通用组件抽离规范拆分。新 SFC 使用 PascalCase；路由视图使用 `HomeScreen.vue` 等语义名称，不新增 `index.vue` 公共入口。
 
-<style scoped lang="less">
-</style>
-```
+## 状态归属
 
-Move derivation and branching into script with `computed`; keep templates declarative.
+- 组件局部交互和普通 Feature Modal 可见性留在组件内。
+- 多面板共享的数据、当前场景、跨功能 Modal 和 LLM 控制状态放入领域 Pinia Store。
+- ECharts、SDK client、播放器和 dt-engine `meta` 等外部实例使用 `shallowRef`，不放入 Pinia，也不由 `reactive` 深代理。
+- 生命周期无关的引擎命令、Page Switch 命令和 MCP action 放入 `services/`，不使用 `use` 前缀。
+- 可复用且依赖 Vue 响应式或生命周期的行为放入 `composables/`。
 
-## Component Boundaries
+## ECharts 所有权
 
-Keep route views thin. Split screen features into:
+使用 `assets/template/data-visualization/useECharts.js`：
 
-- screen container
-- left panel
-- center scene/map/canvas
-- right panel
-- shared modal(s)
-- shared card/chart/counter components
+- 一个图表组件只拥有一个实例。
+- `nextTick` 后等待容器具有正的 `clientWidth/clientHeight` 再初始化。
+- 用 `ResizeObserver` 监听图表元素；零尺寸表示等待，不是错误。
+- Option 变化使用 `flush: 'post'`，Resize 只调整实例尺寸，不重复 `setOption`。
+- Template ref 更换时释放旧元素拥有的实例并重新绑定。
+- `theme` 和 `initOptions` 只在实例创建时读取；改变它们需要 dispose 后重建。
+- 卸载时释放图表、Observer、animation frame 和 window fallback listener。
 
-Split a component when it owns data orchestration and multiple independent UI sections, or when it manages timers/listeners plus substantial markup.
+不要用固定图表宽度、任意 `setTimeout` 或重复无条件 `echarts.init()` 修复生命周期竞态。
 
-## Props And Emits
+## 弹层（Modal）所有权
 
-Use typed and explicit contracts where possible:
+实现弹层前读取 `modal-patterns.md`：
 
-```js
-const props = defineProps({
-  visible: Boolean,
-  data: {
-    type: Object,
-    default: () => ({})
-  }
-});
+- `BaseModal.vue` 负责 Teleport、ARIA、Transition、关闭原因和 Slots。
+- `useModalLifecycle.js` 负责顶层 Escape、Tab 循环、焦点恢复和引用计数滚动锁。
+- Feature Modal 负责 API、验证、业务动作、播放器/图表及其清理。
+- 使用 `v-model:open`，不维护平行的 `visible` 和 `open` 状态。
+- 默认只允许一个主 Modal 和一个 Confirm；Feature 不发明任意 z-index。
+- `keepMounted` 只保留 DOM，关闭后仍停止请求、计时器、媒体和监听器。
 
-const emit = defineEmits(["close", "update:visible"]);
-```
+## dt-engine 所有权
 
-Use `v-model` only for true two-way component contracts such as active tab or modal visibility.
+- 只有渲染场景容器的路由视图调用 `init()` 和 `disposeEngine()`。
+- 同一 JavaScript realm 只保持一个受路由拥有的活动引擎；子功能复用 `loadEngine()` 的缓存。
+- `createEngineActions(meta)` 是无生命周期服务工厂，可由组件、Store 或 MCP handler 使用。
+- 保存并调用所有 `addEventListener`、插件事件、相机跟随、动画和特效返回的清理函数。
+- 目标项目使用非 `4.3.1-1` 版本时，先核对根导出和声明，不从包内部路径导入。
+- 最终释放必须进入 `disposeEngine()` 并在内部 `await meta.dispose()`。
 
-## Composables
+## 资源清理
 
-Put reusable stateful behavior in `src/hooks` or in a component-local `use*.js` file.
+创建资源的最小所有者负责清理：
 
-Composables that allocate resources must expose cleanup or clean up in lifecycle hooks:
+| 资源 | 清理 |
+| --- | --- |
+| 轮询 / 延时器 | `clearInterval` / `clearTimeout` |
+| DOM、window、SDK 事件 | 调用对应 remover 或 remove listener |
+| WebSocket | unsubscribe；由连接所有者决定是否 close |
+| ECharts / 观察器 / 动画帧 | dispose、disconnect、cancel |
+| 动态 Vue app | `app.unmount()` 并移除 mount container |
+| 媒体与 Object URL | pause/close/revoke |
+| POI、特效、相机动作 | remove/clear/stop |
+| dt-engine | 场景路由调用并完成 `disposeEngine()` |
 
-- `setInterval` -> `clearInterval`
-- `setTimeout` -> `clearTimeout` when retained
-- DOM/window events -> remove listener
-- WebSocket listener -> unsubscribe/close
-- dynamic Vue app/modal -> unmount and remove container
-- dt-engine effects/POI -> remove or clear effect ids
-
-## Modal Ownership
-
-Read `references/modal-patterns.md` before implementing a modal or scene popover.
-
-- Use `BaseModal.vue` for Teleport, ARIA, Transition, close reasons, and slots; Feature Modal components own business data and actions.
-- Use `v-model:open`, not parallel `visible` and `open` states.
-- Keep ordinary feature modal visibility local. Use Pinia only for cross-feature, route-independent, LLM, or `frontControl` orchestration.
-- Keep one main modal plus one Confirm. Do not render feature-specific modal stacks with arbitrary z-index values.
-- Side effects follow `open`: abort requests, stop timers/media, and remove listeners on close, replacement, route leave, and unmount. `keepMounted` does not keep side effects active.
-- Use the shared lifecycle composable for topmost Escape, Tab trapping, focus restoration, and reference-counted scroll locking.
-
-## Chart Ownership
-
-Use the bundled `use-echarts.js` composable for charts inside responsive Grid/Flex layouts or content that appears after loading.
-
-- Keep the ECharts instance in a `shallowRef`; never deep-proxy it.
-- Wait for `nextTick`, then initialize only when the container reports positive layout width and height. Prefer `clientWidth/clientHeight` so root zoom or transforms are not applied twice.
-- Observe the chart element with `ResizeObserver`. A zero-size callback is a waiting state, not an initialization signal or an error.
-- Use a `flush: "post"` watcher for option changes so DOM updates finish before render scheduling.
-- Let a changed template ref rebind the observer and dispose the instance owned by the replaced element.
-- Treat `theme` and `initOptions` as initialization-only. Dispose and recreate the instance when either must change; do not expect a reactive theme mutation to recolor an existing ECharts instance.
-- Read `setOptionOptions` at each option application so an owning component can choose update semantics without rebuilding the chart.
-- Dispose the chart, observer, animation frame, and window fallback listener on unmount.
-- Do not repair lifecycle races with fixed chart widths, arbitrary `setTimeout`, or repeated unconditional `echarts.init()` calls.
-
-## Pinia
-
-Use Pinia for cross-feature state:
-
-- cross-feature modal visibility and serializable payloads
-- current scene/step state
-- LLM assistant visibility and command state
-- data shared by several panels
-
-Keep stores focused by domain. Export store modules from `src/store/index.js`.
-
-Prefer minimal source state and computed getters. Store async actions may call `api/` functions, but presentational components should not.
-
-## Router
-
-Use Vue Router 4:
-
-```js
-import { createRouter, createWebHistory } from "vue-router";
-
-const routes = [
-  {
-    path: "/",
-    name: "home",
-    component: () => import("@/views/home")
-  },
-  {
-    path: "/:pathMatch(.*)*",
-    redirect: "/"
-  }
-];
-
-export default createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes
-});
-```
-
-Use HTML5 history mode (`createWebHistory(process.env.BASE_URL)`) by default for routing. Ensure that `publicPath` in `vue.config.js` is configured with an absolute path (typically `"/"`) to prevent nested routing asset loading errors. Production deployments must configure SPA route fallback (e.g., Nginx `try_files`) so reloads on nested routes do not return 404.
-
-For an Nginx root deployment, the minimum fallback is:
-
-```nginx
-location / {
-  try_files $uri $uri/ /index.html;
-}
-```
-
-When deploying below a subpath, set `publicPath` to that absolute subpath and keep `createWebHistory(process.env.BASE_URL)` unchanged so the router and compiled asset base stay aligned.
-
-Use route `meta` for scene keys or app codes only when navigation behavior needs them.
-
-## Lifecycle Safety
-
-Never leave these unmanaged:
-
-- resize handlers
-- click handlers on `document` or `window`
-- timers
-- chart instances
-- WebSocket subscriptions
-- dt-engine camera/effect sequences
-
-Add `onUnmounted` cleanup in the component or composable that created the resource.
+检查打开、更新、替换、路由离开和组件卸载五条路径。异步操作需要取消、版本号或其他陈旧结果保护，不能在卸载后写入状态。

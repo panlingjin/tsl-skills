@@ -52,7 +52,7 @@ component: () => import('@/views/Home.vue')
 
 ### 路由分组
 
-默认让 Vite 按动态导入拆分路由。只有构建分析证明存在缓存或体积问题时，才在 `vite.config.js` 中配置手动分组；不要使用 Webpack magic comment。
+默认让当前构建工具按动态导入拆分路由。只有构建分析证明存在缓存或体积问题时，才在对应构建配置中增加手动分组；不要跨工具链复制 Vite `manualChunks` 或 Webpack magic comment。
 
 ---
 

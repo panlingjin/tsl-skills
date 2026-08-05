@@ -1,0 +1,23 @@
+.llm-control {
+  border: 1px solid rgba(101, 242, 252, 0.55);
+  color: #e9fdff;
+  background: rgba(5, 29, 54, 0.9);
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.llm-control:focus-visible {
+  outline: 2px solid #65f2fc;
+  outline-offset: 3px;
+}
+
+.llm-control:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .llm-control {
+    transition-duration: 0.01ms;
+  }
+}

@@ -1,144 +1,55 @@
-# 数据集成
+# 大屏数据接入
 
-## 目录
+本文件只定义 Vue CLI/Webpack 大屏的数据接入例外。通用 API 分层、错误处理、安全、状态管理规则以 `$frontend-engineering-standards` 为准。
 
-- [Axios](#axios)
-- [MockJS](#mockjs)
-- [定时刷新](#timed-refresh)
-- [WebSocket](#websocket)
+## HTTP 请求
 
-## Axios
-
-Use native `axios` for new projects. Create a single shared instance in `src/utils/axios.js`.
-
-```js
-import axios from "axios";
-import { Toast } from "origami-vue";
-
-const request = axios.create({
-  baseURL: process.env.VUE_APP_BASE_URL || "/",
-  timeout: 30 * 1000,
-  headers: {}
-});
-
-request.interceptors.request.use((config) => {
-  return config;
-});
-
-request.interceptors.response.use(
-  (response) => {
-    const { data } = response;
-    const code = data?.code;
-    if ([200, "200", 0, "0"].includes(code)) {
-      return Object.prototype.hasOwnProperty.call(data, "data") ? data.data : data;
-    }
-
-    const message = data?.message || data?.msg || "请求失败";
-    Toast.error(message);
-    return Promise.reject(new Error(message));
-  },
-  (error) => {
-    const message = error?.response?.data?.message
-      || error?.response?.data?.msg
-      || error?.message
-      || "网络连接失败";
-    Toast.error(message);
-    return Promise.reject(error instanceof Error ? error : new Error(message));
-  }
-);
-
-export default request;
-```
-
-All API modules must import this instance:
-
-```js
-import request from "@/utils/axios";
-
-export function getOverview(params) {
-  return request.get("/api/overview", { params });
-}
-
-export function updateScene(data) {
-  return request.post("/api/scene", data);
-}
-```
-
-## MockJS
-
-Mock data must simulate real HTTP. Business code should still call Axios normally.
-
-Use:
+新项目复制请求适配器：
 
 ```text
-src/mock/
-  index.js
-  home.js
-  device.js
+assets/template/integrations/request.js
+  -> src/api/request.js
 ```
 
-`src/mock/index.js`:
+请求层只负责：
+
+- 创建 Axios 实例并读取 `VUE_APP_API_BASE_URL`。
+- 将成功响应归一化为业务 `data`。
+- 将 HTTP、网络和业务失败统一拒绝为 `Error`。
+
+请求层不得导入 Toast、Modal 或任何 UI 组件库。页面或业务 composable 捕获错误后决定如何展示；日志不得包含 token、完整请求体或客户敏感数据。
+
+旧项目已有 `src/utils/axios.js` 时可以继续维护，不在普通任务中迁移路径；新增调用保持项目内一致。
+
+## MockJS（Vue CLI）
+
+仅在开发环境且 `VUE_APP_MOCK=true` 时动态加载 MockJS：
 
 ```js
-import Mock from "mockjs";
-import "./home";
-import "./device";
-
-Mock.setup({
-  timeout: "200-600"
-});
-```
-
-Domain mock:
-
-```js
-import Mock from "mockjs";
-
-Mock.mock(/\/api\/overview/, "get", () => ({
-  code: 200,
-  message: "success",
-  data: {
-    "total|1000-9999": 1,
-    "online|100-999": 1
-  }
-}));
-```
-
-Rules:
-
-- Match the same URL and HTTP method used by `api/`.
-- Return the same envelope as the real service: `{ code, message, data }`.
-- Include error examples through the same envelope, not by throwing from components.
-- Keep mock records generic. Do not copy customer data, private IDs, URLs, or tokens.
-- Set `VUE_APP_MOCK = true` only in `.env.development`.
-- Set `VUE_APP_MOCK = false` in `.env.test` and `.env.master` unless a dedicated isolated build explicitly requires mocks.
-- Import `src/mock` only when `VUE_APP_MOCK === "true"`.
-
-## Timed Refresh
-
-Use a composable/helper for interval refresh:
-
-```js
-export function useRefresh(callback, waiting = 10 * 60 * 1000, leading = false) {
-  if (leading) callback();
-  const timer = setInterval(callback, waiting);
-  return () => clearInterval(timer);
+if (process.env.NODE_ENV === 'development' && process.env.VUE_APP_MOCK === 'true') {
+  import('@/mock')
 }
 ```
 
-Store cleanup functions in the owning store/component and run them on destroy or route leave.
+- Mock 模块不得进入生产路径。
+- Mock 响应必须复用真实接口的 envelope、分页和错误语义。
+- 不复制 Vite 插件配置；Vue CLI 项目直接接入 MockJS。
 
-## WebSocket
+## 轮询
 
-Use a wrapper when multiple modules subscribe to a socket.
+- 页面可见且功能启用后再启动。
+- 请求未完成时不启动下一轮，避免堆叠。
+- 在 `onUnmounted`、路由离开或功能关闭时清理定时器。
+- 使用退避或合理间隔；失败不可高频重试。
+- 使用序号或 `AbortController` 防止旧响应覆盖新状态。
 
-Minimum wrapper responsibilities:
+## WebSocket 连接
 
-- connect lazily
-- expose `send`
-- expose `addEventListener` returning an unsubscribe function
-- parse JSON safely
-- reconnect only when the business requires it
-- close or unsubscribe when the route/store is destroyed
+- URL 来自 `VUE_APP_*` 环境变量，不硬编码 token。
+- 连接、消息、错误、关闭分别处理；解析外部消息前校验结构。
+- 重连采用有上限的指数退避，主动关闭时停止重连。
+- 组件、store 或服务中只能有一个明确所有者；所有者负责注销监听器和关闭连接。
 
-Do not put raw WebSocket message parsing in display components.
+## Pinia 边界
+
+跨页面共享且需要缓存的数据进入 `stores/`；图表实例、定时器、WebSocket 对象和 dt-engine `meta` 不进入可序列化 store。旧项目采用 `store/` 时沿用现有结构。

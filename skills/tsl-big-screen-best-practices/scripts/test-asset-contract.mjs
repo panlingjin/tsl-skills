@@ -21,10 +21,12 @@ const displayPath = join(root, "assets/template/data-visualization/data-display.
 const display = readFileSync(displayPath, "utf8");
 const urls = [...display.matchAll(/url\(["']?([^"')]+)["']?\)/g)]
   .map((match) => match[1])
-  .filter((url) => url.startsWith("../img/"));
+  .filter((url) => url.startsWith("../images/"));
 assert(urls.length > 0, "data-display.less should reference decoration assets");
 urls.forEach((url) => {
-  const sourcePath = normalize(join(root, "assets", url.replace(/^\.\.\//, "")));
+  const sourcePath = normalize(
+    join(root, "assets", url.replace(/^\.\.\/images\//, "img/")),
+  );
   assert(existsSync(sourcePath), `missing copied-style dependency: ${url}`);
 });
 

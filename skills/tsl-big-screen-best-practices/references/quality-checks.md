@@ -1,89 +1,33 @@
-# 质量检查
+# 大屏验收
 
-## 目录
+通用 lint、格式化、类型边界、安全、错误处理和测试行为以 `$frontend-engineering-standards` 为准。本文件只补充大屏验收项。
 
-- [Skill 自动验证](#automated-skill-validation)
-- [项目基础](#project-foundation)
-- [运行时生命周期](#runtime-lifecycle)
-- [布局与视觉验收](#layout-and-visual-qa)
-- [数据展示验收](#data-display-qa)
-- [安全与交付](#security-and-delivery)
+## 自动校验
 
-This file is the acceptance entry point. Exact dimensions, colors, APIs, and copy targets live in their owning references; do not duplicate them here.
-
-## Automated Skill Validation
-
-Run from the repository root:
+在仓库根目录执行：
 
 ```bash
 node skills/tsl-big-screen-best-practices/scripts/validate-skill.mjs
 node skills/tsl-big-screen-best-practices/scripts/test-chart-options.mjs
 node skills/tsl-big-screen-best-practices/scripts/test-asset-contract.mjs
-python3 /path/to/skill-creator/scripts/quick_validate.py skills/tsl-big-screen-best-practices
+node skills/tsl-big-screen-best-practices/scripts/test-integration-contracts.mjs
 git diff --check
 ```
 
-When dependencies are available, also compile `data-display.less`, `modal.less`, and `BaseModal.vue`, and run `node --check` on every JavaScript template. The bundled validators check reference routing, long-file contents, copied-asset URLs, protected asset hashes, template lifecycle contracts, and chart-builder edge cases.
+项目级测试使用 Vue CLI/Jest；普通 Vite 项目的 Vitest 默认不适用于本 Skill。PyYAML 可用时再执行 Skill Creator 的 `quick_validate.py`，Node 校验始终是无额外依赖的必选入口。
 
-## Project Foundation
+## 场景烟雾检查
 
-Validate against `project-setup.md`, `source-architecture.md`, and `vue-patterns.md`:
+1. 新建 Vue CLI 5/Webpack 大屏：保留 Babel、`vue.config.js`、`VUE_APP_*`、SVG loader、Jest 和 Yarn。
+2. 只新增图表或卡片：只加载对应视觉 reference 与通用 Vue 规则，不加载 Router、Pinia、Mock、dt-engine 或项目搭建文档。
+3. 维护旧 `hooks/store/assets/style` 项目：新增代码沿用该项目结构，不触发目录迁移。
 
-- Vue CLI 5 scaffold has Babel, ESLint, Jest, SVG loader, and their matching dependencies.
-- Default routing uses HTML5 history mode with `createWebHistory(process.env.BASE_URL)`; `publicPath` is configured with absolute path `"/"` (or matching base) and server configuration provides SPA routing fallback.
-- Development enables MockJS explicitly; test/master disable it explicitly.
-- API code uses the shared Axios instance and preserves `null`, `0`, `false`, and empty strings according to the response envelope.
-- Error handling emits one user-facing message per failure and still rejects with an Error.
-- Root app is a composition surface; feature behavior lives in components, composables, services, or stores.
-- No generated template declares a third-party font unless the project explicitly requires one.
+## 人工视觉与交互检查
 
-## Runtime Lifecycle
-
-Validate every owned resource through open, update, replacement, route leave, and unmount:
-
-- `useScale` fits both width and height of the `1920 × 1080` canvas and removes observers/listeners.
-- ECharts initializes only with positive geometry, updates dirty options, resizes without redundant `setOption`, and disposes on element replacement/unmount.
-- Modal replacement never restores stale focus; normal close does. Scroll lock survives main-plus-Confirm stacking.
-- LLM uses `shallowRef`, exposes retry/error state, calls `robot.close()`, and awaits `mcp.close()`.
-- MCP creation returns its server handle; failed initialization does not leave half-created resources.
-- `frontControl` calls lifecycle-free services and never invokes a component composable outside setup.
-- dt-engine shares one pending promise, resets it after failure, installs listeners once, calls returned unsubscribe functions, and awaits `meta.dispose()` from the scene owner.
-- Timers, WebSockets, players, dynamic mount nodes, POI/effects, and document/window listeners all have an owner and cleanup path.
-
-## Layout And Visual QA
-
-Validate against `big-screen-ui.md`, `card-patterns.md`, `title-decoration.md`, and `modal-patterns.md`:
-
-- Supplied Figma/design-MCP/design-file visuals are honored for explicit layout, color, typography, decoration, and component-state decisions; TSL defaults only fill unspecified areas.
-- Header, panels, Page Switch, LLM controls, and Teleported modals remain in the same scaled coordinate system.
-- Page Switch never copies or renders `switch-icon.png`; the collapsed line is its only toggle ornament.
-- Page Switch maps text, muted, border, surface, and active states to the project theme variables; changing theme does not leave a fallback gold glow behind.
-- Full-page scene remains the bottom layer; overlays do not resize it.
-- Side panels pass the documented height budget and `scrollHeight <= clientHeight + 1`; only a bounded card body may scroll.
-- Card hierarchy, density, nesting, blur, interaction, and status treatment follow the card reference.
-- One card uses at most one primary title treatment. Title text truncates safely before decoration or actions overlap.
-- Ya'an Rail and AI Park Marker source assets retain their documented hashes and fixed-color behavior.
-- Dialog, Confirm, Drawer, Media, and Scene Callout use the correct semantics, layers, backdrop, close policy, and AI Park visual baseline.
-- A titleless modal supplies `ariaLabel`; Confirm uses `alertdialog`; busy blocks user dismissal.
-
-## Data Display QA
-
-Validate against `data-visualization.md` and `china-map.md`:
-
-- Display form follows the question and data semantics, including documented degradation rules.
-- Zero remains visible; invalid/missing values become `--` only where specified.
-- Trend/comparison tooltips show units and long labels remain readable.
-- Donuts reject invalid/negative parts, keep center/ring geometry aligned, use one legend mode, and leave ring hover unobstructed.
-- Gauge detail shows the same clamped value represented by its progress.
-- Tables use `.data-table__scroll` for bounded sticky headers and never make the whole side panel scroll.
-- Loading, empty, error, stale, and partial states preserve layout and provide meaningful recovery/context.
-- Static China map registers only the two documented maps, keeps three static layers on one Canvas, and creates no animation, interaction, timer, or business series.
-- Static China map defaults to a shared `64px` fit box on all three layers; no layer uses `105%` overscan unless the caller explicitly selects legacy mode.
-
-## Security And Delivery
-
-- Search generated files for tokens, JWTs, private hosts, customer identifiers, project-specific model ids, and copied business data.
-- Keep browser credentials out of committed source and use approved runtime configuration/token exchange.
-- Include only requested optional integrations and assets.
-- Run the closest available lint, unit, build, and visual smoke checks; report anything that could not be run.
-- Preserve existing user changes and ensure `git diff --check` is clean.
+- 在 1920×1080、16:10 和 4:3 视口检查等比缩放、居中和留白。
+- 检查两侧面板高度预算，不出现页面级或整列滚动。
+- Header、场景、Page Switch、Modal 和 LLM 控件处于同一缩放坐标系。
+- Modal 层级只采用 `modal-patterns.md` 的值。
+- 键盘可到达所有交互入口，焦点清晰，禁用态不可触发。
+- `prefers-reduced-motion` 下非必要动效关闭。
+- 图表、dt-engine、轮询、WebSocket、MCP 注册和事件监听在卸载后全部释放。

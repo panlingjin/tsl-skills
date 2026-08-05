@@ -1,123 +1,78 @@
 # 静态中国地图
 
-## 目录
+本文件只适用于雅安风格的静态全国底图。数据驱动地图、热力图、迁徙线或区域下钻应按业务重新设计 option。
 
-- [源资源](#source-assets)
-- [三层契约](#three-layer-contract)
-- [静态行为](#static-behavior)
-- [注册与生命周期](#registration-and-lifecycle)
-- [验收](#acceptance)
+## 来源资源
 
-Use this pattern only when the screen needs the static Ya'an-style national map surface. It renders the national base map and its depth treatment; it does not own business regions, points, routes, tooltips, rotation, drill-down, refresh, or interaction.
-
-## Source Assets
-
-Copy only the two files used by the Ya'an map component:
+只复制实际使用的两个文件：
 
 ```text
-skill assets/map/china/china.json
-  -> project src/assets/map/china/china.json
-skill assets/map/china/china-map-outline.js
-  -> project src/assets/map/china/china-map-outline.js
+assets/map/china/china.json
+  -> src/assets/map/china/china.json
+assets/map/china/china-map-outline.js
+  -> src/assets/map/china/china-map-outline.js
 ```
 
-`china.json` is the approximately `110 KB` province map. `china-map-outline.js` is the approximately `61 KB` national outline. Do not copy Ya'an's unused `china-map.js` or `china-out.js`; together they add about `913 KB` without participating in the rendered map.
+不要复制未参与渲染的旧 `china-map.js` 或 `china-out.js`。上述资源来自内部参考项目，复制时不得改变坐标、几何、编码或颜色数据。它们不代表已获得公开互联网发布许可；对外发布前必须由项目方核对地图审核和国界展示要求。
 
-These files are copied from an internal reference project without changing coordinates, geometry, encoding, or color data. This template does not assert that they are approved for public Internet publication. The consuming project must verify national-boundary and map-review requirements before public release.
+## 三层结构
 
-The copied province map contains Taiwan, Hong Kong, Macao, and Hainan, but it has no separately named `南海诸岛` feature. Preserve the source byte-for-byte; do not silently add or redraw geography inside this template. A project that requires a reviewed South China Sea inset must replace the map through its own approved asset workflow.
+地图必须包含一层 `geo` 和两层 `map` series：
 
-## Three-Layer Contract
-
-The source project uses a `2160p` design baseline. Normalize line and shadow geometry by `0.5` for the Skill's `1920 x 1080` canvas.
-
-| Layer | Map | 1080p style | Order |
+| 层 | 地图名 | 样式 | 层级 |
 | --- | --- | --- | --- |
-| Bottom outline | `china-map-outline` | transparent area, `4px #00FFFF` edge, `17px` downward offset, `42px` black shadow | `z: 0` |
-| Main map | `china` | `rgba(29,49,64,.5)` area, `1px #B4EAFC` province edge | `z: 1` |
-| Top outline | `china-map-outline` | transparent area, `4px #B4EAFC` edge, `-17px` upward offset, `42px` black shadow | `z: 2` |
+| 底部轮廓 | `china-map-outline` | 透明区域、`4px #00FFFF` 边线、向下 `17px`、`42px` 黑色阴影 | `z: 0` |
+| 主地图 | `china` | 半透明深色区域、`1px #B4EAFC` 边线 | `z: 1` |
+| 顶部轮廓 | `china-map-outline` | 透明区域、`4px #B4EAFC` 边线、向上 `17px`、`42px` 黑色阴影 | `z: 2` |
 
-Keep every layer at `zlevel: 0`. Use `z` for paint order so the static map remains on one Canvas instead of allocating one Canvas per layer.
+三层统一使用 `zlevel: 0`，避免创建额外 Canvas。
 
-Use safe-fit composition by default:
+## 布局规则
 
-- all three layers share `top/right/bottom/left: 64px`
-- `64px` covers `42px` shadow blur, `17px` shadow offset, and half of the `4px` outline border, rounded up to the 8px spacing grid
-- ECharts fits the map inside the remaining layout box as the container aspect ratio changes
-- do not combine fit-mode insets with `layoutCenter` or `layoutSize`
-- aspect scale and zoom: `1`
-
-The former Ya'an composition remains available only through `layout.mode: "legacy"`: outline center `50% / 40%`, main center `50% / 42%`, and size `105%`. Use it only when the target reproduces the original Ya'an center-container geometry and visual clipping has been checked. Supplying the legacy `outlineCenter`, `mapCenter`, or `size` keys also selects legacy mode for backward compatibility.
-
-## Static Behavior
-
-The option must retain all of these constraints:
-
-- `animation: false`
-- `roam: false`
-- `silent: true`
-- labels hidden
-- selection disabled
-- emphasis disabled
-- no Tooltip or VisualMap
-- no scatter, effectScatter, lines, heatmap, custom, or business series
-- no timers, DOM markers, event handlers, API calls, watchers, or rotation
-
-`createChinaMapOption` accepts only layout and color overrides. It never accepts business data or an arbitrary ECharts option merge, because an unrestricted merge could add interaction, animation, extra series, or extra Canvas layers.
+默认采用安全内边距适配：
 
 ```js
-createChinaMapOption({
-  overrides: {
-    layout: {
-      mode: "fit",
-      inset: 64,
-      // Optional asymmetric safe area:
-      // top: 72, right: 64, bottom: 64, left: 64,
-    },
-    colors: {
-      area: "rgba(29, 49, 64, 0.5)",
-      border: "#b4eafc",
-      bottomOutline: "#00ffff",
-      topOutline: "#b4eafc",
-      shadow: "#000000",
-    },
+overrides: {
+  layout: {
+    mode: 'fit',
+    inset: 64,
   },
-});
+}
 ```
 
-## Registration And Lifecycle
+- 三层使用相同的 `top/right/bottom/left`。
+- 默认每侧至少保留 `64px`，为上下阴影留出空间。
+- 默认不设置 `layoutCenter` 和 `layoutSize`。
+- 只有维护旧页面时才使用显式 `mode: 'legacy'`。
+- 地图父容器必须提供可测量的宽高。
 
-Copy `china-map.js` to `src/utils/china-map.js`. Call `ensureChinaMapRegistered()` before assigning the option. The helper lazy-loads both assets, caches the in-flight registration Promise, registers each map name once, and clears a failed Promise so the caller can retry.
+## 静态行为
 
-Use the shared lifecycle composable:
+- 首次渲染后保持静止，不启动动画帧、定时器或数据刷新。
+- 禁止缩放、漫游、选中和高亮交互。
+- 不显示标签、Tooltip、视觉映射或业务数据点。
+- 不因窗口缩放重复注册地图或创建新的 ECharts 实例。
+- 保留源文件中存在的全部几何，不宣称源数据包含独立命名的南海诸岛插图。
 
-```js
-const option = shallowRef(null);
+## 注册与生命周期
 
-onMounted(async () => {
-  await ensureChinaMapRegistered();
-  option.value = createChinaMapOption();
-});
-
-useECharts(mapRef, option, {
-  initOptions: {
-    renderer: "canvas",
-    useDirtyRect: true,
-    devicePixelRatio: Math.min(globalThis.devicePixelRatio || 1, 2),
-  },
-});
+```text
+assets/template/data-visualization/chinaMap.js
+  -> src/utils/chinaMap.js
+assets/template/data-visualization/useECharts.js
+  -> src/composables/useECharts.js
 ```
 
-Render into `.china-map-canvas`. Its parent must provide a measurable height. The lifecycle helper waits for positive geometry, sets the static option once, resizes the existing instance on element changes, and disposes it on unmount.
+在设置 option 前调用 `ensureChinaMapRegistered()`。该函数会懒加载两个资源、缓存正在进行的注册 Promise、避免重复注册，并在失败后清空 Promise 以允许重试。
 
-Fit mode relies on ECharts `top/right/bottom/left` layout and therefore adapts when the existing instance is resized; it does not require rebuilding the option for each container size. Keep the chart canvas at `width/height: 100%`. Do not compensate for clipping with a larger canvas, negative offsets, CSS transforms, or `overflow: visible`.
+使用 `createChinaMapOption()` 生成静态三层 option；使用 `useECharts()` 等待正尺寸、处理 resize，并在卸载时释放实例。
 
-## Acceptance
+## 验收
 
-- Preserve the two source assets byte-for-byte.
-- Render exactly one `geo` layer and two `map` series.
-- Keep all three layers on `zlevel: 0` with stable `z` values `0/1/2`.
-- In default fit mode, keep identical insets on all three layers and omit `layoutCenter/layoutSize`.
-- Preserve at least `64px` on every side unless the shadow geometry is reduced by the same amount.
-- Keep the map idle after first paint: no animation frame loop, interval, timeout, data refresh, or DOM-node growth.
-- Confirm Taiwan, Hong Kong, Macao, Hainan, and every other geometry present in the source remain visible at `1920 x 1080`, `16:10`, and `4:3` map-container ratios; do not claim that the source includes a separately named South China Sea inset.
+- 两个来源资源的哈希和字节保持不变。
+- 恰好渲染一个 `geo` 和两个 `map` series。
+- 三层均为 `zlevel: 0`，`z` 稳定为 `0/1/2`。
+- 默认模式下三层内边距一致，并省略 `layoutCenter/layoutSize`。
+- 除非同步减小阴影几何，否则每侧至少保留 `64px`。
+- 首次绘制后无动画循环、Interval、Timeout、数据刷新或 DOM 节点增长。
+- 在 1920×1080、16:10 和 4:3 容器比例下检查台湾、香港、澳门、海南及源文件中的其他几何均可见。

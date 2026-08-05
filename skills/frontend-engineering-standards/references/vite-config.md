@@ -1,6 +1,6 @@
 # Vite 配置规范
 
-本文档定义前端项目 Vite 配置的标准，重点覆盖插件配置与组件库按需引入。
+本文档只适用于明确采用 Vite 的项目，重点覆盖插件配置与组件库按需引入。使用 Vue CLI 5/Webpack 的 TSL 大屏不得加载或复制本文配置，应读取 `tsl-big-screen-best-practices/references/project-setup.md`。
 
 ---
 
@@ -353,11 +353,11 @@ src/
 
 ---
 
-## 大屏项目配置差异
+## Vite 大屏项目配置差异
 
 ### 配置差异说明
 
-大屏展示项目与 PC 端项目在 Vite 配置上有以下关键差异：
+本节只适用于项目本身明确采用 Vite 的大屏，不适用于 Vue CLI 5/Webpack 的 TSL 大屏。Vite 大屏与 PC 端项目有以下关键差异：
 
 | 配置项 | PC 端项目 | 大屏展示项目 |
 |--------|----------|--------------|
@@ -367,7 +367,7 @@ src/
 | **manualChunks** | 包含 `origami-vue` 分包 | 不包含 `origami-vue` 分包 |
 | **SVG 图标插件** | 安装并配置 | 安装并配置（相同） |
 
-### 大屏项目 vite.config.js 示例
+### Vite 大屏项目 vite.config.js 示例
 
 ```javascript
 import { defineConfig } from 'vite'

@@ -1,325 +1,132 @@
-# 项目搭建
+# Vue CLI 5 / Webpack 项目适配
 
 ## 目录
 
-- [基线](#baseline)
-- [包脚本](#package-scripts)
-- [必要项目配置](#required-project-config)
-- [Vue CLI 配置](#vue-cli-config)
-- [环境文件](#environment-files)
-- [HTML 外壳](#html-shell)
-- [TSL 配置](#tsl-config)
+- [适用边界](#适用边界)
+- [依赖与 Yarn](#依赖与-yarn)
+- [脚本与配置模板](#脚本与配置模板)
+- [Webpack 与 SVG](#webpack-与-svg)
+- [环境变量](#环境变量)
+- [HTML 外壳](#html-外壳)
+- [TSL 配置](#tsl-配置)
 
-## Baseline
+## 适用边界
 
-Create a Vue CLI-compatible Vue 3 big-screen app.
+本文件只定义 `frontend-engineering-standards` 未覆盖的 Vue CLI 5/Webpack 适配。通用目录、命名、JavaScript、Yarn、安全和代码质量继续服从通用规范。
 
-Vue CLI 5 is retained as an explicit TSL compatibility baseline for existing tooling. Do not migrate a generated or maintained project to Vite as an incidental cleanup; use another build system only when the user or target repository requires it.
+- 新建大屏使用 Vue 3、Vue CLI 5、Webpack、Composition API 和 `<script setup>`。
+- 维护项目先读取 `package.json`、`yarn.lock`、`vue.config.js`、Babel、Jest 和 CI；沿用已存在的兼容版本。
+- 不把项目迁移到其他构建系统，也不把其他构建工具的插件、环境变量或配置复制进来。
+- 新项目使用 `composables/`、`stores/`、`src/assets/styles/`、PascalCase SFC 和 camelCase JavaScript。
+- 旧项目采用 `hooks/`、`store/` 或 `src/assets/style/` 时，维护任务沿用旧结构，不做无关迁移。
 
-Default stack:
+## 依赖与 Yarn
 
-- `vue` 3.x
-- `@vue/cli-service` 5.x
-- `vue-router` 4.x
-- `pinia` 3.x when possible, or Pinia 2.x only when project constraints require it
-- `axios`
-- `mockjs`
-- `less` and `less-loader`
-- `svg-sprite-loader`
-- `style-resources-loader` and `vue-cli-plugin-style-resources-loader`
-- `babel-plugin-import`
-- `echarts`
-- `countup`
-- `origami-vue`
-- `@tslfe/ai-sdk` when LLM/MCP is required
-- `@tslfe/dt-engine@4.3.1-1` when digital-twin scenes are required
-- `zod@3.23.8` when MCP input schemas are required
+默认运行时能力按需选择：
 
-Only force exact versions for:
+- 必需：`vue`、`vue-router`、`pinia`、`axios`、`less`、`less-loader`、`echarts`。
+- Webpack SVG：`svg-sprite-loader`。
+- 全局 Less 变量：`style-resources-loader` 与 `vue-cli-plugin-style-resources-loader`，仅在项目确实需要时添加。
+- 开发 Mock：`mockjs`，仅在开发 Mock 被请求时添加。
+- 数字动效：`countup.js`，仅在计数动效被请求时添加。
+- LLM/MCP：`@tslfe/ai-sdk` 与 `zod@3.23.8`，仅在功能需要时添加。
+- 数字孪生：新项目默认安装最新版 `@tslfe/dt-engine`（`npm view @tslfe/dt-engine version` 取最新稳定版）；维护项目沿用已安装版本并按其公共导出核对 API。
 
-```json
-{
-  "zod": "3.23.8",
-  "@tslfe/dt-engine": "4.3.1-1"
-}
-```
+新项目使用团队统一的 Yarn Classic 1.x 并提交 `yarn.lock`，不创建 Yarn Modern 专用的 `.yarnrc.yml` 或 `nodeLinker` 配置。团队模板已经声明 `packageManager` 时保持其 Yarn 1 精确版本，否则不为此引入 Corepack。维护项目沿用现有 Yarn 主版本；不生成 npm 或 pnpm 锁文件。
 
-Use compatible project versions for other dependencies. Do not lock every package in the skill unless a project asks for strict reproducibility.
+## 脚本与配置模板
 
-## Package Scripts
-
-Provide these scripts unless the project has a different established command:
+新项目提供：
 
 ```json
 {
-  "serve": "vue-cli-service serve",
-  "build": "vue-cli-service build --mode master",
-  "build:develop": "vue-cli-service build --mode development",
-  "build:test": "vue-cli-service build --mode test",
-  "build:master": "vue-cli-service build --mode master",
-  "test:unit": "vue-cli-service test:unit",
-  "lint": "vue-cli-service lint"
-}
-```
-
-If TSL CLI is required, keep the same environment modes and replace the script body with the appropriate `tsl-cli` command.
-
-## Required Project Config
-
-When creating a project from zero, generate these files before writing feature code:
-
-- `babel.config.js`
-- `package.json` with `eslintConfig`
-- `.eslintignore`
-- `.editorconfig`
-- `.ls-lint.yml`
-- `jest.config.js`
-
-Do not omit Babel or ESLint config. Vue CLI projects generated from this skill must be able to run `vue-cli-service serve`, `vue-cli-service build`, and `vue-cli-service lint` without failing because base config files are missing.
-
-### Babel
-
-Create `babel.config.js`:
-
-```js
-const plugins = [
-  ["import", { libraryName: "origami-vue", libraryDirectory: "es", style: true }],
-  ["@babel/plugin-proposal-private-methods"]
-];
-
-module.exports = {
-  presets: ["tsl-cli-helper/preset"],
-  plugins
-};
-```
-
-Add the matching dev dependencies:
-
-```json
-{
-  "@babel/core": "^7.12.16",
-  "@babel/plugin-proposal-private-methods": "^7.18.6",
-  "@vue/cli-plugin-babel": "~5.0.0",
-  "@vue/cli-plugin-eslint": "~5.0.0",
-  "@vue/cli-plugin-unit-jest": "~5.0.0",
-  "@vue/cli-service": "^5.0.8",
-  "babel-plugin-import": "^1.13.8",
-  "babel-jest": "^27.0.6",
-  "svg-sprite-loader": "^6.0.11",
-  "tsl-cli-helper": "^2.1.13"
-}
-```
-
-### ESLint
-
-Add this baseline to `package.json`:
-
-```json
-{
-  "eslintConfig": {
-    "root": true,
-    "extends": ["tsl-standard"],
-    "rules": {
-      "global-require": 0,
-      "import/no-dynamic-require": 0,
-      "no-shadow": "off",
-      "no-param-reassign": "off",
-      "no-plusplus": "off",
-      "no-console": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-var-requires": "off",
-      "vue/no-multiple-template-root": "off",
-      "vue/multi-word-component-names": "off",
-      "vue/require-prop-type-constructor": "off"
-    },
-    "globals": {
-      "defineProps": "readonly",
-      "defineExpose": "readonly",
-      "defineEmits": "readonly",
-      "withDefaults": "readonly"
-    }
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build --mode master",
+    "build:develop": "vue-cli-service build --mode development",
+    "build:test": "vue-cli-service build --mode test",
+    "build:master": "vue-cli-service build --mode master",
+    "test:unit": "vue-cli-service test:unit",
+    "lint": "vue-cli-service lint"
   }
 }
 ```
 
-Add the matching dev dependencies:
+目标项目已有不同命令时沿用现状。只有实际使用 TSL CLI 时才替换脚本主体，并保持相同环境模式。
 
-```json
-{
-  "eslint-config-tsl-standard": "vue",
-  "eslint-plugin-prettier": "^4.2.1",
-  "prettier": "^2.8.4"
-}
-```
-
-Create `.eslintignore`:
+按需复制配置模板：
 
 ```text
-iconfont.js
-public/*
+assets/template/project/babel.config.js -> babel.config.js
+assets/template/project/vue.config.js   -> vue.config.js
+assets/template/project/jest.config.js  -> jest.config.js
 ```
 
-### Editor, File Naming, And Jest
+配置规则：
 
-Create `.editorconfig` with 2-space indentation, LF endings, UTF-8, final newline, and trailing-whitespace trimming.
+- Babel 默认使用 `@vue/cli-plugin-babel/preset`；只有目标项目已经依赖 `tsl-cli-helper/preset` 时才沿用该 preset。
+- 不安装 `babel-plugin-import`，不配置 UI 组件库按需加载。
+- Jest 只匹配 JavaScript 与 Vue 文件，不声明 `.ts`、`.tsx` 或 TypeScript 转换。
+- ESLint 沿用目标项目兼容格式；Vue CLI 旧项目可以使用 legacy config，但不关闭多词组件名、Promise、未使用变量或生产调试代码检查。
+- `App.vue` 是允许的单词组件名；不要为 `index.vue` 关闭全局命名规则，新建路由视图使用 `HomeScreen.vue` 等 PascalCase 名称。
+- Prettier 使用通用规范的单引号、无分号和 2 空格配置。
 
-Create `.ls-lint.yml` using the naming rules in `references/quality-checks.md`.
+## Webpack 与 SVG
 
-Create `jest.config.js`:
+`vue.config.js` 模板包含：
 
-```js
-module.exports = {
-  preset: "@vue/cli-plugin-unit-jest",
-  moduleFileExtensions: ["js", "jsx", "ts", "tsx", "json", "vue"],
-  testMatch: ["**/tests/unit/**/*.(spec|test).[jt]s?(x)", "**/__tests__/*.[jt]s?(x)"]
-};
-```
+- `publicPath: '/'` 和关闭生产 Source Map 的默认值。
+- 从 `VUE_APP_API_PROXY_TARGET` 读取开发代理；未配置时不创建代理。
+- 将 `src/assets/icons` 从默认 SVG rule 排除，并使用 `svg-sprite-loader` 注册 `src/assets/icons/svg`。
+- 根图标生成 `#icon-name`，嵌套图标生成带目录前缀的 symbol id。
+- 可选的 Less 全局变量文件为 `src/assets/styles/variables.less`。
+- UMD、图片 file URL 和其他 loader 只在目标项目确实需要时增加。
 
-## Vue CLI Config
+本地跨应用联调需要 CORS 响应头时显式启用，不把 `Access-Control-Allow-Origin: *` 作为默认配置。开发服务器若监听 `0.0.0.0`，必须确认所在网络和访问边界。
 
-Create `vue.config.js` with:
+## 环境变量
 
-- `devServer.headers["Access-Control-Allow-Origin"] = "*"` for local integration.
-- `devServer.proxy` entries that read targets from environment variables. Never hard-code private hosts in generated projects.
-- `chainWebpack` SVG sprite config for `src/assets/icons`.
-- `pluginOptions["style-resources-loader"]` pointing at `src/assets/style/var.less`.
-- Less `modifyVars` only when the UI library theme requires it.
-- UMD output settings only when the app must be consumed by a container.
-- Image asset rules only when model/runtime assets must remain file URLs instead of base64.
+使用 `.env`、`.env.development`、`.env.test` 和 `.env.master`。客户端变量统一使用 `VUE_APP_`，使用前校验和转换。
 
-Default complete `vue.config.js`:
-
-```js
-const path = require("path");
-
-function resolve(dir) {
-  return path.join(__dirname, dir);
-}
-
-module.exports = {
-  publicPath: "/",
-  productionSourceMap: false,
-  devServer: {
-    host: "0.0.0.0",
-    headers: {
-      "Access-Control-Allow-Origin": "*"
-    },
-    proxy: process.env.VUE_APP_BASE_URL
-      ? {
-          "/api": {
-            target: process.env.VUE_APP_BASE_URL,
-            changeOrigin: true,
-            pathRewrite: { "^/api": "" }
-          }
-        }
-      : undefined
-  },
-  pluginOptions: {
-    "style-resources-loader": {
-      preProcessor: "less",
-      patterns: [resolve("src/assets/style/var.less")]
-    }
-  },
-  chainWebpack: (config) => {
-    config.module.rule("svg").exclude.add(resolve("src/assets/icons")).end();
-
-    config.module
-      .rule("icons")
-      .test(/\.svg$/)
-      .include.add(resolve("src/assets/icons"))
-      .end()
-      .use("svg-sprite-loader")
-      .loader("svg-sprite-loader")
-      .options({
-        symbolId: (filePath) => {
-          const relativePath = path
-            .relative(resolve("src/assets/icons/svg"), filePath)
-            .replace(/\\/g, "/")
-            .replace(/\.svg$/, "");
-
-          return `icon-${relativePath.replace(/\//g, "-")}`;
-        }
-      })
-      .end();
-  }
-};
-```
-
-Merge additional project-specific options into this single `module.exports`. Do not create a second `module.exports`. If the project has no `VUE_APP_BASE_URL`, leave `devServer.proxy` undefined instead of hard-coding a private host. The custom `symbolId` keeps root icons as `#icon-swiper-item-icon` and nested weather icons as `#icon-weather-qing`.
-
-## Environment Files
-
-Use `.env`, `.env.development`, `.env.test`, and `.env.master` for build-time configuration.
-
-Allowed variable categories:
+允许的常见变量：
 
 - `VUE_APP_BASE_URL`
+- `VUE_APP_API_PROXY_TARGET`
 - `VUE_APP_MOCK`
 - `VUE_APP_LLM_APP_CODE`
 - `VUE_APP_MCP_SERVER_NAME`
 - `VUE_APP_DTENGINE_WS`
 - `VUE_APP_TACOS_LOAD_MODE`
-- service base URLs represented as placeholders
 
-Use mode-specific MockJS defaults:
-
-```env
-# .env.development
-VUE_APP_MOCK = true
-
-# .env.test and .env.master
-VUE_APP_MOCK = false
-```
-
-Do not put `VUE_APP_MOCK = true` in the shared `.env`; otherwise test and production-like builds silently inherit mock interception. Import mocks only when the explicit mode value equals `"true"`. Do not make activation depend implicitly on `NODE_ENV`.
-
-When the project uses `@tslfe/dt-engine` in local Unity EXE mode, `.env.development` must include these local defaults:
+Mock 必须显式分模式：
 
 ```env
 # .env.development
-VUE_APP_TACOS_LOAD_MODE = unity-exe
-VUE_APP_DTENGINE_WS = ws://127.0.0.1:8181
+VUE_APP_MOCK=true
+
+# .env.test / .env.master
+VUE_APP_MOCK=false
 ```
 
-When the project uses LLM/MCP, `.env` must include this fixed value:
+不要在共享 `.env` 中启用 Mock，也不要只根据 `NODE_ENV` 推断。
+
+本地 Unity EXE 模式可以在 `.env.development` 使用：
 
 ```env
-VUE_APP_MCP_SERVER_NAME = bigscreen
+VUE_APP_TACOS_LOAD_MODE=unity-exe
+VUE_APP_DTENGINE_WS=ws://127.0.0.1:8181
 ```
 
-Treat the dt-engine values as local development defaults; test/master must provide their deployment-specific runtime values instead of inheriting localhost. Treat `VUE_APP_MCP_SERVER_NAME = bigscreen` as the shared MCP server default unless a mode intentionally overrides it.
+测试和 master 环境必须提供部署值，不继承 localhost。LLM/MCP 项目可使用非敏感默认值 `VUE_APP_MCP_SERVER_NAME=bigscreen`。客户端环境变量不能保存 token、App Secret、JWT 或其他秘密。
 
-Never commit real tokens, app secrets, JWTs, private hostnames, or customer-specific identifiers. Use placeholder values and document where deployment supplies real values.
+## HTML 外壳
 
-## HTML Shell
+`public/index.html` 使用 `<div id="infraApp"></div>` 作为默认挂载点，并提供标准 viewport、透明背景支持和与场景一致的 theme color。
 
-In `public/index.html`:
+- 默认保留浏览器缩放能力，不写 `user-scalable=no` 或限制 `maximum-scale`。
+- 只有经过批准的专用 kiosk 容器负责锁定终端缩放时，才由容器策略处理。
+- 第三方脚本优先通过构建系统引入；只有无法打包的运行时库才放入 HTML。
 
-- Use `<div id="infraApp"></div>` as the default mount element.
-- Include viewport settings that prevent browser zoom on screen terminals.
-- Use transparent-capable meta and dark theme color when the screen overlays a renderer.
-- Keep vendor scripts out of `index.html` unless a runtime library cannot be bundled.
+## TSL 配置
 
-## TSL Config
-
-Create `tsl.config.json` only when the project uses TSL tooling. Keep it generic:
-
-```json
-{
-  "type": "project",
-  "name": "tsl-big-screen",
-  "micro": {
-    "type": "project",
-    "name": "tsl-big-screen",
-    "enable": false,
-    "register": []
-  },
-  "main": {
-    "devServer": {
-      "open": true,
-      "port": 9900,
-      "host": "0.0.0.0"
-    }
-  }
-}
-```
+只在项目使用 TSL 工具时创建 `tsl.config.json`。使用通用项目名和端口配置，不复制客户名、私有服务地址或生产注册信息。已有项目保留其配置结构，不因普通功能修改重写。

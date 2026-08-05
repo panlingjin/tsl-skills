@@ -1,23 +1,23 @@
 export const DATA_PALETTE = Object.freeze([
-  "#45D8FD",
-  "#78D2D6",
-  "#6AA2D4",
-  "#84CDB0",
-  "#D8B283",
-  "#E78181",
-  "#A38ECE",
-]);
+  '#45D8FD',
+  '#78D2D6',
+  '#6AA2D4',
+  '#84CDB0',
+  '#D8B283',
+  '#E78181',
+  '#A38ECE',
+])
 
 export const CHART_TOKENS = Object.freeze({
-  textPrimary: "#F2F3F5",
-  textSecondary: "#E5E6EB",
-  textMuted: "#C9CDD4",
-  axis: "rgba(143, 181, 197, 0.3)",
-  gridLine: "rgba(143, 181, 197, 0.1)",
-  tooltipBackground: "rgba(0, 8, 16, 0.88)",
-  tooltipBorder: "rgba(143, 181, 197, 0.3)",
-  active: "#E5C569",
-});
+  textPrimary: '#F2F3F5',
+  textSecondary: '#E5E6EB',
+  textMuted: '#C9CDD4',
+  axis: 'rgba(143, 181, 197, 0.3)',
+  gridLine: 'rgba(143, 181, 197, 0.1)',
+  tooltipBackground: 'rgba(0, 8, 16, 0.88)',
+  tooltipBorder: 'rgba(143, 181, 197, 0.3)',
+  active: '#E5C569',
+})
 
 export function createChartGrid(overrides = {}) {
   return {
@@ -27,10 +27,10 @@ export function createChartGrid(overrides = {}) {
     left: 8,
     containLabel: true,
     ...overrides,
-  };
+  }
 }
 
-export function createChartTooltip(trigger = "axis", overrides = {}) {
+export function createChartTooltip(trigger = 'axis', overrides = {}) {
   return {
     trigger,
     backgroundColor: CHART_TOKENS.tooltipBackground,
@@ -42,7 +42,7 @@ export function createChartTooltip(trigger = "axis", overrides = {}) {
       fontSize: 12,
     },
     ...overrides,
-  };
+  }
 }
 
 export function createChartLegend(show = true, overrides = {}) {
@@ -58,12 +58,12 @@ export function createChartLegend(show = true, overrides = {}) {
       fontSize: 12,
     },
     ...overrides,
-  };
+  }
 }
 
 export function createCategoryAxis(data = [], overrides = {}) {
   return {
-    type: "category",
+    type: 'category',
     data: Array.isArray(data) ? data : [],
     axisTick: { show: false },
     axisLine: { lineStyle: { color: CHART_TOKENS.axis } },
@@ -74,12 +74,12 @@ export function createCategoryAxis(data = [], overrides = {}) {
     },
     splitLine: { show: false },
     ...overrides,
-  };
+  }
 }
 
-export function createValueAxis(unit = "", overrides = {}) {
+export function createValueAxis(unit = '', overrides = {}) {
   return {
-    type: "value",
+    type: 'value',
     name: unit,
     nameTextStyle: {
       color: CHART_TOKENS.textMuted,
@@ -97,12 +97,12 @@ export function createValueAxis(unit = "", overrides = {}) {
       lineStyle: { color: CHART_TOKENS.gridLine },
     },
     ...overrides,
-  };
+  }
 }
 
 export function createAreaGradient(color) {
   return {
-    type: "linear",
+    type: 'linear',
     x: 0,
     y: 0,
     x2: 0,
@@ -111,5 +111,5 @@ export function createAreaGradient(color) {
       { offset: 0, color: `${color}4D` },
       { offset: 1, color: `${color}08` },
     ],
-  };
+  }
 }

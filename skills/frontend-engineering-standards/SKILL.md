@@ -11,7 +11,7 @@ description: 为 Vue 3 + JavaScript 项目提供工程规范与审查流程，�
 
 - 使用 Vue 3、JavaScript、Composition API 和 `<script setup>`；源码、配置、Mock 与测试均不创建 `.ts` / `.tsx` 文件。
 - 使用 ES Modules，并在外部数据边界执行运行时校验；复杂公共接口使用必要的 JSDoc。
-- 使用 Yarn，禁止生成 npm、pnpm 命令或锁文件。已有项目沿用其 Yarn 主版本，新项目默认 Yarn 4。
+- 使用 Yarn，禁止生成 npm、pnpm 命令或锁文件。已有项目沿用其 Yarn 主版本，新项目默认 Yarn Classic 1.x。
 - 使用 `src/assets/styles/` 存放主题、变量、重置和跨组件公共样式；组件私有样式可保留在 SFC 中。
 - 优先遵循目标项目已声明的框架与工具版本，不擅自升级依赖或替换构建系统。
 

@@ -1,6 +1,6 @@
 # 测试规范
 
-本文档定义单元、组件、集成和 E2E 测试，以及测试运行时的模块 Mock。开发服务器 API Mock 统一参见 `mock-data.md`。
+本文档定义单元、组件、集成和 E2E 测试，以及测试运行时的模块 Mock。开发服务器 API Mock 统一参见 `mock-data.md`。Vitest 是普通 Vite 项目的默认；Vue CLI/Webpack 大屏使用专项 Skill 指定的 Jest，但继续遵循本文的测试行为和质量要求。
 
 ---
 

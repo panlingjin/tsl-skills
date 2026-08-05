@@ -1,253 +1,156 @@
-# Modal 与弹层模式
-
-Use this reference for Dialog, Confirm, Drawer, Media Viewer, and non-modal Callout/Popover overlays attached to a 3D scene. Classify an overlay by interaction semantics before choosing its size, backdrop, focus, and dismissal behavior. Do not treat everything that floats above the page as a Modal.
+# 弹层模式（Modal）
 
 ## 目录
 
-- [类型选择](#type-selection)
-- [视觉来源与标准化](#visual-source-and-normalization)
-- [结构与职责](#structure-and-responsibilities)
-- [层级与并发](#layers-and-concurrency)
-- [挂载与缩放](#mounting-and-scaling)
-- [关闭规则](#dismissal-rules)
-- [焦点与键盘](#focus-and-keyboard)
-- [尺寸与布局](#size-and-layout)
-- [异步任务与清理](#async-work-and-cleanup)
-- [非模态场景弹层](#non-modal-scene-overlays)
-- [模板使用](#template-usage)
-- [检查清单](#checklist)
+- [类型选择](#类型选择)
+- [视觉来源](#视觉来源)
+- [结构与职责](#结构与职责)
+- [唯一层级表](#唯一层级表)
+- [挂载与缩放](#挂载与缩放)
+- [关闭规则](#关闭规则)
+- [焦点与键盘](#焦点与键盘)
+- [尺寸与布局](#尺寸与布局)
+- [异步任务与清理](#异步任务与清理)
+- [非模态场景浮层](#非模态场景浮层)
+- [模板接口](#模板接口)
+- [验收](#验收)
 
-## Type Selection
+先按交互语义选择 Dialog、Confirm、Drawer、Media Viewer 或 Scene Callout，不要把所有浮在页面上方的内容都实现为 Modal。
 
-| Type | Use for | Backdrop dismissal | Default role | Typical size |
-| --- | --- | --- | --- | --- |
-| Dialog | General information, short forms, record details, detail tables | Enabled | `dialog` | `md` / `lg` |
-| Confirm | Confirmation, warnings, irreversible actions | Disabled | `alertdialog` | `sm` |
-| Drawer | Long details, control panels, continuous browsing | Enabled | `dialog` | 480px wide |
-| Media Viewer | Video, images, surveillance feeds | Enabled | `dialog` | `xl` |
-| Scene Callout / Popover | Point details, lightweight actions, spatially anchored information | No backdrop | Non-modal | Content-driven |
+## 类型选择
 
-Toast is transient feedback, an LLM control panel is a persistent workspace, and a card is page content. Do not implement any of them with this modal structure.
+| 类型 | 适用场景 | 背景遮罩 | 焦点约束 |
+| --- | --- | --- | --- |
+| Dialog | 表单、详情、复杂任务 | 有 | 有 |
+| Confirm | 不可逆操作确认 | 有 | 有，优先级最高 |
+| Drawer | 长详情、表格、分步操作 | 有 | 有 |
+| Media | 视频、图片和监控画面 | 有 | 有 |
+| Scene Callout / Popover | 与三维坐标关联的简短信息 | 无 | 无全局焦点陷阱 |
 
-## Visual Source And Normalization
+Toast 是短暂反馈，LLM 控制面板是持续工作区，Card 是页面内容，均不得套用 Modal 结构。
 
-The default visual language comes from real `ai-park-screen` overlay patterns. It is not a pixel-frequency analysis across multiple projects. AI Park uses a different canvas and many business-specific dimensions, so preserve only stable visual characteristics and normalize typography and geometry to the Skill's 1920x1080 canvas and 8px spacing system.
+## 视觉来源
 
-| AI Park source pattern | 1920x1080 baseline | Treatment |
-| --- | --- | --- |
-| Main surface `rgba(0,0,0,.4)` | `rgba(0,0,0,.4)` | Preserve the translucent black surface; keep the backdrop separate |
-| 134-degree, 2px, `#65F2FC` gradient edge | Same angle and color | Draw a masked pseudo-element so the gradient stays in the 2px edge and the 8px radius remains available |
-| Main modal `blur(32px)` | `blur(32px)` | Preserve readability over complex scenes |
-| 60px header and 28px title | 48px header and 20px title | Normalize to 1080p and the 8px grid |
-| Header `rgba(16,23,22,.4)` with cyan inset glow | Preserve with a 13px inset glow | Use as the main modal signature |
-| 186x77px actions with 24px text | Minimum 120px width, 48px height, 16px text | Preserve the cyan edge and inner/outer glow |
-| Scene overlay `rgba(15,31,47,.72)`, `#6C8097`, `blur(16px)` | Preserve colors and blur | Keep as the lighter Scene Callout preset |
+设计稿明确指定弹层视觉时优先还原设计；未指定时使用模板中的 AI Park 蓝青色表面。视觉变化不得破坏焦点、关闭、滚动、层级和缩放坐标系契约。
 
-Keep the Skill's `sm/md/lg/xl` sizes, 480px Drawer width, 32px canvas edge, and application layer scale. Do not copy AI Park fixed coordinates, incidental business dimensions, title background images, or customer data.
+## 结构与职责
 
-## Structure And Responsibilities
+- Header 放标题、上下文信息和关闭按钮，主要业务动作放在 Footer。
+- 关闭按钮始终位于 Header 右侧安全区，不依赖 `header-extra` 是否存在。
+- Body 独立负责内容滚动，长内容不得把整个弹层推出画布。
+- Footer 只在存在确认、取消或下一步动作时渲染。
+- 关闭控件使用 `<button type="button">`，不得使用可点击 `div`。
 
-Use a consistent header, body, and footer anatomy:
+基础 Modal 只负责结构、焦点、层级、滚动锁和关闭语义。Feature Modal 负责请求、表单、播放器、图表和业务资源清理。
 
-- Put the title, contextual metadata, and close button in the header. Keep primary business actions out of it.
-- Keep the close button aligned to the header's right safe area. Its position must not depend on whether the optional `header-extra` slot is rendered.
-- Let the body own content scrolling. Long content must not push the whole modal beyond the canvas.
-- Put confirm, cancel, and next-step actions in the footer. Do not render an empty footer or divider.
-- Use a real `<button type="button">` for close controls, never a clickable `div`.
+## 唯一层级表
 
-`BaseModal.vue` owns only Teleport, structure, ARIA, Transition, dismissal events, and slots. Feature Modal components own requests, form state, action behavior, media instances, and business copy. Do not import domain APIs or Pinia stores into the base shell.
+本文件是应用弹层层级的唯一事实源：
 
-## Layers And Concurrency
-
-Use this application layer scale:
-
-| Content | z-index |
-| --- | ---: |
-| LLM control layer | 1999 |
-| Main modal | 2000 |
+| 层 | z-index |
+| --- | --- |
+| LLM 控制区 | 1999 |
+| 主 Modal / Drawer / Media | 2000 |
 | Confirm | 2100 |
-| Toast / urgent feedback reserve | 2200 |
+| Toast 或紧急反馈预留 | 2200 |
 
-Do not use arbitrary feature-level values such as `9999` or `99999` to solve stacking problems.
+最多同时存在一个主 Modal 和一个 Confirm：
 
-Allow at most one main modal and one Confirm:
+- 打开新主 Modal 时，以 `replaced` 原因关闭旧主 Modal，并先关闭已有 Confirm。
+- Confirm 只覆盖当前主 Modal，不允许继续叠加 Confirm。
+- 只有最上层处理 Escape 和 Tab。
+- 功能级代码不得新增应用级 z-index。
 
-- Opening a new main modal closes the previous main modal with reason `replaced`. Close an existing Confirm first.
-- A Confirm may cover the main modal and is always the top keyboard interaction target.
-- A new Confirm replaces the previous Confirm. Never build an unbounded confirmation stack.
-- A non-modal Scene Callout does not enter the modal stack, but it must remain below the main modal and Confirm layers.
+弹层状态默认保留在组件内；只有跨页面编排、LLM 命令或无关模块共同控制时才进入 Pinia。Store 只保存可序列化状态，不保存 DOM、组件实例或播放器。
 
-Keep feature-local modal state local by default. Promote it to Pinia only for cross-page orchestration, LLM commands, or unrelated modules that share control. Store serializable state, not DOM nodes, component instances, or media players.
+## 挂载与缩放
 
-## Mounting And Scaling
+- 默认 Teleport 到 `#infraApp`。
+- `.modal-layer` 使用绝对定位填满设计画布，不使用浏览器 viewport 单位。
+- 最大宽高时保留至少 `32px` 画布边距。
+- 只有项目存在另一个稳定的缩放弹层根时才覆盖 `teleportTo`。
 
-On a scaled 1920x1080 screen, Teleport to `#infraApp` by default so overlays share the page coordinate system and root scale. Do not default to `body`; doing so can detach size, pointer coordinates, and scene anchors from the design canvas.
+## 关闭规则
 
-- Make `#infraApp` the stable scaling root, or a positioned descendant of it.
-- Use an absolutely positioned `.modal-layer` that fills the canvas instead of browser viewport units.
-- Preserve a 32px canvas edge at maximum width and height.
-- Override `teleport-to` only when the project mounting structure demonstrably uses another scaled overlay root.
-
-## Dismissal Rules
-
-Use only these close reasons:
+统一使用以下关闭原因：
 
 ```text
-close-button | backdrop | escape | replaced | programmatic
+close-button | backdrop | escape | programmatic | replaced
 ```
 
-- Enable backdrop dismissal for Dialog, Drawer, and Media. Disable it for Confirm.
-- Let Escape close only the topmost layer and respect `closeOnEsc`.
-- When `busy=true`, block Escape, backdrop dismissal, and the close button.
-- When the parent directly changes `open` to `false`, report `programmatic`.
-- Make dismissal idempotent. Repeated input must not duplicate requests, unlock scrolling twice, or destroy a resource twice.
-- Use Confirm for irreversible actions and name the affected object and consequence. Avoid vague confirmation copy.
+- Dialog、Drawer、Media 默认允许点击遮罩关闭；Confirm 不允许。
+- Escape 只关闭最上层，并服从 `closeOnEsc`。
+- `busy=true` 时阻止 Escape、遮罩和关闭按钮退出。
+- 父组件直接将 `open` 改为 `false` 时报告 `programmatic`。
+- 关闭操作必须幂等，重复输入不得重复请求、重复解锁滚动或重复销毁资源。
+- 不可逆操作使用 Confirm，并明确受影响对象和后果。
 
-## Focus And Keyboard
+## 焦点与键盘
 
-When a modal opens:
+打开弹层时：
 
-1. Save the active trigger element.
-2. Focus `[autofocus]`, then the first operable element, then the modal shell as a fallback.
-3. Keep Tab and Shift+Tab inside the topmost modal.
-4. Restore focus to the connected trigger after the leave transition finishes.
+1. 保存触发元素。
+2. 优先聚焦 `[autofocus]`，其次第一个可操作元素，最后聚焦弹层 Shell。
+3. 将 Tab 和 Shift+Tab 限制在最上层弹层内。
+4. 离场动画完成后，将焦点恢复到仍连接的触发元素。
 
-When a Confirm covers a main modal, focus moves to the Confirm. Closing it restores focus inside the main modal. A modal closed with `replaced` must suppress restoration through transition completion and component unmount; storing the reason only inside `BaseModal` is insufficient because the lifecycle composable also owns unmount cleanup. Use a reference-counted scroll lock so closing the Confirm does not unlock a page still covered by the main modal.
+无标题弹层必须提供 `ariaLabel`。关闭按钮、业务按钮和表单控件均保留明显的 `:focus-visible`。
 
-Use `aria-labelledby` when a visible title exists. A titleless modal must provide `ariaLabel`. Use `role="alertdialog"` for Confirm and `role="dialog"` for other modal variants, with `aria-modal="true"`.
+## 尺寸与布局
 
-## Size And Layout
+| 尺寸 | 建议宽度 | 用途 |
+| --- | --- | --- |
+| `sm` | 420px | Confirm、短表单 |
+| `md` | 720px | 普通详情和表单 |
+| `lg` | 1120px | 表格、复杂详情 |
+| `xl` | 1600px | Media、宽内容 |
 
-Use these size presets:
+- Header 高度、间距和边框使用 Modal token，不在功能代码中重定义。
+- Body 使用 `min-height: 0` 和 `overflow: auto`。
+- 表格详情优先使用 `lg`，先优化列、Tooltip 和横向滚动，再考虑全屏。
+- Media 可移除普通 Body padding，但播放器必须有稳定比例、Loading 和 Error 状态。
 
-| Size | Width | Use for |
-| --- | ---: | --- |
-| `sm` | 360px | Confirm, short notices, compact forms |
-| `md` | 560px | General details and short forms |
-| `lg` | 800px | Detail tables and multi-section forms |
-| `xl` | 1200px | Media and complex details |
+## 异步任务与清理
 
-A Drawer defaults to 480px and enters from the left or right. Media defaults to `xl`. Every variant remains constrained by the 32px canvas edge.
+弹层关闭、被替换、路由变化或组件卸载时清理其创建的资源：
 
-- Use modal tokens for header height and padding instead of redefining them in feature code.
-- Give the body `min-height: 0` and `overflow: auto` so it scrolls correctly inside Flex.
-- Prefer `lg` for table details. Improve columns, tooltips, or horizontal scrolling before making the modal fullscreen.
-- Media may remove normal body padding, but the player needs a stable ratio, loading state, and error state.
-- A Drawer used for continuous browsing should restore list scroll and selection after closing.
+- 使用 `AbortController` 或等价机制取消未完成请求。
+- 清除轮询、定时器、全局监听、ResizeObserver 和动态挂载容器。
+- 暂停视频并释放 MediaStream、HLS/WebRTC 实例和 Object URL。
+- 释放临时 ECharts、Three.js 控制器和第三方组件实例。
+- 动态创建 Vue app 的调用方负责 `app.unmount()` 并移除容器。
 
-## Async Work And Cleanup
+## 非模态场景浮层
 
-Clean resources created while a modal is open when it closes, is replaced, the route changes, or the component unmounts:
+Scene Callout / Popover 与 Modal 的区别：
 
-- Abort unfinished requests with `AbortController` or an equivalent mechanism.
-- Clear polling, timers, global listeners, ResizeObserver, and dynamic containers.
-- Pause video and release media streams, HLS/WebRTC instances, and object URLs.
-- Dispose temporary ECharts, Three.js controllers, and third-party component instances.
-- `keepMounted` preserves DOM only. Drive business side effects from `open` and stop them while closed.
+- 不渲染遮罩、不锁定滚动、不设置 `aria-modal`、不安装全局焦点陷阱。
+- 锚定三维点或二维坐标，接近画布边缘时翻转或收缩。
+- 允许点击场景背景关闭，但不阻断无关的拖拽或缩放。
+- 内容复杂、需要持续键盘操作或遮挡场景过多时升级为 Drawer 或 Dialog。
 
-For dynamically created Feature Modals, retain the value returned by `createApp()`, call `app.unmount()`, and remove the temporary container after close. Prefer declarative templates and local state unless a cross-module invocation genuinely requires dynamic mounting.
-
-## Non-Modal Scene Overlays
-
-Scene Callout / Popover differs from Modal in these ways:
-
-- Do not render a backdrop, lock scrolling, set `aria-modal`, or install a global focus trap.
-- Anchor it to a 3D point or 2D coordinate and flip or contract it near canvas edges.
-- Allow scene-background dismissal without blocking unrelated drag or zoom input.
-- Upgrade to a Drawer or Dialog when content becomes complex, needs sustained keyboard interaction, or obscures too much of the scene.
-
-The `.scene-callout` preset creates its angled title accent with CSS and does not depend on AI Park image assets. Keep its close control as a real button. Use an `aside`, `section`, or ordinary container without `aria-modal`.
-
-## Template Usage
-
-Use the exact Modal copy paths in `references/source-architecture.md`.
-
-`modal.less` imports `data-tokens.less`, so keep them in the same target directory. Import `modal.less` once from the global style entry. Feature Modal components may style their content but must not redefine base layers and dimensions.
-
-Do not implement the translucent surface and gradient border as two ordinary background layers. Because `@modal-surface` is partially transparent, a `border-box` gradient layer underneath it will bleed through the whole content area. Keep the surface as the shell background and isolate the gradient in the masked `::before` edge supplied by `modal.less`.
-
-Public Vue contract:
+## 模板接口
 
 ```text
-Props
-open: Boolean
-title: String
-variant: dialog | confirm | drawer | media
-size: sm | md | lg | xl
-layer: main | confirm
-placement: left | right
-closable: Boolean
-closeOnBackdrop: Boolean
-closeOnEsc: Boolean
-busy: Boolean
-keepMounted: Boolean
-teleportTo: String
-ariaLabel: String
-
-Emits
-update:open
-close({ reason })
-after-enter
-after-leave
-
-Slots
-title | header-extra | default | footer
+assets/template/modal/BaseModal.vue
+  -> src/components/common/BaseModal/BaseModal.vue
+assets/template/modal/useModalLifecycle.js
+  -> src/composables/useModalLifecycle.js
+assets/template/data-visualization/modal.less
+  -> src/assets/styles/modal.less
 ```
 
-Public CSS contract:
+公开 Vue 契约保持：`v-model:open`、`title`、`variant`、`size`、`layer`、`placement`、`closable`、`closeOnBackdrop`、`closeOnEsc`、`busy`、`keepMounted`、`teleportTo`、`ariaLabel`，以及 `close`、`after-enter`、`after-leave` 事件。
 
-```text
-.modal-layer--main | --confirm
-.modal-backdrop
-.modal-shell--dialog | --confirm | --drawer | --media
-.modal-shell--sm | --md | --lg | --xl
-.modal-shell--left | --right
-.modal__header | __title | __extra | __close | __body | __footer
-.modal-action
-.modal-action--primary | .modal-action--secondary
-.scene-callout
-.scene-callout__header | .scene-callout__title
-.scene-callout__close | .scene-callout__body
-```
+为兼容 Vue 3.2，`BaseModal.vue` 可以单独使用普通 `<script>` 设置 `inheritAttrs: false`；其余逻辑使用 `<script setup>`。
 
-```vue
-<BaseModal
-  v-model:open="open"
-  title="Space details"
-  variant="dialog"
-  size="md"
-  layer="main"
-  :busy="saving"
-  teleport-to="#infraApp"
-  @close="handleClose"
->
-  <template #header-extra />
-  <template #default />
-  <template #footer />
-</BaseModal>
-```
+## 验收
 
-```html
-<aside class="scene-callout" aria-label="Point details">
-  <header class="scene-callout__header">
-    <h3 class="scene-callout__title">Point details</h3>
-    <button class="scene-callout__close" type="button" aria-label="Close point details"></button>
-  </header>
-  <div class="scene-callout__body">...</div>
-</aside>
-```
-
-## Checklist
-
-- The type, size, and dismissal policy match the content semantics.
-- At most one main modal and one Confirm are active; only the top layer handles Escape and Tab.
-- A titleless modal has `ariaLabel`; Confirm uses `alertdialog`.
-- Busy state blocks every user dismissal path and provides clear feedback.
-- Focus enters, cycles, and restores correctly; the close control is a real button.
-- The close button remains right-aligned with and without `header-extra`; keep a 12px gap when extra content exists.
-- Teleported content remains inside the scaled 1080p canvas coordinate system.
-- The scroll-lock reference count returns to zero after stacking, replacement, and unmount.
-- Reduced-motion disables unnecessary translation and scaling.
-- Main modals use the normalized AI Park surface; Scene Callout uses the lighter blue-gray surface.
-- The cyan border gradient is visible only in the 2px edge and never tints the body surface.
-- Requests, timers, media, listeners, observers, and dynamic mounts have cleanup paths.
+- 类型、尺寸和关闭策略与内容语义一致。
+- 最多一个主 Modal 和一个 Confirm，只有最上层处理键盘。
+- Busy 状态阻止全部用户关闭路径并提供反馈。
+- 焦点进入、循环和恢复正确，关闭控件是真实按钮。
+- Teleport 内容保持在缩放后的 1080p 坐标系内。
+- 弹层替换和卸载后滚动锁引用计数归零。
+- reduced-motion 下关闭非必要位移和缩放。
+- 请求、定时器、媒体、监听器、Observer 和动态挂载均有清理路径。

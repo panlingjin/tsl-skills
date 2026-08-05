@@ -1,0 +1,31 @@
+.page-switch__toggle,
+.page-switch__item {
+  border: 1px solid rgba(101, 242, 252, 0.55);
+  color: #e9fdff;
+  background: rgba(5, 29, 54, 0.86);
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.page-switch__toggle:focus-visible,
+.page-switch__item:focus-visible {
+  outline: 2px solid #65f2fc;
+  outline-offset: 3px;
+}
+
+.page-switch__toggle:disabled,
+.page-switch__item:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.page-switch__item {
+  background-image: url('@/assets/images/switch/switch-item-bg.png');
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-switch__toggle,
+  .page-switch__item {
+    transition-duration: 0.01ms;
+  }
+}

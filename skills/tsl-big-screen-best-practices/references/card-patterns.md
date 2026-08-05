@@ -2,245 +2,144 @@
 
 ## 目录
 
-- [卡片层级](#card-hierarchy)
-- [标准结构](#standard-anatomy)
-- [选择卡片类型](#choose-the-card-type)
-- [网格与堆叠布局](#grid-and-stack-layout)
-- [密度与尺寸](#density-and-size)
-- [表面与视觉状态](#surface-and-visual-states)
-- [内容模式](#content-patterns)
-- [嵌套与性能](#nesting-and-performance)
-- [可复用 CSS 契约](#reusable-css-contract)
-- [无障碍与数据状态](#accessibility-and-data-states)
+- [卡片层级](#卡片层级)
+- [标准结构](#标准结构)
+- [类型选择](#类型选择)
+- [网格与堆叠](#网格与堆叠)
+- [密度与尺寸](#密度与尺寸)
+- [表面与状态](#表面与状态)
+- [常见内容模式](#常见内容模式)
+- [性能与层级](#性能与层级)
+- [CSS 复用契约](#css-复用契约)
+- [可访问性](#可访问性)
 
-## Card Hierarchy
+## 卡片层级
 
-Use cards at three levels. Do not style every rectangle as the same component.
+大屏卡片分为三层，不要把所有矩形区域做成相同样式：
 
-1. **Panel card**: organize a related dashboard region. It can contain content cards but must not compete with their data hierarchy.
-2. **Content card**: answer one question with a chart, table, list, or focused explanation.
-3. **Item card**: show one metric, status, feature, or media item inside a panel/content card.
+| 层级 | 用途 | 视觉强度 |
+| --- | --- | --- |
+| Panel | 左右主面板或主要业务域 | 最强，可使用完整边框、背景和标题装饰 |
+| Content Card | 图表、列表、KPI 组等内容模块 | 中等，减少装饰和阴影 |
+| Item | 单个指标、状态、排行项 | 最轻，默认不增加独立卡片表面 |
 
-Keep modals separate. A modal owns focus, dismissal, and application-level layering; it is not a card variant. Use `references/modal-patterns.md` for Dialog, Confirm, Drawer, Media Viewer, and non-modal Scene Callout behavior.
+可见表面嵌套最多两层。不要在 Panel、Content Card、Item 三层上同时使用发光边框和模糊背景。
 
-A Ya'an Rail title requires an open Panel surface. Combine `.data-card--panel` with `.data-card--rail-panel`; the latter removes the closed card fill, border, radius, blur, and padding so the long Rail can define the Panel edge. Never place a Rail header directly inside the standard rounded Panel shown below it.
+## 标准结构
 
-Use at most two visible card surfaces in one branch: a panel plus content/item cards. Avoid panel → content card → decorated item card → decorated inner block nesting.
-
-## Standard Anatomy
-
-Use this order when a region needs each part:
+需要完整结构时按以下顺序组织：
 
 ```text
 data-card
-├── data-card__header
-│   ├── data-card__title
-│   └── data-card__meta (unit, time, filter, or action)
-├── data-card__body
-└── data-card__footer (source, legend, paging, or secondary action)
+  data-card__header
+    data-card__title
+    data-card__meta / actions
+  data-card__body
+  data-card__footer（可选）
 ```
 
-- Keep the title, unit, freshness label, filter, and actions in the header rather than floating them over ordinary content.
-- Use one line for a card title. Truncate only when the full title is available through context or a tooltip.
-- Let the body use `flex: 1` and `min-height: 0` so charts and bounded lists can size correctly.
-- Omit the footer when it has no real content. Do not render an empty divider.
-- Keep decorative title backgrounds independent of text sizing and padding; a supplied image may decorate the header but must not define its layout.
-- Read `title-decoration.md` before choosing a Panel cap, content rail, section marker/line, floating bracket, divider, corner, or icon orbit. Keep repeated KPI/status item titles plain by default.
-- Keep reusable card-title typography on the browser/page default font. Add a brand or third-party font only when the user, supplied design, or existing project explicitly requires it.
-- Reset heading margins through `.data-card__title`; do not rely on browser `h2/h3` defaults for title placement.
+- 标题、单位、数据新鲜度、筛选和操作位于 Header。
+- 标题保持单行；截断时必须通过上下文或 Tooltip 提供完整内容。
+- Body 使用 `flex: 1` 和 `min-height: 0`，使图表和局部滚动区正确计算尺寸。
+- Footer 没有真实内容时不渲染，也不保留空分隔线。
+- 标题装饰不负责文字布局；使用前读取 `title-decoration.md`。
+- 可复用标题默认使用浏览器或页面字体，不擅自加入品牌字体。
 
-## Choose The Card Type
+## 类型选择
 
-| Type | Purpose | Default composition | Avoid |
-| --- | --- | --- | --- |
-| Panel card | Group one dashboard topic or mode | Header plus stacked/grid content | Putting unrelated sections in one panel |
-| Content/chart card | Answer one analytical question | Header, bounded body, optional footer | Mixing several unrelated charts |
-| KPI card | Highlight one current value | Label, value, unit, optional icon/trend | Using a chart for one plain number |
-| Status card | Show state and count/value | Status/icon, label, value, text state | Encoding state by color alone |
-| Feature card | Explain a capability or category | Icon/image, title, short description | Long paragraphs or fake numeric decoration |
-| Media card | Present image/video evidence | Fixed-ratio media, caption, metadata | Stretching or cropping critical evidence silently |
-| Floating card | Annotate the 3D scene | Strong surface, concise content, optional pointer | Reproducing an entire side dashboard over the scene |
+| 内容问题 | 推荐类型 |
+| --- | --- |
+| 一个关键数值及趋势 | KPI 卡片 |
+| 多个同级状态 | 状态 Item 列表 |
+| 时间趋势、构成或对比 | 图表卡片 |
+| 有固定列语义的记录 | 表格卡片 |
+| 有顺序的事件 | 时间线卡片 |
+| 图片、视频或监控画面 | 媒体卡片 |
+| 与场景坐标关联的简短信息 | 浮动卡片 |
 
-Use the data-display selection rules in `references/data-visualization.md` inside content, KPI, and status cards. Card type controls hierarchy and surface; it does not decide whether the body should be a line chart, table, or list.
+能用数字、短列表或一句话回答时不要强行使用图表。
 
-## Grid And Stack Layout
+## 网格与堆叠
 
-Use `.card-stack` for vertical groups and `.card-grid` for aligned rows. The default gap is `16px`; use the compact `12px` gap only in dense side panels.
+页面级重复卡片使用 12 列 Grid；卡片内部的图标、标签、单位和不等宽内容使用 Flex。DOM 顺序必须与视觉阅读顺序一致，不使用 dense grid 将后续内容移动到前面的空位。
 
-The grid has 12 equal columns:
-
-- `.card-span--12`: one full-width card
-- `.card-span--8` + `.card-span--4`: main/secondary layout
-- two `.card-span--6`: equal two-column layout
-- three `.card-span--4`: equal three-column layout
-
-Keep DOM order equal to visual reading order. Do not use dense grid placement that moves later content into earlier gaps.
-
-Use the span class on the card itself. Cards in the same grid row stretch to equal height; content inside them must not fake equal height with absolute positioning.
-
-Inside a side dashboard around `420–520px` wide:
-
-- prefer one full-width chart/table card
-- use two columns for normal KPI/status items
-- use three columns only when each item remains at least `120px` wide
-- use the `8/4` main/secondary split only for concise content
-
-Use Grid for equal-weight repeated cards. Use Flex inside a card for icons, labels, legends, units, and unequal content roles.
-
-## Density And Size
-
-Use the 1920 × 1080 authoring baseline and scale the screen root.
-
-| Density | Padding | Header minimum | Gap to body | Use for |
-| --- | --- | --- | --- | --- |
-| Compact | `12px` | `28px` | `12px` | KPI/status groups and dense side panels |
-| Standard | `16px` | `32px` | `16px` | Charts, tables, lists, and most content |
-| Spacious | `24px` | `40px` | `24px` | Feature/media cards and presentation-focused panels |
-
-Defaults:
-
-- standard card radius: `8px`
-- KPI/status minimum height: `76px`
-- content/chart minimum height: `160px`
-- floating card minimum width: `220px`
-- card group gap: `16px`; compact gap: `12px`
-
-Prefer minimum sizes over fixed heights. Use a fixed height only when aligned charts, bounded tables, media ratios, or passive auto-scrolling require it.
-
-Minimum card sizes do not override the side-panel height budget. Before stacking cards in a left or right dashboard column, verify that all sections, gaps, and safe areas fit the 1080p canvas contract in `big-screen-ui.md`. If they do not fit, reduce information density through prioritization, aggregation, tabs/paging, or drill-down overlays; never make the whole card stack vertically scrollable.
-
-## Surface And Visual States
-
-Use the unified blue-cyan theme from `data-tokens.less`.
-
-- **Panel**: dark blue-green gradient, stronger border, and one `32px` backdrop blur.
-- **Open Rail Panel**: transparent surface with no border, radius, shadow, blur, or outer padding. Its Rail header and inner content/item cards provide the visible structure.
-- **Standard content/item card**: translucent `rgba(13, 29, 48, 0.6)` surface, structural border, no backdrop blur.
-- **Floating card**: more opaque surface, stronger border, backdrop blur, and a restrained external shadow for separation from the scene.
-- **Active**: gold border/accent and a small focus shadow. Do not recolor ordinary chart series gold.
-- **Success/warning/danger**: add a `2px` semantic edge and adjust the border. Do not fill the whole card with a saturated status color.
-- **Disabled**: reduce opacity, suppress interaction, and keep text readable enough to understand the unavailable item.
-
-Static cards do not move or glow on hover. Add hover and keyboard focus only with `.data-card--interactive`, and only when clicking the whole card performs an action.
-
-Keep radius consistent within one screen. Do not mix sharp-corner panels, pill cards, and heavily rounded cards without a supplied design reason.
-
-Do not combine the open horizontal language of a Rail background with the complete border of a rounded Panel. Choose one of these compositions:
-
-```html
-<section class="data-card data-card--panel data-card--rail-panel">
-  <header class="data-card__header data-card__header--rail">
-    <h2 class="data-card__title">核心运营数据</h2>
-  </header>
-  <div class="data-card__body">...</div>
-</section>
+```less
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+}
 ```
 
-```html
-<section class="data-card data-card--panel">
-  <header class="data-card__header">
-    <h2 class="data-card__title">核心运营数据</h2>
-  </header>
-  <div class="data-card__body">...</div>
-</section>
-```
+固定画布内优先使用最小高度而非统一固定高度。只有对齐图表、限定表格、媒体比例或被动滚动确实需要时才固定高度。
 
-## Content Patterns
+## 密度与尺寸
 
-### KPI And Status
+- 默认内容间距为 `12–16px`。
+- KPI 数值必须明显高于标签和单位，但不能挤压相邻内容。
+- 交互控件保持可点击尺寸，不通过缩小按钮解决高度超限。
+- 文本行数和列表行数在设计画布上明确限定。
+- 面板高度超限时服从 `big-screen-ui.md` 的侧栏预算处理顺序。
 
-- Place value and unit on the same baseline; keep the unit visually subordinate.
-- Use tabular numerals for changing values.
-- Keep the icon area fixed so labels and values align across a row.
-- Preserve numeric zero. Use `--` only for missing or invalid data.
-- Pair semantic color with text or an icon.
+## 表面与状态
 
-### Feature Cards
+同一屏幕保持统一圆角体系。没有设计依据时，不混用直角 Panel、胶囊卡片和大圆角卡片。
 
-- Use one icon or image, one short title, and a description of one to three lines.
-- Align media and titles consistently across a grid.
-- Do not animate every icon. Use one restrained motion motif and respect reduced motion.
+卡片至少考虑：默认、Hover（仅交互卡片）、Focus、Selected、Disabled、Loading、Empty、Error、Stale。
 
-### Media Cards
+- 状态色必须同时配合文字或图标。
+- Loading、Empty、Error 和 Stale 保留卡片标题与上下文，避免高度跳变。
+- Rail 是开放的横向标题语言，不与完整圆角边框、彩色 Panel 填充或重复背景叠加。
 
-- Use `16:9` for video and wide captures; use `4:3` only when the source or task requires it.
-- Use `object-fit: cover` for decorative media and `contain` when cropping would hide evidence.
-- Keep captions and status outside the media layer unless they are genuine overlays.
+## 常见内容模式
 
-### Floating Cards
+### KPI 与状态
 
-- Keep content concise: usually one title and one to four metrics/statuses.
-- Use `pointer-events: auto` only when the card is interactive; let its surrounding overlay remain transparent to scene input.
-- Position the floating card at the scene/view level. Do not encode viewport coordinates in the reusable card style.
+- 数值与单位共用基线，单位降低视觉权重。
+- 变化中的数值使用等宽数字。
+- 图标区域宽度固定，使同一行标签和值对齐。
+- 数字 `0` 必须保留；只有缺失或非法数据才显示 `--`。
 
-## Nesting And Performance
+### 功能卡片
 
-- Limit visible card-surface nesting to two levels.
-- Apply backdrop blur only to panel and floating surfaces. Repeated blur on every nested card is expensive and muddies the hierarchy.
-- Avoid large animated shadows and continuous transforms on a full card grid.
-- Keep ordinary content in Grid/Flex flow. Reserve absolute positioning for deliberate badges, pointers, or media overlays.
-- Keep z-index local. A card should not create viewport-level stacking values intended for headers, Page Switch, or modals.
-- Preserve the card's minimum height during loading and empty states to avoid layout jumps.
+- 使用一个图标或图片、一个短标题和一至三行说明。
+- 网格中的媒体尺寸和标题位置保持一致。
+- 不让每个图标都持续运动；只保留一个克制的动效主题。
 
-## Reusable CSS Contract
+### 媒体卡片
 
-Copy `data-tokens.less` and `data-display.less` as described in `references/data-visualization.md`.
+- 视频和宽幅画面默认使用 `16:9`；仅在来源要求时使用 `4:3`。
+- 装饰图片使用 `object-fit: cover`；裁剪会丢失证据时使用 `contain`。
+- 标题和状态默认位于媒体层外，除非它们确实属于画面叠加信息。
 
-Layout:
+### 浮动卡片
 
-```text
-.card-stack
-.card-stack--compact
-.card-grid
-.card-grid--compact
-.card-span--12 | --8 | --6 | --4
-```
+- 内容通常限制为一个标题和一至四个指标或状态。
+- 只有可交互卡片设置 `pointer-events: auto`，外围覆盖层保持场景事件可穿透。
+- 坐标由场景或页面层决定，不写入可复用卡片样式。
 
-Card anatomy and variants:
+## 性能与层级
 
-```text
-.data-card
-.data-card--panel | --rail-panel | --floating
-.data-card--compact | --spacious
-.data-card--interactive | --active | --disabled
-.data-card--success | --warning | --danger
-.data-card__header | __title | __meta | __unit | __body | __footer
-.data-card__header--cap | --rail | --bracket
-.data-card__title-icon
-.data-card__meta--en | --preserve-case
-```
+- Backdrop blur 只用于 Panel 或浮动表面，不给每个 Item 重复添加。
+- 避免大面积动态阴影和整组卡片持续 transform。
+- 普通内容保持在 Grid/Flex 流中，绝对定位只用于角标、指针或媒体覆盖层。
+- 卡片 `z-index` 保持局部，不使用 Header、Page Switch 或 Modal 的应用级层级。
 
-Section titles and restrained decoration:
+## CSS 复用契约
 
-```text
-.section-title
-.section-title__text
-.section-title--marker | --line
-.decor-divider | .decor-divider--capped
-.decor-corner | .decor-corner--right
-.decor-icon-orbit | .decor-icon-orbit--running
-```
+复用 `assets/template/data-visualization/data-display.less` 与 `data-tokens.less` 中的：
 
-Specialized item patterns:
+- `.data-panel`、`.data-card`、`.data-item`
+- `.data-card__header`、`.data-card__title`、`.data-card__body`
+- `.data-card--interactive`、`.data-card--selected`
+- `.data-state` 及 loading/empty/error/stale 状态
 
-```text
-.metric-item
-.status-card
-.feature-card
-.media-card
-```
+功能组件只增加业务布局，不在 scoped 样式中重复公共表面、标题和状态值。
 
-Do not reproduce these surface values in scoped component styles. Use the classes and tokens, then add feature-specific layout only where needed.
+## 可访问性
 
-Treat `.data-card--rail-panel` as a Panel modifier, not as another visible nesting level. Keep its direct children in normal flow and place visible surfaces on the inner metric/content cards only.
-
-Do not combine `.data-card--rail-panel` with `.data-card--interactive`, status, or active card modifiers. Put interaction and semantic state on the appropriate inner card so the open Panel remains structural rather than behaving like one large button.
-
-## Accessibility And Data States
-
-- Use a button or link for a fully clickable card, or provide equivalent keyboard semantics and an accessible name.
-- Keep `.data-card--interactive` focus visible; do not remove the outline without a replacement.
-- Do not rely on hover to reveal required information.
-- Pair status color with text/icon meaning and maintain readable contrast over the 3D scene.
-- Keep loading, empty, error, and stale states inside the card body and preserve the card header/context.
-- Stop item motion when reduced motion is requested.
+- 整卡可点击时使用按钮或链接，或提供等价键盘语义和可访问名称。
+- `.data-card--interactive` 必须保留清晰的 `:focus-visible`。
+- 必要信息不能只在 Hover 时显示。
+- 装饰层不得遮挡文字、焦点或点击目标。
+- `prefers-reduced-motion` 下停止 Item 动效。

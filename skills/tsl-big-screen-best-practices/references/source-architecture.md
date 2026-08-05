@@ -1,336 +1,195 @@
-# 源码架构
+# 大屏源码与资源契约
 
 ## 目录
 
-- [目录契约](#directory-contract)
-- [职责](#responsibilities)
-- [通用资源包](#common-asset-pack)
-- [基础与集成模板](#foundation-and-integration-templates)
-- [数据可视化模板](#data-visualization-templates)
-- [Modal 模板](#modal-templates)
-- [SVG 图标组件](#svg-icon-component)
-- [入口流程](#entry-flow)
-- [根应用](#root-app)
-- [DT Engine 视图所有权](#dt-engine-view-ownership)
-- [命名](#naming)
+- [适用边界](#适用边界)
+- [场景级结构](#场景级结构)
+- [基础模板](#基础模板)
+- [数据可视化模板](#数据可视化模板)
+- [弹层模板](#弹层模板modal)
+- [可选集成模板](#可选集成模板)
+- [资源包](#资源包)
+- [入口与场景所有权](#入口与场景所有权)
 
-## Directory Contract
+## 适用边界
 
-Use this source shape for new projects:
+通用目录职责、文件命名和组件抽离服从 `frontend-engineering-standards`。本文件只规定大屏场景结构、模板复制路径和资源所有权。
+
+新项目使用下列通用名称：
 
 ```text
 src/
   api/
   assets/
-    font/
     icons/svg/
-      weather/
-    img/
-      decorations/
-      switch/
-    map/
-      china/
-    style/
+    images/
+    map/china/
+    styles/
   components/
-    modal/
-    svg-icon/
-  constant/
-  hooks/
-    use-scale.js
-  mock/
-  plugin/
+    common/
+    business/
+  composables/
+  constants/
+  plugins/
   router/
   services/
-  store/
+  stores/
   utils/
   views/
-  App.vue
-  main.js
-  public-path.js
 ```
 
-Use `src/store` for new projects. Only use `src/stores` when maintaining an existing codebase that already uses it.
+维护旧项目时不要为了匹配本树而重命名 `hooks/`、`store/`、`style/` 或现有组件；复制模板时将导入和目标路径适配到项目已有结构。
 
-## Responsibilities
+## 场景级结构
 
-- `api/`: endpoint functions grouped by business domain. Export functions, not raw URLs.
-- `assets/`: visual assets, fonts, SVG icon sources, image backgrounds, and global Less files.
-- `components/`: reusable UI and behavior components such as cards, charts, counters, modals, Page Switch, weather, SVG icons, and LLM/MCP controls.
-- `constant/`: load modes, selector names, route keys, scene maps, action maps, and UI enums.
-- `hooks/`: composables such as `useScale`, `useEngine`, timers, sequence/stepper helpers, and reusable interaction logic.
-- `mock/`: MockJS registration only. Components and stores must not import mock records directly.
-- `plugin/`: app-wide Vue plugin registration, global components, icon registration, and error handler wiring.
-- `router/`: route definitions and optional guards.
-- `services/`: lifecycle-free orchestration that can be called from components, stores, MCP handlers, or tests.
-- `store/`: Pinia stores for cross-feature state, modal state, scene state, and LLM state.
-- `utils/`: Axios instance, query parsing, dt-engine initialization, WebSocket helpers, action sequencing, and generic utilities.
-- `views/`: route-level screens. Keep them as composition surfaces that assemble feature components.
+路由视图是场景组合面：
 
-## Common Asset Pack
+- 渲染全页 `#three-container` 或地图画布作为底层。
+- 组合 Header、左右面板、Page Switch、Modal 和 LLM/MCP 控件。
+- 初始化并最终释放该路由拥有的 dt-engine。
+- 不承载卡片内部展示、图表实现或长业务动作序列。
 
-This skill includes reusable big-screen assets under `assets/`. When generating a project that uses Page Switch, LLM quick questions, weather, or common screen controls, copy the relevant files into the project instead of redrawing or inventing replacements.
+新项目使用 `views/home/HomeScreen.vue` 等 PascalCase 路由视图。页面私有组件放在 `views/<feature>/components/`；跨页面能力按实际复用范围放入 `components/common/` 或 `components/business/`。
 
-Copy targets:
+## 基础模板
 
 ```text
-skill assets/icons/svg/*.svg          -> project src/assets/icons/svg/
-skill assets/icons/svg/weather/*.svg  -> project src/assets/icons/svg/weather/
-skill assets/img/switch/switch-base.png
-  -> project src/assets/img/switch/switch-base.png
-skill assets/img/switch/switch-item-bg.png
-  -> project src/assets/img/switch/switch-item-bg.png
-skill assets/img/decorations/*        -> project src/assets/img/decorations/
-skill assets/map/china/*              -> project src/assets/map/china/
+assets/template/project/babel.config.js
+  -> babel.config.js
+assets/template/project/vue.config.js
+  -> vue.config.js
+assets/template/project/jest.config.js
+  -> jest.config.js
+assets/template/layout/useScale.js
+  -> src/composables/useScale.js
+assets/template/integrations/dtEngine.js
+  -> src/utils/dtEngine.js
+assets/template/integrations/engineActions.js
+  -> src/services/engineActions.js
+assets/template/integrations/request.js
+  -> src/api/request.js
 ```
 
-Included common assets:
+只复制目标功能需要的模板。复制后按项目环境变量、部署路径和已安装包调整，不改变模板的生命周期与错误契约。
 
-- Page Switch: `swiper-item-icon.svg`, `switch-base.png`, `switch-item-bg.png`; do not copy or render the legacy `switch-icon.png`
-- LLM quick questions: `icon-refresh.svg`, `icon-question-1.svg`, `icon-question-2.svg`
-- Common controls: `ganta.svg`
-- Card titles and decoration: `card-title-cap.svg`, `card-title-rail.png`, `section-title-marker.png`, `floating-title-bracket.svg`, `icon-orbit.svg`
-- Static Ya'an China map: `china.json`, `china-map-outline.js`
-- Weather: `qing.svg`, `duoyun.svg`, `yin.svg`, `yu.svg`, `xue.svg`, `feng.svg`, `wu.svg`, `mai.svg`, `shachenbao.svg`, `longjuanfeng.svg`
-
-Keep the existing project `svg-icon` registration mechanism. Do not add another icon system only to consume these assets.
-
-Do not copy font files or `@font-face` declarations from the reference projects by default. Generated projects and reusable title templates use the browser/page font unless an explicit user, design-system, or maintenance requirement supplies a brand font.
-
-## Foundation And Integration Templates
-
-Copy these only when the project uses the corresponding feature:
+## 数据可视化模板
 
 ```text
-skill assets/template/layout/use-scale.js
-  -> project src/hooks/use-scale.js
-skill assets/template/integrations/dt-engine.js
-  -> project src/utils/dt-engine.js
+assets/template/data-visualization/data-tokens.less
+  -> src/assets/styles/data-tokens.less
+assets/template/data-visualization/data-display.less
+  -> src/assets/styles/data-display.less
+assets/template/data-visualization/chartTheme.js
+  -> src/utils/chartTheme.js
+assets/template/data-visualization/chartOptions.js
+  -> src/utils/chartOptions.js
+assets/template/data-visualization/useECharts.js
+  -> src/composables/useECharts.js
+assets/template/data-visualization/chinaMap.js
+  -> src/utils/chinaMap.js
 ```
 
-## Data Visualization Templates
+职责保持分离：
 
-When the project needs standard card layouts, KPI, chart, table, progress, or empty-state styling, copy the bundled data-visualization templates:
+- `chartTheme.js` 保存稳定的主题和图表结构默认值。
+- `chartOptions.js` 将已归一化的特征数据转换为 ECharts option。
+- `chinaMap.js` 只负责静态全国地图注册和三层静态 option。
+- `useECharts.js` 负责正尺寸初始化、更新、ResizeObserver 和释放。
+- 图表组件负责 DOM ref、loading/empty/error 和业务交互。
+- 业务模块负责标签、单位、阈值语义和特征专属 option。
+
+Option builder 不请求 API、不启动定时器，也不创建 ECharts 实例。
+
+## 弹层模板（Modal）
 
 ```text
-skill assets/template/data-visualization/data-tokens.less
-  -> project src/assets/style/data-tokens.less
-skill assets/template/data-visualization/data-display.less
-  -> project src/assets/style/data-display.less
-skill assets/template/data-visualization/chart-theme.js
-  -> project src/utils/chart-theme.js
-skill assets/template/data-visualization/chart-options.js
-  -> project src/utils/chart-options.js
-skill assets/template/data-visualization/use-echarts.js
-  -> project src/hooks/use-echarts.js
-skill assets/template/data-visualization/china-map.js
-  -> project src/utils/china-map.js
+assets/template/modal/BaseModal.vue
+  -> src/components/common/BaseModal/BaseModal.vue
+assets/template/modal/useModalLifecycle.js
+  -> src/composables/useModalLifecycle.js
+assets/template/data-visualization/modal.less
+  -> src/assets/styles/modal.less
 ```
 
-Import `data-display.less` once from the global style entry. Keep both Less files in the same directory because `data-display.less` imports `data-tokens.less`.
+`BaseModal.vue` 的普通 `<script>` 只用于 Vue 3.2 下设置 `inheritAttrs: false`，其余实现使用 `<script setup>`。Feature Modal 负责请求、表单、播放器、图表和业务清理；动态调用者负责 `app.unmount()` 并移除挂载容器。
 
-When decorated titles are used, also copy every file under `assets/img/decorations/` to `src/assets/img/decorations/`. Keep this target path because `data-display.less` resolves them through `../img/decorations/`. Do not register the SVG background masks in the SVG symbol plugin; they are CSS decoration rather than semantic icons. Preserve `card-title-rail.png` and `section-title-marker.png` as raster assets with their original alpha and fixed colors.
+## 可选集成模板
 
-When the static Ya'an-style national map is used, copy only `assets/map/china/china.json` and `assets/map/china/china-map-outline.js` plus `china-map.js`. Keep the target paths shown above because the registration helper lazy-imports them through `@/assets/map/china/`. Do not copy the reference project's unused `china-map.js` or `china-out.js` geography files.
-
-Keep chart responsibilities separated:
-
-- `chart-theme.js` owns the stable palette and shared axis, grid, tooltip, and legend styling.
-- `chart-options.js` turns normalized feature data into ECharts options.
-- `china-map.js` registers the two static Ya'an map assets once and builds the fixed one-geo-plus-two-map option without business data or interaction.
-- `use-echarts.js` waits for measurable geometry, then owns ECharts initialization, dirty option updates, resize-only geometry handling, and disposal.
-- chart components own the DOM ref, option source, loading/empty UI, and feature interaction wiring.
-- feature code owns business labels, units, threshold meaning, data-driven geographic displays, and advanced map/radar/heatmap/bar-line options. Do not extend the static China-map template into a business map.
-
-Do not fetch APIs, start timers, or create ECharts instances inside an option builder.
-
-## Modal Templates
-
-When the project needs Dialog, Confirm, Drawer, or Media Viewer behavior, copy the shared modal templates:
+页面切换器（Page Switch）：
 
 ```text
-skill assets/template/modal/BaseModal.vue
-  -> project src/components/modal/BaseModal.vue
-skill assets/template/modal/use-modal-lifecycle.js
-  -> project src/hooks/use-modal-lifecycle.js
-skill assets/template/data-visualization/modal.less
-  -> project src/assets/style/modal.less
+assets/template/page-switch/usePageSwitch.js
+  -> src/composables/usePageSwitch.js
+assets/template/page-switch/useAutoCloseTimer.js
+  -> src/composables/useAutoCloseTimer.js
+assets/template/page-switch/pageSwitch.js
+  -> src/services/pageSwitch.js
+assets/template/page-switch/page-switch.less
+  -> src/assets/styles/page-switch.less
 ```
 
-Keep `modal.less` beside `data-tokens.less`, which it imports. Import `modal.less` once from the global style entry. Feature Modal components may style their content, but must not duplicate the base backdrop, layer, focus, scroll-lock, or transition implementation.
-
-Responsibilities remain separate:
-
-- `BaseModal.vue` owns the reusable shell and public Vue/CSS contract.
-- `use-modal-lifecycle.js` owns the single-main-plus-Confirm registry, focus stack, keyboard behavior, and scroll-lock reference count.
-- Feature Modal components own APIs, validation, business actions, player/chart instances, and cleanup.
-- Dynamic callers own `createApp()` unmounting and removal of their temporary mount container.
-
-## SVG Icon Component
-
-When any SVG icon is used, generate the `svg-icon` component and register all SVG symbols globally. Do not rely on copied SVG files alone.
-
-Create:
+LLM/MCP 控制：
 
 ```text
-src/components/svg-icon/
-  index.js
-  SvgIcon.vue
+assets/template/llm/useLlmMcp.js
+  -> src/composables/useLlmMcp.js
+assets/template/llm/mcp.js
+  -> src/services/mcp.js
+assets/template/llm/frontControl.js
+  -> src/services/frontControl.js
+assets/template/llm/llm-controls.less
+  -> src/assets/styles/llm-controls.less
 ```
 
-`SvgIcon.vue`:
+这些是行为模板，不是完整应用脚手架。组件仍由目标设计和业务数据决定。
+
+## 资源包
+
+仅复制所选功能使用的资源：
+
+```text
+assets/icons/svg/*.svg          -> src/assets/icons/svg/
+assets/icons/svg/weather/*.svg  -> src/assets/icons/svg/weather/
+assets/img/switch/switch-base.png
+  -> src/assets/images/switch/switch-base.png
+assets/img/switch/switch-item-bg.png
+  -> src/assets/images/switch/switch-item-bg.png
+assets/img/decorations/*
+  -> src/assets/images/decorations/
+assets/map/china/*
+  -> src/assets/map/china/
+```
+
+- Page Switch 不复制或渲染旧 `switch-icon.png`。
+- 图标保留现有项目的 SVG 注册机制，不新增第二套图标系统。
+- 装饰背景不注册为语义 SVG symbol。
+- 地图和受保护装饰资源保持字节不变。
+- 不复制参考项目字体、客户图片、私有 URL 或业务数据。
+
+样式模板中的相对 URL 以 `src/assets/styles/` 为起点解析到 `../images/decorations/`；复制时保持该相对关系。
+
+## 入口与场景所有权
+
+`src/main.js` 只负责：
+
+1. 导入共享请求和全局样式。
+2. 创建 Vue app。
+3. 安装 Pinia、Router 和应用插件。
+4. 在 `VUE_APP_MOCK === 'true'` 时加载开发 Mock。
+5. 挂载到 `#infraApp`。
+
+不要在 `main.js` 或 `App.vue` 初始化 dt-engine。场景路由在容器挂载后初始化，并在卸载时调用 `disposeEngine()`；子面板、Page Switch 和 LLM/MCP 只复用缓存实例，不独立创建或释放引擎。
+
+`App.vue` 保持为路由和缩放组合面：
 
 ```vue
 <script setup>
-import { computed } from "vue";
+import { useScale } from '@/composables/useScale'
 
-const props = defineProps({
-  iconClass: {
-    type: String,
-    required: true
-  },
-  prefix: {
-    type: String,
-    default: ""
-  },
-  color: {
-    type: String,
-    default: "currentColor"
-  },
-  size: {
-    type: [Number, String],
-    default: 16
-  }
-});
-
-const symbolName = computed(() => (props.prefix ? `${props.prefix}-${props.iconClass}` : props.iconClass));
-const symbolId = computed(() => `#icon-${symbolName.value}`);
-const fontSize = computed(() => (typeof props.size === "number" ? `${props.size}px` : props.size));
+useScale('#infraApp', { width: 1920, height: 1080 })
 </script>
 
 <template>
-  <svg class="svg-icon" :style="{ color, fontSize }" aria-hidden="true">
-    <use :xlink:href="symbolId" />
-  </svg>
+  <RouterView />
 </template>
-
-<style scoped>
-.svg-icon {
-  width: 1em;
-  height: 1em;
-  overflow: hidden;
-  vertical-align: -0.15em;
-  fill: currentColor;
-}
-</style>
 ```
-
-`index.js`:
-
-```js
-import SvgIcon from "./SvgIcon.vue";
-
-const req = require.context("@/assets/icons/svg", true, /\.svg$/);
-req.keys().forEach(req);
-
-export default {
-  install(app) {
-    app.component("SvgIcon", SvgIcon);
-  }
-};
-```
-
-Register it in `src/plugin/index.js`:
-
-```js
-import icons from "@/components/svg-icon";
-
-export default function plugin(app) {
-  app.use(icons);
-  return app;
-}
-```
-
-Use icons as:
-
-```vue
-<svg-icon icon-class="swiper-item-icon" :size="40" />
-<svg-icon icon-class="icon-refresh" :size="28" />
-<svg-icon prefix="weather" icon-class="qing" :size="20" />
-```
-
-Vue maps `icon-class` to the `iconClass` prop. Keep asset file names aligned with the symbol id rule: `swiper-item-icon.svg` becomes `#icon-swiper-item-icon`, and `weather/qing.svg` is referenced as `prefix="weather" icon-class="qing"` to produce `#icon-weather-qing`.
-
-## Entry Flow
-
-`src/main.js` should:
-
-1. Import Axios setup before API usage.
-2. Import global reset/style entry.
-3. Create the Vue app.
-4. Install Pinia, Router, and app plugins.
-5. Mount to `#infraApp`.
-6. Import `src/mock` only when `VUE_APP_MOCK === "true"`; development defaults to true, while test/master default to false.
-
-`src/main.js` must not initialize dt-engine. Initialize dt-engine only inside the route view or scene container that owns the rendered `three-container` element. This prevents `meta.amount(idSelector)` from running before the container exists.
-
-Keep app creation explicit:
-
-```js
-import "./utils/axios";
-import { createApp } from "vue";
-import { createPinia } from "pinia";
-import App from "./App.vue";
-import router from "./router";
-import plugin from "@/plugin";
-import "@/assets/style/reset.less";
-
-if (process.env.VUE_APP_MOCK === "true") {
-  require("./mock");
-}
-
-const app = plugin(createApp(App));
-app.use(createPinia()).use(router).mount("#infraApp");
-```
-
-## Root App
-
-Keep `App.vue` thin:
-
-```vue
-<template>
-  <router-view />
-</template>
-
-<script setup>
-import { useScale } from "@/hooks";
-
-useScale("#infraApp", { width: 1920, height: 1080 });
-</script>
-```
-
-Do not put feature markup, engine action sequences, or API orchestration in `App.vue`.
-
-## DT Engine View Ownership
-
-When dt-engine is required, the default owner is `src/views/home/index.vue`.
-
-That view must:
-
-- render `<div id="three-container">` as the full-page bottom scene layer
-- render Header, left dashboard, right dashboard, Page Switch, modals, and LLM/MCP controls as overlays above the scene
-- import `init` from `@/utils/dt-engine`
-- call `await init()` inside `onMounted`
-- retain or pass the resulting `meta` for scene actions, Page Switch, and LLM/MCP behavior
-
-Do not use the header or left/right panels to define the 3D container size. The 3D container owns the full scene/page area; panels reserve internal padding for the visual header area and float above the scene.
-
-Panels and shared components can call `loadEngine()` only to reuse the cached instance. They must not create independent engine instances.
-
-## Naming
-
-Use:
-
-- kebab-case for folders and most files.
-- PascalCase for Vue component files only when the surrounding project already does so.
-- `use-*.js` or `use*.js` composables consistently within a folder.
-- `index.vue` for folder entry components when the component is the folder's public API.

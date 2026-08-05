@@ -1,216 +1,100 @@
-# 卡片标题与装饰
+# 标题与装饰
 
 ## 目录
 
-- [来源模式](#source-patterns)
-- [层级与选择](#hierarchy-and-selection)
-- [排版矩阵](#typography-matrix)
-- [默认字体策略](#default-font-policy)
-- [标题变体](#title-variants)
-- [图标与双语元信息](#icons-and-bilingual-meta)
-- [装饰基元](#decoration-primitives)
-- [标记结构](#markup)
-- [资源与 Token](#assets-and-tokens)
-- [克制与布局安全](#restraint-and-layout-safety)
-- [无障碍与动效](#accessibility-and-motion)
+- [标题层级](#标题层级)
+- [选择规则](#选择规则)
+- [文字与辅助信息](#文字与辅助信息meta)
+- [标记结构](#标记结构)
+- [资源与设计变量](#资源与设计变量token)
+- [克制与布局安全](#克制与布局安全)
+- [可访问性与动效](#可访问性与动效)
 
-## Source Patterns
+标题装饰用于建立层级，不用于填满空白。优先保证标题文字、操作和数据上下文可读，再选择装饰形式。
 
-This system normalizes reusable visual grammar from the four reference projects. The Ya'an Rail and AI Park Section Marker are deliberate exceptions: their text-free source PNGs are retained for visual fidelity.
+## 标题层级
 
-| Source | Reusable visual grammar | Normalized use |
+| 层级 | 适用位置 | 推荐形式 |
 | --- | --- | --- |
-| `ai-park-screen` | half-frame `gray-title.png` beside a restrained gray subtitle; separate divider with bright end caps | canonical fixed-color Section Marker, capped divider |
-| `infra-yaan` | long title rail, top locator blocks, bottom diagonal ticks, paired edge lines | canonical fixed-color Rail PNG |
-| `infra-xunfei` | centered panel crown, inward chevrons, compact floating title strip | panel cap and floating bracket |
-| `infra-shapan` | the same title-rail structure with a different palette, plus icon orbit and short text bands | reuse the Ya'an Rail layout; keep orbit as a separate primitive |
+| 页面标题 | Header | 页面主题与状态，不使用卡片装饰 |
+| Panel 标题 | 左右主面板 | Cap 或设计指定背景 |
+| Content Card 标题 | 图表、列表、KPI 组 | Rail 或普通标题 |
+| Subsection 标题 | 卡片内部小节 | Marker / Line |
+| Floating 标题 | 场景浮动卡片 | Bracket |
+| Item 标签 | KPI、状态、排行项 | 默认纯文字 |
 
-Typography normalization uses each project's design height: AI Park `1536px`, Ya'an `2160px`, and Xunfei/Shapan `1080px`. The AI Park Marker is an explicit fidelity exception and retains the source component's declared `22px` text, `24px` icon, `8px` gap, and `5px` icon offset. All treatments deliberately ignore the projects' custom font-family declarations.
+同一卡片只使用一种主要标题形式：`cap`、`rail` 或 `bracket`。
 
-Keep the unified blue-cyan theme. Gold is a selected/active or deliberately emphasized state, not the default ornament color. The fixed Ya'an Rail and AI Park Marker PNGs do not participate in token-driven color changes.
+## 选择规则
 
-## Hierarchy And Selection
+- Cap：用于完整 Panel 表面，强调主业务区域。
+- Rail：用于开放、横向的内容卡片；只与 `.data-card--rail-panel` 配合。
+- Marker / Line：用于卡片内部小节，不升级为 Panel 标题。
+- Bracket：用于场景浮动信息或轻量覆盖层。
+- Orbit：只包围具有真实语义的图标，不作为纯背景噪声。
+- Divider / Corner：只用于辅助分组，不与全部其他装饰叠加。
 
-Use title decoration to communicate hierarchy, not to fill empty space.
+Rail 不与完整圆角边框、彩色 Panel 填充或 Backdrop blur 组合。Panel 强、Content Card 中、Subsection 轻、重复 Item 纯文字。
 
-| Content level | Default | Allowed alternative | Avoid |
-| --- | --- | --- | --- |
-| Panel card | `cap` | Ya'an `rail` on an open Rail Panel, or plain header | Rail inside a closed rounded Panel |
-| Content/chart card | plain header or section `marker` | `line` for a light subdivision | a full Rail background inside a bordered card |
-| Section inside a card | `marker` or `line` | plain text | using another full card header |
-| Floating scene card | `bracket` | plain compact header | a panel-sized title crown |
-| KPI, status, feature item | plain label | one semantic icon/orbit | repeated background rails on every item |
+## 文字与辅助信息（Meta）
 
-Apply the restrained hierarchy by default:
+- 使用与文档层级相符的 `h1/h2/h3`，不要通过 class 伪造语义层级。
+- 标题单行显示；必须截断时提供完整上下文、`title` 或可访问 Tooltip。
+- 标题位置由 CSS token 控制，不写项目专属绝对坐标。
+- 不让 SVG 或背景图决定标题 padding、文字宽度或卡片高度。
+- 未明确要求时不复制第三方字体或来源项目字体。
 
-1. Give the outer Panel the strongest title treatment.
-2. Keep content cards closed and quiet with plain or Marker titles; let the outer open Panel own the Rail.
-3. Use a marker or line for internal subsections.
-4. Keep repeated KPI and status items quiet so their values remain dominant.
+中文界面同时提供英文标题时：
 
-Do not select a decoration from a field name alone. Select it from the card level and the reading hierarchy.
+- 英文作为右侧 `.data-card__meta.data-card__meta--en`，不创建第二标题行。
+- 只使用业务或来源数据提供的英文，不自行猜译。
+- 默认 `14px / 20px`、字重 `400`、大写和 `.06em` 字距。
+- 产品名等需要保留大小写时添加 `.data-card__meta--preserve-case`。
+- 空间不足时先缩小或截断重复英文 Meta，再处理主标题。
 
-## Typography Matrix
+## 标记结构
 
-Use this 1920 × 1080 baseline:
-
-| Treatment | Size / line height | Weight | Alignment | Letter spacing |
-| --- | --- | --- | --- | --- |
-| Panel `cap` | `20px / 28px` | `500` | centered | `1px` |
-| Ya'an `rail` | `24px / 32px` | `700` | left | `2px` |
-| AI Park Section `marker` | `22px / normal` | `400` | left | `0` |
-| Generic Section `line` | `16px / 24px` | `500` | left | `0` |
-| Floating `bracket` | `18px / 24px` | `400` | left | `0` |
-| Header Meta | `14px / 20px` | `400` | right | `0`; English Meta uses `.06em` |
-
-Keep every decorated title on one line. Use normal text color with no gradient fill, text outline, or strong text glow; the decoration already supplies the visual accent. Active/selected state may change recolorable SVG decoration to gold but does not recolor the Rail or Marker PNGs or change title typography and ordinary title color.
-
-## Default Font Policy
-
-Do not declare a font family in reusable title, section-title, Meta, or numeric-title classes unless the user, supplied design, or maintained project explicitly requires one.
-
-- In the default generated project, omit `font-family` and inherit the page/browser font.
-- Do not add Alimama, HYQiHei, OPPOSans, DIN, or another project font merely because it appeared in a source project.
-- Do not copy source font files or `@font-face` declarations into the Skill or generated project by default.
-- Do not assign a special numeric font to a title or Meta value by default.
-- Treat a project-level brand font as an explicit override outside the reusable title template.
-
-## Title Variants
-
-### Panel Cap
-
-Use `.data-card__header--cap` only for a Panel title. It uses the centered crown and inward-chevron language normalized from `infra-xunfei`.
-
-- Height: `48px`
-- Title: `20px / 28px`, weight `500`, centered, `1px` letter spacing
-- Meta/action: pinned to the right edge
-- Maximum: one cap per Panel
-- Active state: cyan mask changes to gold through `.data-card--active`
-
-Do not use a cap on every content card; repeated crowns flatten the hierarchy and consume the side-panel height budget.
-
-### Ya'an Rail
-
-Use `.data-card__header--rail` only as the direct header of `.data-card--panel.data-card--rail-panel`. It uses Ya'an's original text-free `1424 × 130` RGBA PNG so the rail geometry, line weights, transparency, and source cyan remain exact. The open Panel modifier removes the competing rounded frame and lets inner cards carry the visible surfaces.
-
-- Height: `45px`, taken from Shapan's native 1080p title height while retaining Ya'an's shared rail geometry
-- Title: `24px / 32px`, weight `700`, color `#EFEDE9`, left aligned, `2px` letter spacing
-- Meta/action: remains in normal Flex flow at the right
-- Surface: transparent; render `card-title-rail.png` through a full-size pseudo-element with `background-size: 100% 100%`
-- Text safe area: `14px` on both sides. Ya'an's original `2160p` inset is `28px`, so the `1080p` baseline uses the exact `0.5` scale
-- Icon: omit by default. Render `.data-card__title-icon` only when a real semantic icon is supplied; never emit an empty placeholder
-- Ornament: use the PNG as-is; do not redraw it, tint it, apply CSS filters, or add a duplicate underline
-- Color: fixed to the source PNG. If a future requirement needs another color, provide a separately approved asset rather than approximate it with `filter` or `hue-rotate`
-
-### Floating Bracket
-
-Use `.data-card__header--bracket` for a concise floating card over the scene. It is normalized from `infra-xunfei` floating title strips.
-
-- Height: `28px`
-- Title: `18px / 24px`, weight `400`, no extra letter spacing
-- Keep content to one short title and one to four metrics/statuses
-- Do not combine it with a Panel cap
-
-### Section Marker And Line
-
-Use `.section-title--marker` for a named subsection that must reproduce the AI Park home-screen title. Use `.section-title--line` for a lighter generic divider title; it is not presented as an exact AI Park asset.
-
-AI Park Marker:
-
-- Source: AI Park `gray-title.png`, copied byte-for-byte as `section-title-marker.png`
-- Layout: `29px` line box, composed from the source `24px` icon plus its original `5px` top offset
-- Title: `22px`, browser-normal line height, weight `400`, color `#C9CDD4`, no extra letter spacing
-- Icon: `24 × 24px`, followed by an `8px` gap
-- Surface: transparent; do not add a long underline, cyan dot, background strip, glow, mask, filter, or generated frame
-- Color: fixed to the source PNG. A different palette requires an approved replacement asset
-
-Generic Line:
-
-- Height: `32px`
-- Title: `16px / 24px`, weight `500`, no extra letter spacing
-- Use only when a quieter internal divider is required
-
-Wrap the visible text in `.section-title__text` (or use a direct heading element). It keeps the title single-line and truncates before the line decoration or action area can overlap it.
-
-## Icons And Bilingual Meta
-
-Keep icons subordinate to the title text:
-
-| Treatment | Icon size | Gap to text |
-| --- | --- | --- |
-| Cap | `20px`; omit by default | `8px` |
-| Rail | `18px`; omit by default | `8px` |
-| AI Park Marker | source ornament `24px` | `8px` |
-| Generic Line | optional semantic icon `16px` | `8px` |
-| Bracket | `16px` | `8px` |
-
-Use `.data-card__title-icon` inside the title. Do not replace the semantic heading with an icon.
-
-When a Chinese interface also provides an English title:
-
-- Render English as `.data-card__meta.data-card__meta--en` at the right; do not create a second title row.
-- Use only English supplied by the business or source data. Do not generate or guess a translation.
-- English Meta uses `14px / 20px`, weight `400`, uppercase, and `.06em` letter spacing.
-- Add `.data-card__meta--preserve-case` for product names or other copy whose case must remain unchanged.
-- Limit Meta width to `96px` in Cap, `120px` in Rail, and `96px` in Bracket.
-- When space is tight, shrink and truncate the duplicate English Meta before sacrificing the primary title. Preserve the complete value through context, `title`, or an accessible tooltip.
-
-## Decoration Primitives
-
-- `.decor-divider`: a low-contrast horizontal separator.
-- `.decor-divider--capped`: a separator with AI Park-style glowing end caps. Use between major groups, not between every row.
-- `.decor-corner`: one structural top-left corner mark; add `.decor-corner--right` only when a balanced pair is justified.
-- `.decor-icon-orbit`: a `40px` icon frame normalized from `infra-shapan`.
-- `.decor-icon-orbit--running`: rotate the orbit only when the icon means running, syncing, scanning, or loading.
-
-Decorative elements must remain `pointer-events: none`. Static decoration receives no hover state. Do not animate an orbit merely to make an idle card feel active.
-
-## Markup
-
-Panel cap:
+面板帽标题（Panel Cap）：
 
 ```html
-<article class="data-card data-card--panel">
-  <header class="data-card__header data-card__header--cap">
-    <h2 class="data-card__title">设备概览</h2>
-    <span class="data-card__meta data-card__meta--en" title="Robot Overview">Robot Overview</span>
-  </header>
-  <div class="data-card__body">...</div>
-</article>
+<header class="data-card__header data-card__header--cap">
+  <h2 class="data-card__title">标题</h2>
+</header>
 ```
 
-Open Rail Panel and subsection:
+开放 Rail 与内部小节：
 
 ```html
-<section class="data-card data-card--panel data-card--rail-panel">
+<section class="data-card data-card--rail-panel">
   <header class="data-card__header data-card__header--rail">
-    <h2 class="data-card__title">设备状态</h2>
+    <h3 class="data-card__title">标题</h3>
   </header>
-  <div class="data-card__body">
-    <div class="section-title section-title--marker">
-      <span class="section-title__text">Fault Distribution</span>
-    </div>
-  </div>
+  <div class="data-section-title data-section-title--marker">小节标题</div>
 </section>
 ```
 
-Semantic orbit:
+语义 Orbit：
 
 ```html
-<span class="decor-icon-orbit decor-icon-orbit--running" aria-hidden="true">
-  <svg-icon icon-class="sync" :size="20" />
+<span class="data-icon-orbit" aria-hidden="true">
+  <svg class="data-icon-orbit__icon"><use href="#icon-status" /></svg>
 </span>
 ```
 
-The decoration assets contain no text. Keep semantic titles in HTML so truncation, localization, and assistive technology continue to work.
+装饰资源不包含文字。语义标题必须保留在 HTML 中，确保截断、本地化和辅助技术正常工作。没有标题、Meta 或操作时不渲染空 Header。
 
-If a card has neither a title nor header metadata/actions, omit the header element. The decorated header classes hide a truly empty element as a fallback, but templates should not emit whitespace-only headers.
+## 资源与设计变量（Token）
 
-## Assets And Tokens
+```text
+assets/img/decorations/*
+  -> src/assets/images/decorations/
+assets/template/data-visualization/data-tokens.less
+  -> src/assets/styles/data-tokens.less
+assets/template/data-visualization/data-display.less
+  -> src/assets/styles/data-display.less
+```
 
-Copy the five assets from the skill's `assets/img/decorations/` directory to project `src/assets/img/decorations/`. Keep `data-display.less` in `src/assets/style/`; its `../img/decorations/` URLs depend on that layout.
-
-Rail and AI Park Marker are fixed-color source PNGs; the remaining assets are monochrome SVG masks:
+装饰资源包括：
 
 ```text
 card-title-cap.svg
@@ -220,33 +104,25 @@ floating-title-bracket.svg
 icon-orbit.svg
 ```
 
-Use the title and decoration tokens in `data-tokens.less` instead of recreating feature-scoped sizes, shadows, or colors. For SVG masks, the mask owns geometry and `--card-title-accent` owns color. The Rail and Marker PNGs retain their embedded colors and do not switch to gold under `.data-card--active`.
+`data-display.less` 的 `../images/decorations/` 相对路径依赖上述目标目录。Token 只定义字号、行高、字重、间距、图标几何和 Meta 限制，不定义 font-family。
 
-The typography tokens contain sizes, line heights, weights, spacing, icon geometry, and Meta limits only. They intentionally contain no font-family token.
+## 克制与布局安全
 
-## Restraint And Layout Safety
+- 不在同一卡片叠加标题背景、发光边框、双角标、带端点分隔线和动画 Orbit。
+- 不添加数据中不存在的装饰性英文、序号或状态词。
+- 横向装饰线位于标题行盒的上方或下方，不穿过字形。
+- Rail 只使用共享 `card-title-rail.png`，不增加重复底色、背景或下划线。
+- Rail 标题使用 `14px` Header 内边距，不再嵌套无意义图标占位或内容容器。
+- 雅安或沙盘来源页面默认使用固定 Rail 资源，不在运行时改色；新配色需要新的已批准图片。
+- AI Park Marker 只用于内部小节，不提升为 Panel 标题，也不与 Rail、Cap 组合。
+- 标题高度必须计入 `big-screen-ui.md` 的侧栏预算。
+- 在 `420px`、`480px`、`520px` 侧栏宽度下，先保留标题和 Meta，再缩短装饰线。
 
-- Give one card only one primary title treatment: `cap`, `rail`, or `bracket`.
-- Pair Rail only with `.data-card--rail-panel`. Do not wrap the long transparent Rail in a rounded border, colored Panel fill, or backdrop blur.
-- Do not combine a title background, glow border, corner pair, capped divider, and animated orbit on the same card.
-- Keep Panel strong, content card medium, subsection light, and repeated items plain.
-- Do not add decorative English text, sequence numbers, or status words that are not present in the data.
-- Do not position title text with project-specific absolute coordinates.
-- Do not add source-project font names or font files without an explicit brand-font requirement.
-- Do not let an SVG define title padding, text width, or card height; CSS tokens own layout.
-- Keep horizontal ornament lines in the top or bottom edge band, outside the title line box. A line may frame text but must never run behind, through, or immediately across its glyphs. The AI Park Marker has no horizontal line.
-- Keep Rail fill transparent. Use only the shared `card-title-rail.png`; do not add a feature-level color wash, duplicate background, or title underline.
-- Keep the Rail title at the `14px` header inset. Do not add another title padding, margin, invisible icon slot, or nested content wrapper before the text.
-- Use the fixed Ya'an Rail asset by default for Ya'an- and Shapan-derived screens. Do not attempt runtime recoloring; a true palette variant requires another approved raster asset.
-- Use the fixed AI Park Marker only for internal subsection titles. Do not promote it to a Panel title or combine it with a Rail, Cap, or another marker.
-- Include title heights in the side-panel budget from `big-screen-ui.md`. Decoration is not permission to create column scrolling.
-- At `420px`, `480px`, and `520px` side-panel widths, preserve title text and meta before decorative line length. Truncate the title only when its full value is available through context or tooltip.
+## 可访问性与动效
 
-## Accessibility And Motion
-
-- Use heading elements that match the actual document hierarchy; classes do not determine heading level.
-- Mark inline decorative assets and orbit wrappers `aria-hidden="true"`.
-- Pair color-coded active/status meaning with text or an icon.
-- Keep required actions in normal DOM flow with visible keyboard focus; decoration must not cover them.
-- Respect `prefers-reduced-motion`; the running orbit becomes static.
-- Preserve readable contrast when the 3D scene behind a Panel changes brightness.
+- 纯装饰资源和 Orbit 包装设置 `aria-hidden="true"`。
+- 颜色状态同时提供文字或图标。
+- 必要操作保留在正常 DOM 流中，并有可见键盘焦点。
+- 装饰层设置合理的 pointer-events，不覆盖点击目标。
+- `prefers-reduced-motion` 下 Orbit 保持静止。
+- 三维场景亮度变化时仍保持标题对比度。

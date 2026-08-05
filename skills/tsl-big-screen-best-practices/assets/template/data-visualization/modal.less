@@ -47,7 +47,11 @@
   border-radius: @modal-radius;
   box-shadow: @modal-shadow;
   backdrop-filter: blur(@modal-backdrop-blur);
-  outline: none;
+  outline: 2px solid transparent;
+}
+
+.modal-shell:focus-visible {
+  outline-color: #65f2fc;
 }
 
 @supports ((-webkit-mask-composite: xor) or (mask-composite: exclude)) {

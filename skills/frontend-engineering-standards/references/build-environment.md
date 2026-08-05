@@ -1,6 +1,6 @@
 # 构建、环境与依赖管理规范
 
-本文件统一管理 Node.js、Yarn、依赖、环境变量、构建脚本和 CI。Vite 插件及打包细节参见 [Vite 配置规范](vite-config.md)。
+本文件统一管理 Node.js、Yarn、依赖、环境变量、构建脚本和 CI。Vite 插件及打包细节参见 [Vite 配置规范](vite-config.md)。专项 Skill 明确使用其他构建工具时，构建配置、环境变量前缀和测试运行器服从专项 Skill；Yarn、依赖安全和 CI 质量要求仍服从本文件。
 
 ## 技术基线
 
@@ -16,7 +16,7 @@
 只使用 Yarn。优先读取 `package.json#packageManager` 判断版本；未声明时运行 `yarn --version`，再按实际主版本选择命令。
 
 - 已有项目保持当前 Yarn 主版本和锁文件格式。
-- 新项目默认使用 Yarn 4，通过 Corepack 启用，并在 `packageManager` 中记录精确版本。
+- 新项目默认使用 Yarn Classic 1.x，并使用团队锁定的具体版本。
 - 提交 `yarn.lock`，不要手动编辑锁文件，不生成 `package-lock.json` 或 `pnpm-lock.yaml`。
 
 ## 依赖分类与版本
@@ -50,7 +50,7 @@ yarn outdated
 yarn audit
 ```
 
-### Yarn Modern（2+，新项目默认 Yarn 4）
+### Yarn Modern（2+）
 
 ```bash
 yarn install --immutable
@@ -103,7 +103,7 @@ const enableMock = import.meta.env.VITE_ENABLE_MOCK === 'true'
 
 ## CI
 
-CI 使用项目锁定的 Node.js 与 Yarn 版本。以下示例适用于新建的 Yarn Modern 项目：
+CI 使用项目锁定的 Node.js 与 Yarn 版本。以下示例适用于新建的 Yarn Classic 项目：
 
 ```yaml
 name: CI
@@ -117,14 +117,13 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: 'yarn'
-      - run: corepack enable
-      - run: yarn install --immutable
+      - run: yarn install --frozen-lockfile
       - run: yarn lint
       - run: yarn test
       - run: yarn build
 ```
 
-Yarn Classic 项目将安装命令替换为 `yarn install --frozen-lockfile`。不要缓存 `node_modules` 或把构建产物作为依赖缓存；优先使用包管理器缓存。
+已有 Yarn Modern 项目按项目基线启用 Corepack，并将安装命令替换为 `yarn install --immutable`。不要缓存 `node_modules` 或把构建产物作为依赖缓存；优先使用包管理器缓存。
 
 ## 依赖维护与安全
 

@@ -1,132 +1,52 @@
-# DT Engine 数字孪生引擎
+# dt-engine 大屏接入
 
-## 目录
+先加载 `$dt-engine-best-practices` 获取当前 API 与生命周期规则。本文件只定义 TSL 大屏的版本、文件和场景所有权约定。
 
-- [依赖](#dependency)
-- [常量](#constants)
-- [引擎初始化](#engine-initialization)
-- [场景 Hook](#scene-hook)
-- [视图集成](#view-integration)
-- [清理](#cleanup)
+## 版本策略
 
-## Dependency
+- 维护项目沿用已安装的 `@tslfe/dt-engine` 版本，除非任务明确要求升级。
+- 新项目默认安装最新稳定版（以 `npm view @tslfe/dt-engine version` 为准），不锁定历史补丁版本。
+- 复制模板后必须按实际安装版本核对初始化、插件和事件 API，不确定时参考 `$dt-engine-best-practices` 中的 API 参考。
 
-When the project uses digital-twin scenes, install exactly:
-
-```json
-{
-  "@tslfe/dt-engine": "4.3.1-1"
-}
-```
-
-## Constants
-
-Define engine constants in `src/constant/index.js`:
-
-```js
-export const TACOS_LOAD_MODE = {
-  UNITY_CLOUD: "unity-cloud",
-  UNITY_EXE: "unity-exe",
-  WEBGL: "webgl"
-};
-
-export const THREE_SELECTOR = "three-container";
-```
-
-## Engine Initialization
-
-Copy the verified `4.3.1-1` integration template:
+## 模板与位置
 
 ```text
-skill assets/template/integrations/dt-engine.js
-  -> project src/utils/dt-engine.js
+assets/template/integrations/dtEngine.js
+  -> src/utils/dtEngine.js
+
+assets/template/integrations/engineActions.js
+  -> src/services/engineActions.js
 ```
 
-Its public lifecycle is:
+`dtEngine.js` 是唯一初始化入口，负责：
 
-```js
-loadEngine(idSelector); // shared concurrent promise; rejection can retry
-init(idSelector);       // installs the shared click listener once
-disposeEngine();        // removes listeners and awaits meta.dispose()
-```
+- 缓存初始化 Promise 和 `meta`，避免重复创建引擎。
+- 根据 `VUE_APP_TACOS_LOAD_MODE` 安装 Unity 或 WebGL 插件。
+- 在容器存在后挂载引擎。
+- 注销事件并等待引擎释放。
 
-The template was checked against the installed `@tslfe/dt-engine@4.3.1-1` declarations: `addEventListener()` returns an unsubscribe function and `Meta.dispose()` returns a Promise. Keep `pending` reset in `finally`; otherwise one failed connection permanently poisons all later attempts.
+`createEngineActions(meta)` 是无 Vue 生命周期的服务工厂，负责场景重置、模型显隐等命令。它不是 composable，不使用 `useEngine()` 命名，也可以安全地被 MCP 服务调用。
 
-## Scene Hook
+## 页面所有权
 
-Create `src/hooks/use-engine.js` to wrap Unity/plugin commands. Keep business names in constants and keep the hook generic:
-
-```js
-export function useEngine(meta) {
-  const resetScene = () => meta.unity.invoke("ResetScene");
-
-  const changeScene = (name, options = {}) =>
-    meta.unity.invoke("ChangeState", {
-      Name: name,
-      IsNeedMergeBuilding: Boolean(options.mergeBuilding),
-      IsNeedSplitBuilding: Boolean(options.splitBuilding),
-      IsNeedMergeAfterSplit: Boolean(options.mergeAfterSplit)
-    });
-
-  const changeViewPoint = (cameraInfo, duration = 3) =>
-    meta.unity.invoke("ChangeViewPoint", {
-      Position: cameraInfo.Position,
-      EulerAngles: cameraInfo.EulerAngles,
-      Duration: duration
-    });
-
-  return { resetScene, changeScene, changeViewPoint };
-}
-```
-
-Add POI, line effects, wall effects, lights, and room controls only when the requested project needs them.
-
-## View Integration
-
-Use a stable route-level container. Follow the canonical structure and CSS in `references/big-screen-ui.md`; do not duplicate that layout in this integration reference. The scene-owning view initializes after the container exists and disposes on unmount:
+路由页面在 `onMounted` 初始化，在 `onUnmounted` 释放；事件监听器、POI、特效和临时图层由创建它们的页面或功能模块清理。Page Switch、LLM/MCP 和普通 UI 只接收同一个已初始化 `meta`，不得各自创建引擎。
 
 ```vue
 <script setup>
-import { onBeforeUnmount, onMounted, shallowRef } from "vue";
-import { disposeEngine, init } from "@/utils/dt-engine";
-import { useEngine } from "@/hooks";
+import { onMounted, onUnmounted, shallowRef } from 'vue'
+import { disposeEngine, init } from '@/utils/dtEngine'
 
-const metaRef = shallowRef(null);
+const meta = shallowRef(null)
 
 onMounted(async () => {
-  const meta = await init();
-  metaRef.value = meta;
+  meta.value = await init()
+})
 
-  const engine = useEngine(meta);
-  // Use engine actions here or pass meta/engine to feature composables.
-});
-
-onBeforeUnmount(() => {
-  void disposeEngine();
-});
+onUnmounted(async () => {
+  await disposeEngine()
+  meta.value = null
+})
 </script>
 ```
 
-This initialization is mandatory whenever the project includes dt-engine. Creating `src/utils/dt-engine.js` is not enough.
-
-Rules:
-
-- Call `init()` only in a route view or dedicated scene container that renders `<div id="three-container">`.
-- Render `#three-container` as the full-page bottom scene layer. Header and left/right dashboards must overlay it and must not reduce its width or height.
-- Do not call `init()` in `main.js`, `App.vue`, left/right panel components, Page Switch, or LLM components.
-- Page Switch, LLM/MCP, `frontControl`, and `useEngine(meta)` must reuse the same initialized `meta` or call `loadEngine()` to access the cached instance.
-- If a custom container id is used, pass it explicitly: `await init("three-container")`.
-- Do not run scene actions until `init()` resolves.
-- Only the route/scene owner calls `disposeEngine()`. Child panels, Page Switch, and LLM/MCP code reuse the cached instance and never dispose shared ownership independently.
-
-## Cleanup
-
-Track and clear:
-
-- POI ids returned from `applyToPosition` or `applyToComponent`
-- segment wall ids
-- line effect handles
-- dynamic modal instances opened by scene actions
-- timers used in staged scene playback
-
-Wrap removal in functions that can be called during reset and before running a new scene action.
+错误必须交给页面错误态或统一监控；不要静默吞错，也不要把连接地址、token 或客户数据写入日志。

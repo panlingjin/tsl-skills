@@ -4,10 +4,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const themeSource = await readFile(join(root, "assets/template/data-visualization/chart-theme.js"), "utf8");
+const themeSource = await readFile(join(root, "assets/template/data-visualization/chartTheme.js"), "utf8");
 const themeUrl = `data:text/javascript;base64,${Buffer.from(themeSource).toString("base64")}`;
-const optionSource = (await readFile(join(root, "assets/template/data-visualization/chart-options.js"), "utf8"))
-  .replace('from "./chart-theme.js"', `from "${themeUrl}"`);
+const optionSource = (await readFile(join(root, "assets/template/data-visualization/chartOptions.js"), "utf8"))
+  .replace("from './chartTheme.js'", `from "${themeUrl}"`);
 const optionUrl = `data:text/javascript;base64,${Buffer.from(optionSource).toString("base64")}`;
 const {
   createComparisonOption,
@@ -65,9 +65,9 @@ const echartsMockUrl = `data:text/javascript;base64,${Buffer.from(`
   export function registerMap() {}
 `).toString("base64")}`;
 const chinaMapSource = (await readFile(
-  join(root, "assets/template/data-visualization/china-map.js"),
+  join(root, "assets/template/data-visualization/chinaMap.js"),
   "utf8",
-)).replace('from "echarts"', `from "${echartsMockUrl}"`);
+)).replace("from 'echarts'", `from "${echartsMockUrl}"`);
 const chinaMapUrl = `data:text/javascript;base64,${Buffer.from(chinaMapSource).toString("base64")}`;
 const { createChinaMapOption } = await import(chinaMapUrl);
 

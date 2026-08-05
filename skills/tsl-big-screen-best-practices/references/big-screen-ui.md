@@ -2,57 +2,58 @@
 
 ## 目录
 
-- [画布与缩放](#canvas-and-scaling)
-- [设计来源与视觉优先级](#design-sources-and-visual-priority)
-- [布局](#layout)
-- [页头、面板与场景层](#header-panels-and-scene-layer)
-- [侧栏高度预算](#side-panel-height-budget)
-- [视觉组件](#visual-components)
-- [资源](#assets)
-- [交互与动效](#interaction-and-motion)
+- [画布与缩放](#画布与缩放)
+- [设计来源与视觉优先级](#设计来源与视觉优先级)
+- [页面布局](#页面布局)
+- [侧栏高度预算](#侧栏高度预算)
+- [视觉组件](#视觉组件)
+- [资源与图标](#资源与图标)
+- [交互动效与可访问性](#交互动效与可访问性)
 
-## Canvas And Scaling
+## 画布与缩放
 
-Big-screen pages use a fixed design canvas and scale to the current terminal/browser window.
-
-Copy the reusable scale helper:
+大屏页面使用固定设计画布，并按当前终端或浏览器窗口等比缩放。
 
 ```text
-skill assets/template/layout/use-scale.js
-  -> project src/hooks/use-scale.js
+assets/template/layout/useScale.js
+  -> src/composables/useScale.js
 ```
 
-It fixes the authoring canvas at `1920 × 1080`, scales by `min(viewportWidth / 1920, viewportHeight / 1080)`, and centers the canvas with a transform. This prevents both horizontal clipping and vertical overflow. Keep Header, panels, Page Switch, LLM controls, and Modal Teleport targets inside this same root. The compatibility overload `useScale(target, 1080)` remains valid; new code should use `useScale(target, { width: 1920, height: 1080 })`.
+唯一设计尺寸为 `1920 × 1080`。缩放比例使用：
 
-## Design Sources And Visual Priority
+```text
+min(viewportWidth / 1920, viewportHeight / 1080)
+```
 
-When the user provides a Figma node, design-system MCP output, exported design file, screenshot, or approved generated visual, use it as the primary source for visual implementation. Extract and preserve its layout, spacing, typography intent, colors, radii, borders, shadows, decorative assets, component states, and chart styling unless the user limits the scope.
+画布缩放后在视口中居中，允许在非 16:9 屏幕上产生留白，不得分别拉伸宽高。Header、左右面板、Page Switch、LLM 控件和 Modal Teleport 目标必须位于同一个 `#infraApp` 缩放根内。
 
-Use the TSL defaults in this reference only for areas the design source does not specify. Do not restyle an explicit design source back into the bundled blue-cyan TSL look just because this skill contains fallback card, title, chart, or modal treatments.
+新代码使用 `useScale(target, { width: 1920, height: 1080 })`；兼容旧项目时允许保留 `useScale(target, 1080)`。
 
-Keep these constraints even when a visual source suggests otherwise:
+## 设计来源与视觉优先级
 
-- the page still renders inside the scaled `1920 × 1080` root unless the user explicitly changes the target canvas
-- Header, panels, Page Switch, LLM controls, and modals remain in the same scaled coordinate system
-- the full-page 3D scene or map stays as the bottom layer unless the design explicitly removes it
-- side panels must pass the documented height budget and may not create page-level or whole-panel scrolling
-- text, controls, and chart labels must remain readable, non-overlapping, and visible inside the canvas
-- application overlays, dt-engine resources, ECharts instances, timers, WebSockets, and MCP tools keep their documented lifecycle ownership
-- private URLs, secrets, model ids, and customer data are never copied from source projects or design annotations
+用户提供 Figma 节点、设计系统输出、截图或已批准视觉稿时，以其为视觉实现依据。保留其中的布局、间距、字体意图、颜色、圆角、边框、阴影、装饰资源、组件状态和图表风格；仅在未定义部分使用本 Skill 的蓝青色默认样式。
 
-## Layout
+视觉来源不得覆盖以下工程约束：
 
-Use:
+- 页面仍位于统一的 1920×1080 缩放根内。
+- 三维场景或地图保持为全页底层，除非设计明确移除。
+- 侧栏必须满足高度预算，不产生页面级或整栏滚动。
+- 文本、控件和图表标签可读且不重叠。
+- 弹层、dt-engine、ECharts、定时器、WebSocket 和 MCP 注册仍遵循各自生命周期。
+- 不复制私有 URL、密钥、模型 ID、客户数据或参考项目字体。
 
-- full-screen root
-- transparent or dark renderer background
-- full-page 3D scene container as the bottom layer
-- header as a top overlay, not a layout row that reduces the scene height
-- center digital-twin or map region
-- left and right panels as overlays for dense metrics
-- absolute overlays only when they align to a fixed design canvas
+## 页面布局
 
-Root CSS baseline:
+推荐结构：
+
+- `#infraApp`：1920×1080 固定画布和唯一缩放根。
+- 场景层：全页 Three.js、Unity 或地图容器。
+- Header：顶部覆盖层，不挤压场景高度。
+- 左右面板：覆盖在场景两侧。
+- 中部：保留给模型、地图及少量绝对定位标注。
+- Page Switch、Modal、LLM 控件：位于同一坐标系。
+
+根样式基线：
 
 ```less
 html,
@@ -78,230 +79,63 @@ body,
 ::before,
 ::after {
   box-sizing: border-box;
-  outline: none;
 }
 ```
 
-## Header, Panels, And Scene Layer
+不要使用 `height: calc(100% - headerHeight)` 缩短场景，也不要让左右面板参与普通文档流从而挤压中心模型。
 
-For digital-twin big screens, the three-dimensional scene must fill the page or the dedicated full-page scene area first. Header, left dashboard, right dashboard, Page Switch, modals, and LLM/MCP controls sit above the scene as overlays.
+普通页面层级固定为：场景 `0`、面板 `10`、Header `20`、Page Switch `30`。应用弹层层级只以 `modal-patterns.md` 为准，不在功能代码中创建 `9999` 等临时层级。
 
-Do not make `#three-container` a normal-flow sibling that is shortened by the header or squeezed by left/right panels. Avoid `height: calc(100% - headerHeight)` for the 3D container unless the design explicitly says the scene should not exist behind the header.
+## 侧栏高度预算
 
-Canonical route-level structure:
+左右看板列必须完整容纳在缩放后的 1080p 画布内。被动展示大屏不得出现页面滚动条或整栏滚动条。
 
-```vue
-<template>
-  <div class="home-screen">
-    <Header class="home-header" />
-
-    <main class="scene-shell">
-      <div id="three-container" class="three-container"></div>
-
-      <div class="dashboard-layer">
-        <LeftPanel class="dashboard-panel dashboard-panel-left" />
-        <RightPanel class="dashboard-panel dashboard-panel-right" />
-      </div>
-
-      <PageSwitch v-if="switchShow" class="page-switch-layer" />
-    </main>
-  </div>
-</template>
-```
-
-Canonical Less baseline:
-
-```less
-.home-screen {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: transparent;
-}
-
-.scene-shell {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.three-container {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: auto;
-}
-
-.home-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 20;
-  width: 100%;
-  pointer-events: auto;
-}
-
-.dashboard-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.dashboard-panel {
-  --panel-safe-top: 80px;
-  --panel-safe-bottom: 24px;
-  --panel-section-gap: 16px;
-
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  height: auto;
-  min-height: 0;
-  padding-top: var(--panel-safe-top);
-  padding-bottom: var(--panel-safe-bottom);
-  overflow: hidden;
-  pointer-events: auto;
-}
-
-.dashboard-panel__content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--panel-section-gap);
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.dashboard-panel__section {
-  flex: 0 0 auto;
-  min-height: 0;
-}
-
-.dashboard-panel__section--fill {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.dashboard-panel-left {
-  left: 0;
-}
-
-.dashboard-panel-right {
-  right: 0;
-}
-
-.page-switch-layer {
-  position: absolute;
-  z-index: 30;
-}
-```
-
-Canonical panel-internal structure:
-
-```vue
-<template>
-  <aside>
-    <div class="dashboard-panel__content">
-      <section class="dashboard-panel__section">
-        <!-- fixed KPI or summary card group -->
-      </section>
-
-      <section class="dashboard-panel__section dashboard-panel__section--fill">
-        <!-- the one bounded chart, table, or list that may use remaining height -->
-      </section>
-    </div>
-  </aside>
-</template>
-```
-
-Panel details:
-
-- Reserve top padding inside left/right panels for the visual header area, instead of pushing the whole scene down.
-- Reserve bottom padding for Page Switch, legal text, or other fixed controls. Increase `--panel-safe-bottom` when those controls overlap a side column.
-- Use fixed design-width panels on fixed-canvas screens, then let root scaling adapt them.
-- Use left/right gradient shadows when the panel needs to blend into the 3D scene.
-- Keep the center area visually open for the model. Center overlays must be absolute and must not resize the 3D container.
-- Keep page composition layers predictable: scene `0`, panels `10`, header `20`, and Page Switch `30`. The application-level LLM/modal/Confirm/Toast stack uses `1999/2000/2100/2200`; do not invent feature-level values such as `9999`.
-
-## Side-Panel Height Budget
-
-Left and right dashboard columns must fit inside the scaled 1080p canvas. A passive big-screen dashboard must not create a page scrollbar or a scrollbar for the whole side panel.
-
-Wrap the cards in `.dashboard-panel__content` and make each top-level card or card group a `.dashboard-panel__section`. At most one section in a column may use `.dashboard-panel__section--fill`; use it for the chart, bounded table, or list that is allowed to consume the remaining height.
-
-Budget the column before implementation:
+实现前计算：
 
 ```text
-available height = 1080 - safe top - safe bottom
-required height  = sum(section heights) + section gap × (section count - 1)
-required height <= available height
+可用高度 = 1080 - 顶部安全区 - 底部安全区
+内容高度 = 卡片高度总和 + 卡片间距总和
+要求：内容高度 <= 可用高度
 ```
 
-For the default `80px` top inset, `24px` bottom inset, and `16px` gaps, the content budget is `976px`. Replace these values with the actual header and fixed-control safe areas used by the screen; do not compensate with browser scrolling.
+顶部安全区包含 Header 的视觉占位，底部安全区包含 Page Switch、版权文字或固定操作区。内容超出时按以下顺序处理：
 
-When the content exceeds the budget, resolve it in this order:
+1. 删除、合并或移动低优先级卡片。
+2. 使用紧凑密度和 `12px` 区块间距，同时保留最小字号和控件尺寸。
+3. 聚合重复状态，减少表格或列表的可见行数。
+4. 将同级次要内容放入 Tab、分页或具有清晰当前态的自动轮播。
+5. 将长记录和下钻详情移入 Drawer 或 Dialog。
 
-1. Remove, merge, or move lower-priority cards so the column answers fewer, clearer questions.
-2. Use compact card density and `12px` section gaps while preserving minimum type and control sizes.
-3. Aggregate repetitive statuses and reduce the number of visible table/list rows.
-4. Put secondary peer sections behind tabs, pagination, or a controlled carousel/rotation with a visible current state.
-5. Move long records and drill-down detail into a Drawer or Dialog.
+仅允许表格正文、日志、告警流等明确的局部区域滚动；标题、单位、筛选和状态上下文保持可见。
 
-Do not solve overflow by adding `overflow-y: auto` or `overflow-y: scroll` to `.dashboard-panel`, `.dashboard-panel__content`, the page root, or the screen root. Do not use `height: max-content`, shrink text below the documented baseline, or silently clip critical cards. A table or live-event list may scroll or auto-scroll only inside an explicitly bounded card body; that local region must pause automatic movement on hover/focus and must not move the entire side column.
+## 视觉组件
 
-The geometry contract is:
+共享组件只承担稳定职责：
 
-```text
-dashboard panel: top = 0, bottom = 0, overflow = hidden
-panel content:   height = 100%, min-height = 0, overflow = hidden
-fixed section:   flex = 0 0 auto
-one fill section: flex = 1 1 0, min-height = 0
-```
+- Header：标题、时间、全局状态和必要操作。
+- Panel/Card：内容分组和密度控制。
+- Number/Counter：数值、单位、前后缀及可选计数动效。
+- Chart：ECharts 容器和 loading/empty/error 状态。
+- Modal：弹层结构、焦点和关闭语义。
 
-After rendering data, both side panels and their content wrappers must satisfy `scrollHeight <= clientHeight + 1`. Treat a larger value as a layout failure even when `overflow: hidden` makes the scrollbar invisible.
+计数器仅在需要时使用 `countup.js`，数值变化时更新实例，不通过反复卸载组件重启动效。
 
-## Visual Components
+图表使用 `useECharts.js`，等待容器具有正尺寸后初始化，在尺寸变化时复用实例，并在卸载时释放。
 
-Read `references/data-visualization.md` before choosing a data-display form. Read `references/card-patterns.md` before defining card hierarchy, panel/content/item surfaces, card layouts, or floating cards. Read `references/title-decoration.md` before adding card-title backgrounds or decoration. Read `references/modal-patterns.md` before implementing modal types, focus behavior, close rules, or application-level overlay layers. Keep this file focused on page composition and scene-overlay layout.
+## 资源与图标
 
-Standard shared components:
+- 业务图标优先复用项目现有 SVG Sprite 系统。
+- 装饰 SVG/PNG 保持为背景或遮罩，不注册成语义图标。
+- 图片放入 `src/assets/images/`，样式放入 `src/assets/styles/`。
+- 未经明确要求不复制字体、客户图片或来源项目私有资源。
+- 受哈希保护的地图和装饰资源必须保持字节不变。
 
-- `card`
-- `panel`
-- `title` or `sub-title`
-- `countup`
-- `chart`
-- `modal`
-- `date-time`
-- `weather`
-- `svg-icon`
-- `page-switch`
+## 交互、动效与可访问性
 
-Charts must own their ECharts instance and dispose it on unmount. Use the bundled `use-echarts.js` lifecycle template for responsive, conditional, tabbed, drawer, or asynchronously loaded chart containers so initialization waits for positive geometry.
-
-Counters should accept value, decimals, duration, prefix/suffix, and unit. Watch value changes and update the CountUp instance instead of remounting.
-
-Use the maintained project's theme first. In the bundled blue-cyan fallback, reserve gold for selected or deliberately highlighted states instead of mixing it into the ordinary chart-series palette.
-
-## Assets
-
-Use the directory and copy contracts in `references/source-architecture.md` as the single source of truth. Copy only assets required by the selected features. Do not embed generated iconfont blobs or source-project font files unless a supplied package or explicit brand requirement needs them.
-
-## Interaction And Motion
-
-Use motion sparingly. Modal timing, drawer direction, and reduced-motion behavior come from `modal.less` and `references/modal-patterns.md`:
-
-- fade for modals
-- slide-left/slide-right for panels
-- active scaling for Page Switch items
-- short loop animations for status indicators
-
-Avoid animations that resize fixed layout containers unexpectedly.
+- 可点击行为使用真实 `button` 或链接，并提供键盘焦点和可访问名称。
+- 不移除全局焦点轮廓；使用 `:focus-visible` 提供清晰反馈。
+- 只 transition 明确属性，不使用 `transition: all`。
+- 使用位移和透明度实现轻量动效，避免持续改变布局尺寸。
+- 在 `prefers-reduced-motion: reduce` 下关闭非必要旋转、闪烁、缩放和位移。
+- 状态不能只依靠颜色表达；同时提供文字或图标。
+- 场景亮度变化时仍需保持文字和控件对比度。

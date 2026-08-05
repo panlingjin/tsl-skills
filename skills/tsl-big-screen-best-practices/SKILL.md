@@ -1,52 +1,74 @@
 ---
 name: tsl-big-screen-best-practices
-description: 从零搭建、维护或评审符合 TSL 规范的 Vue 3 可视化大屏项目，并保持与 Vue CLI 5 技术栈兼容。适用于数字孪生、数据可视化、大屏看板、Figma 或设计 MCP 还原，以及卡片、面板、标题装饰、弹窗、Dialog、Drawer、媒体查看器、浮动卡片、KPI、ECharts 图表、表格、时间线、地图和 Grid/Flex 数据布局的设计与实现；也适用于接入 Vue Router、Pinia、Axios、MockJS、CountUp、Page Switch、@tslfe/dt-engine、@tslfe/ai-sdk、MCP 与 LLM 前端控制流程。
+description: 为 TSL Vue 3 可视化大屏提供专项实现、维护与评审规范，覆盖 1920×1080 缩放画布、数字孪生场景、ECharts 数据展示、卡片与标题、Modal、Page Switch、静态中国地图及 LLM/MCP 控制。使用于新建或维护 Vue CLI 5 + Webpack 大屏，以及依据 Figma、截图或设计 MCP 还原大屏；通用 JavaScript、Yarn、目录、命名、安全和错误处理服从 frontend-engineering-standards。
 ---
 
-# TSL 可视化大屏项目
+# TSL 可视化大屏最佳实践
 
-创建、维护或评审 TSL 可视化大屏项目。除非用户明确选择其他构建系统，否则以 Vue 3 和 Vue CLI 5 作为兼容性基线。
+将本 Skill 与 `frontend-engineering-standards` 一起使用。本 Skill 只覆盖大屏领域规则和 Vue CLI 5/Webpack 兼容适配，不重新定义通用前端工程规范。
 
-## 工作流程
+## 规则边界
 
-1. 先阅读 `references/project-setup.md`，了解技术栈、依赖、配置、环境变量和 HTML 外壳要求。
-2. 创建或移动源码文件前，阅读 `references/source-architecture.md`。
-3. 编写 Vue、Pinia、Router、composable 或生命周期代码前，阅读 `references/vue-patterns.md`。
-4. 实现大屏布局、视觉组件、图表、计数器、资源和缩放逻辑前，阅读 `references/big-screen-ui.md`。
-5. 选择数据展示形式，或实现 KPI 卡片、图表、表格、时间线、地图、状态列表和数据样式前，阅读 `references/data-visualization.md`。
-6. 渲染雅安风格的静态全国地图及其多层阴影效果时，阅读 `references/china-map.md`。
-7. 定义面板卡片、内容卡片、条目卡片层级，12 栏布局、卡片密度、交互状态或三维场景浮动卡片前，阅读 `references/card-patterns.md`。
-8. 设置 Panel、卡片或区块标题样式，添加标题背景、分隔线、角标或动态图标装饰前，阅读 `references/title-decoration.md`。
-9. 实现 Dialog、Confirm、Drawer、媒体查看器、焦点锁定、弹层堆叠或场景 Callout/Popover 前，阅读 `references/modal-patterns.md`。
-10. 添加 Axios API、MockJS、定时刷新或 WebSocket 代码前，阅读 `references/data-integration.md`。
-11. 项目涉及数字孪生场景、Unity/WebGL 控制、POI、相机、特效或模型事件时，阅读 `references/dt-engine.md`。
-12. 项目需要多项目或多场景切换时，阅读 `references/page-switch.md`。
-13. 添加 AI 助手、MCP 工具、LLM 问答或 `frontControl` 动作时，阅读 `references/llm-and-mcp.md`。
-14. 最终交付前，阅读 `references/quality-checks.md` 并完成验收。
+| 领域 | 规则来源 |
+| --- | --- |
+| JavaScript、Yarn、目录与命名、组件边界、Router、Pinia、安全、错误处理 | `frontend-engineering-standards` |
+| 构建、环境变量、SVG loader、单元测试运行器 | 本 Skill 的 Vue CLI 5/Webpack 适配 |
+| 缩放画布、场景叠层、侧栏预算、图表、卡片、Modal、Page Switch、dt-engine、LLM/MCP | 本 Skill |
+| 明确的视觉细节 | 用户提供的 Figma、设计 MCP、截图或设计文件 |
 
-## 设计来源优先级
+Vue CLI 5/Webpack 适配只允许以下例外：
 
-当用户提供 Figma 文件、设计系统 MCP、截图、标注视觉参考或生成式设计图，并要求据此实现时，将该来源视为视觉权威。本 Skill 负责补充设计来源未明确的工程结构、运行时生命周期、大屏缩放、数据语义、无障碍、安全和降级策略。
+- 使用 `vue.config.js`、Babel、Webpack loader 和 `VUE_APP_*`。
+- 使用 Jest，而不是为测试额外引入 Vite/Vitest。
+- 使用 `svg-sprite-loader` 处理 `src/assets/icons/svg/`。
+- 新项目使用团队统一的 Yarn Classic 1.x；维护项目沿用现有 Yarn 主版本。
 
-按以下优先级执行：
+不得借此覆盖通用规范中的 JavaScript、Composition API、Yarn、PascalCase SFC、camelCase JavaScript、`composables/`、`stores/`、`src/assets/styles/`、运行时校验、安全或错误处理规则。新建大屏不使用 `origami-vue`；维护旧项目时不在无关任务中强制移除已有依赖，但不得新增耦合。
 
-1. 用户的明确指令。
-2. 用户提供的 Figma、设计 MCP 或设计文件中的视觉细节。
-3. 维护现有项目时，该项目已经形成的约定。
-4. 未指定部分采用本 Skill 的 TSL 视觉默认值。
+## 按任务加载
 
-按领域解决冲突：视觉细节遵循用户提供的设计来源；工程、可用性、安全和生命周期约束遵循本 Skill。不得用内置的蓝青色 TSL 默认样式覆盖明确的设计来源，也不得让设计来源破坏 `1920 × 1080` 缩放根节点、受控的侧栏高度预算、弹层层级、资源清理责任或私有配置规则。
+只读取当前任务所需文档：
 
-## 默认构建规范
+| 任务 | 读取文档 |
+| --- | --- |
+| 创建项目，修改依赖、环境、Webpack、HTML 外壳或 Jest | `references/project-setup.md` |
+| 复制模板、资源或组织场景级源码 | `references/source-architecture.md` |
+| 处理大屏组件分区、图表/Modal/引擎所有权或资源清理 | `references/vue-patterns.md` |
+| 实现画布缩放、场景叠层、Header/侧栏布局 | `references/big-screen-ui.md` |
+| 选择或实现 KPI、图表、表格、时间线、列表 | `references/data-visualization.md` |
+| 使用静态雅安风格全国地图 | `references/china-map.md` |
+| 定义卡片层级、网格、密度、交互或浮动卡片 | `references/card-patterns.md` |
+| 实现标题背景、分隔线、角标或图标装饰 | `references/title-decoration.md` |
+| 实现 Dialog、Confirm、Drawer、Media 或 Scene Callout | `references/modal-patterns.md` |
+| 接入共享请求、Vue CLI MockJS、轮询或 WebSocket | `references/data-integration.md` |
+| 接入 Unity/WebGL、POI、相机、特效或模型事件 | `references/dt-engine.md`，并核对目标项目实际 dt-engine 版本 |
+| 实现多项目或多场景切换 | `references/page-switch.md` |
+| 接入 AI 助手、MCP 工具、LLM 或 `frontControl` | `references/llm-and-mcp.md` |
+| 交付大屏改动 | `references/quality-checks.md`，并执行通用工程检查 |
 
-- 使用 Vue 3、Composition API、Vue CLI 5、Vue Router 4、Pinia、Less、ECharts 和现有 TSL 包约定。
-- 仅固定对兼容性敏感的依赖版本：`zod@3.23.8` 和 `@tslfe/dt-engine@4.3.1-1`。
-- 所有 HTTP 请求统一通过 `src/utils/axios.js` 中的原生 `axios` 实例发送。
-- 使用 `#infraApp` 作为 `1920 × 1080` 缩放根节点，并将所有弹层保持在同一坐标系内。
-- 按 `source-architecture.md` 中的复制契约复用内置模板和资源，不要手工重建其生命周期行为。
-- 除非用户、设计来源或现有项目明确要求品牌字体，否则使用浏览器或页面默认字体。默认不要复制第三方源项目字体。
-- 左右看板栏必须位于缩放后的 1080p 画布内。非交互侧栏必须满足文档规定的高度预算，不得产生页面级或整栏纵向滚动。
-- 保持根组件和路由组件轻量。将功能 UI 放入子组件，将功能行为放入 composable、service 或 store。
-- 不得从现有项目复制项目专属密钥、私有 URL、模型 ID、Token、JWT、App Secret 或硬编码客户数据。
+一个任务涉及多个领域时组合读取对应文档，不要因为修改一个卡片就加载项目搭建、Router、Pinia、dt-engine 和 LLM 全部规则。
 
-最终按照 `references/quality-checks.md` 中的自动化与人工验收入口完成交付。
+## 视觉优先级
+
+按领域处理来源：
+
+1. 用户明确指令最高。
+2. Figma、设计 MCP、截图和批准的设计文件决定视觉细节。
+3. 维护项目沿用已有工程和主题约定。
+4. 未指定视觉采用本 Skill 的 TSL 默认值。
+
+视觉来源不得破坏大屏画布坐标系、侧栏高度预算、弹层语义、键盘可用性、资源所有权、安全或私有配置边界。具体缩放和叠层规则只在 `big-screen-ui.md` 维护。
+
+## 核心兼容约定
+
+- 新项目使用 Vue 3、JavaScript、Composition API、Vue CLI 5、Webpack、Vue Router 4、Pinia、Less 和 ECharts。
+- 维护项目先读取 `package.json` 和锁文件；不得因本 Skill 自动迁移构建工具、目录或依赖主版本。
+- 新项目默认安装最新版 `@tslfe/dt-engine`（以 `npm view @tslfe/dt-engine version` 为准）；维护项目沿用已安装版本并按其公共导出核对 API。
+- 仅在 MCP 输入 schema 需要时使用 `zod@3.23.8`。
+- 仅在数字计数动效需要时添加 `countup.js`，不默认安装旧 `countup` 包。
+- 所有 HTTP 请求通过 `src/api/request.js`；请求层不直接调用 Toast 或其他 UI 组件。
+- 使用 `#infraApp` 作为缩放根节点，所有应用弹层保持在同一坐标系内。
+- 复用 `assets/template/` 中的代码和生命周期契约，不手工重建易错行为。
+- 不复制第三方字体、密钥、私有 URL、模型 ID、Token、JWT、App Secret 或客户数据。
+
+最终按照 `references/quality-checks.md` 完成自动化与人工验收。

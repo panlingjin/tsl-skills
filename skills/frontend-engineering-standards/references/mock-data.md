@@ -1,6 +1,6 @@
 # Mock 数据规范
 
-本文档只定义开发服务器中的 API Mock、Mock.js 数据模板和环境开关。Vitest 的模块替身、组件测试数据与断言策略统一参见 `testing-standards.md`。
+本文档只定义开发服务器中的 API Mock、Mock.js 数据模板和环境开关。Vitest 的模块替身、组件测试数据与断言策略统一参见 `testing-standards.md`。Vue CLI/Webpack 大屏的 MockJS 接入服从 `tsl-big-screen-best-practices/references/data-integration.md`，不要复制本文的 Vite 插件配置。
 
 ---
 

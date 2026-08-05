@@ -64,7 +64,7 @@
 
 ### 按需加载组件库
 
-组件库按需引入由项目实际组件库和插件决定，具体配置统一参见 [Vite 配置规范](vite-config.md)。
+组件库按需引入由项目实际组件库和构建插件决定。Vite 项目参见 [Vite 配置规范](vite-config.md)；其他构建工具读取对应专项 Skill。
 
 ---
 
@@ -117,7 +117,7 @@
 
 ## 打包优化策略
 
-代码分割、Tree Shaking、压缩和 Chunk 阈值统一参见 [Vite 配置规范](vite-config.md)。先分析构建产物，再决定是否手动分包；Gzip/Brotli 和缓存头由部署环境配置并验证。
+代码分割、Tree Shaking、压缩和 Chunk 阈值由当前构建工具负责。先分析构建产物，再决定是否手动分包；Vite 项目参见 [Vite 配置规范](vite-config.md)，其他构建工具读取对应专项 Skill。Gzip/Brotli 和缓存头由部署环境配置并验证。
 
 ---
 
