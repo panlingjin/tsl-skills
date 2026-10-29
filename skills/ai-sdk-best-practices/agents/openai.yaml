@@ -1,4 +1,4 @@
 interface:
-  display_name: "TSL AI SDK Best Practices"
-  short_description: "Best practices for @tslfe/ai-sdk"
-  default_prompt: "Use $ai-sdk-best-practices to integrate @tslfe/ai-sdk into my TypeScript frontend."
+  display_name: "TSL AI SDK 最佳实践"
+  short_description: "接入与排查 @tslfe/ai-sdk 的对话、语音和 MCP 功能"
+  default_prompt: "使用 $ai-sdk-best-practices，在 TypeScript 前端接入 @tslfe/ai-sdk，并处理配置、事件、错误和资源清理。"
